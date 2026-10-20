@@ -12,6 +12,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.example.data.model.AmortizationSummary
 import com.example.data.model.LtvMetrics
+import com.example.data.model.LandedCostResult
 import com.example.data.model.MarginMarkupState
 import com.example.data.model.PnlModel
 import com.example.data.model.SavedDeal
@@ -31,7 +32,8 @@ object PdfExportService {
         amortization: AmortizationSummary,
         pnl: PnlModel,
         ltv: LtvMetrics,
-        margin: MarginMarkupState
+        margin: MarginMarkupState,
+        landedCost: LandedCostResult? = null
     ): Result<Uri> {
         return runCatching {
             val pdfDocument = PdfDocument()

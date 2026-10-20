@@ -119,4 +119,21 @@ class BigDealCalculatorsTest {
         assertEquals(2.0, funnel.overallConversionPct, 0.01)
         assertEquals(200000.0, funnel.totalPipelineValue, 0.01)
     }
+
+    @Test
+    fun testRoi12MonthForecastEngine() {
+        val forecast = com.example.domain.calculator.RoiForecastEngine.calculate12MonthForecast(
+            cohortSize = 25,
+            cac = 4000.0,
+            ltv = 25000.0,
+            churnRatePct = 2.5,
+            grossMarginPct = 75.0,
+            monthlyOpex = 2500.0
+        )
+        assertEquals(100000.0, forecast.totalCacInvestment, 0.01)
+        assertEquals(12, forecast.monthlyPoints.size)
+        assertTrue(forecast.total12MonthRevenue > 0.0)
+        assertTrue(forecast.paybackMonth > 0.0)
+        assertTrue(forecast.customerRetention12MoPct > 70.0)
+    }
 }

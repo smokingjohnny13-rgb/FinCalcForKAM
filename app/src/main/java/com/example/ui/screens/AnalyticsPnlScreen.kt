@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.FinancialInputField
 import com.example.ui.components.MetricCard
+import com.example.ui.components.RoiPnlModeler
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -117,7 +118,21 @@ fun AnalyticsPnlScreen(
             }
         }
 
-        // 2. Comprehensive PnL Income Statement Breakdown
+        // 2. 12-Month Cohort ROI & PnL Modeler (CAC, LTV, Churn)
+        item {
+            RoiPnlModeler(
+                initialCac = viewModel.cac.value.toDoubleOrNull() ?: 4000.0,
+                initialLtv = viewModel.ltvMetrics.value.ltv,
+                initialChurnRatePct = viewModel.churnRatePct.value.toDoubleOrNull() ?: 2.5,
+                initialGrossMarginPct = viewModel.grossMarginPct.value.toDoubleOrNull() ?: 75.0,
+                onApplyForecastToPnl = { forecast ->
+                    viewModel.applyRoiPnlForecast(forecast)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 3. Comprehensive PnL Income Statement Breakdown
         item {
             Box(
                 modifier = Modifier

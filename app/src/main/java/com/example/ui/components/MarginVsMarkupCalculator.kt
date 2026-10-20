@@ -1,0 +1,528 @@
+package com.example.ui.components
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.domain.calculator.MarginMarkupSolver
+import com.example.ui.theme.ElectricCyan
+import com.example.ui.theme.EmeraldPrimary
+import com.example.ui.theme.ExecutiveBorder
+import com.example.ui.theme.ExecutiveCard
+import com.example.ui.theme.ExecutiveSurface
+import com.example.ui.theme.ExecutiveSurfaceVariant
+import com.example.ui.theme.GoldAccent
+import java.text.NumberFormat
+import java.util.Locale
+import kotlin.math.round
+
+data class PricingStrategyPreset(
+    val label: String,
+    val marginPct: Double,
+    val description: String
+)
+
+/**
+ * Reusable Margin vs. Markup calculator component.
+ * Allows users to input desired margin percentage and instantly calculates the
+ * required markup multiplier (and vice-versa) for accurate pricing strategies.
+ */
+@Composable
+fun MarginVsMarkupCalculator(
+    modifier: Modifier = Modifier,
+    initialMarginPct: Double = 35.0,
+    sampleBaseCost: Double = 1000.0,
+    onStrategySelected: ((marginPct: Double, markupPct: Double, multiplier: Double) -> Unit)? = null,
+    testTag: String = "margin_vs_markup_calculator"
+) {
+    // 0 = Input Margin -> Output Markup & Multiplier
+    // 1 = Input Markup -> Output Margin & Multiplier
+    var activeInputMode by remember { mutableIntStateOf(0) }
+
+    var marginInput by remember { mutableStateOf(initialMarginPct.toString()) }
+    var markupInput by remember {
+        mutableStateOf(String.format(Locale.US, "%.1f", MarginMarkupSolver.marginToMarkup(initialMarginPct)))
+    }
+    var baseCostInput by remember { mutableStateOf(sampleBaseCost.toInt().toString()) }
+
+    var marginValue by remember { mutableDoubleStateOf(initialMarginPct) }
+    var markupValue by remember { mutableDoubleStateOf(MarginMarkupSolver.marginToMarkup(initialMarginPct)) }
+
+    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
+    val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
+
+    val currentMultiplier = 1.0 + (markupValue / 100.0)
+    val baseCost = baseCostInput.toDoubleOrNull() ?: sampleBaseCost
+    val calculatedPrice = baseCost * currentMultiplier
+    val calculatedProfit = calculatedPrice - baseCost
+
+    val presets = listOf(
+        PricingStrategyPreset("15% Margin", 15.0, "Competitive / High Volume"),
+        PricingStrategyPreset("25% Margin", 25.0, "Standard Wholesale"),
+        PricingStrategyPreset("35% Margin", 35.0, "Commercial B2B Target"),
+        PricingStrategyPreset("50% Margin", 50.0, "Premium Software & Value-Add"),
+        PricingStrategyPreset("60% Margin", 60.0, "Enterprise SaaS / High Touch"),
+        PricingStrategyPreset("75% Margin", 75.0, "Proprietary IP / Low Volume")
+    )
+
+    Box(
+        modifier = modifier
+            .testTag(testTag)
+            .clip(RoundedCornerShape(16.dp))
+            .background(ExecutiveSurface)
+            .border(1.dp, ExecutiveBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CompareArrows,
+                        contentDescription = null,
+                        tint = EmeraldPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "MARGIN VS. MARKUP CALCULATOR",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(ElectricCyan.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = "${numberFmt.format(currentMultiplier)}x MULTIPLIER",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ElectricCyan,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Direction Mode Tabs
+            TabRow(
+                selectedTabIndex = activeInputMode,
+                containerColor = ExecutiveSurfaceVariant,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(10.dp))
+            ) {
+                Tab(
+                    selected = activeInputMode == 0,
+                    onClick = { activeInputMode = 0 },
+                    text = {
+                        Text(
+                            text = "Set Margin % → Get Markup",
+                            fontSize = 11.sp,
+                            fontWeight = if (activeInputMode == 0) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+                Tab(
+                    selected = activeInputMode == 1,
+                    onClick = { activeInputMode = 1 },
+                    text = {
+                        Text(
+                            text = "Set Markup % → Get Margin",
+                            fontSize = 11.sp,
+                            fontWeight = if (activeInputMode == 1) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                )
+            }
+
+            // Key Results Comparison Card (Hero Display)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(ExecutiveCard)
+                    .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "DESIRED GROSS MARGIN",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "${numberFmt.format(marginValue)}%",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Black,
+                            color = EmeraldPrimary
+                        )
+                        Text(
+                            text = "Profit / Selling Price",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 10.sp
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .height(48.dp)
+                            .width(1.dp)
+                            .background(ExecutiveBorder)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                    ) {
+                        Text(
+                            text = "REQUIRED MARKUP",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "${numberFmt.format(markupValue)}%",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Black,
+                            color = ElectricCyan
+                        )
+                        Text(
+                            text = "Profit / Base Cost",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+            }
+
+            // Input Slider & Text Input
+            if (activeInputMode == 0) {
+                // Set Margin % -> updates Markup
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Desired Gross Margin: ${numberFmt.format(marginValue)}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Multiplier: ${numberFmt.format(currentMultiplier)}x",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ElectricCyan,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Slider(
+                        value = marginValue.toFloat().coerceIn(1f, 85f),
+                        onValueChange = { newVal ->
+                            marginValue = round(newVal.toDouble() * 10.0) / 10.0
+                            marginInput = marginValue.toString()
+                            markupValue = MarginMarkupSolver.marginToMarkup(marginValue)
+                            markupInput = String.format(Locale.US, "%.1f", markupValue)
+                        },
+                        valueRange = 1f..85f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = EmeraldPrimary,
+                            activeTrackColor = EmeraldPrimary,
+                            inactiveTrackColor = ExecutiveBorder
+                        ),
+                        modifier = Modifier.testTag("slider_margin_percentage")
+                    )
+
+                    FinancialInputField(
+                        label = "Desired Gross Margin (%)",
+                        value = marginInput,
+                        onValueChange = {
+                            marginInput = it
+                            val m = it.toDoubleOrNull() ?: 0.0
+                            val clampedM = m.coerceIn(0.1, 95.0)
+                            marginValue = clampedM
+                            markupValue = MarginMarkupSolver.marginToMarkup(clampedM)
+                            markupInput = String.format(Locale.US, "%.1f", markupValue)
+                        },
+                        suffix = "%",
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "input_desired_margin"
+                    )
+                }
+            } else {
+                // Set Markup % -> updates Margin
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Applied Markup: ${numberFmt.format(markupValue)}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Multiplier: ${numberFmt.format(currentMultiplier)}x",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ElectricCyan,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Slider(
+                        value = markupValue.toFloat().coerceIn(1f, 250f),
+                        onValueChange = { newVal ->
+                            markupValue = round(newVal.toDouble() * 10.0) / 10.0
+                            markupInput = markupValue.toString()
+                            marginValue = MarginMarkupSolver.markupToMargin(markupValue)
+                            marginInput = String.format(Locale.US, "%.1f", marginValue)
+                        },
+                        valueRange = 1f..250f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = ElectricCyan,
+                            activeTrackColor = ElectricCyan,
+                            inactiveTrackColor = ExecutiveBorder
+                        ),
+                        modifier = Modifier.testTag("slider_markup_percentage")
+                    )
+
+                    FinancialInputField(
+                        label = "Applied Markup (%)",
+                        value = markupInput,
+                        onValueChange = {
+                            markupInput = it
+                            val mu = it.toDoubleOrNull() ?: 0.0
+                            val clampedMu = mu.coerceIn(0.1, 1000.0)
+                            markupValue = clampedMu
+                            marginValue = MarginMarkupSolver.markupToMargin(clampedMu)
+                            marginInput = String.format(Locale.US, "%.1f", marginValue)
+                        },
+                        suffix = "%",
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "input_applied_markup"
+                    )
+                }
+            }
+
+            // Quick Pricing Strategy Presets
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "TARGET PRICING PRESETS",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(presets) { preset ->
+                        val isSelected = Math.abs(marginValue - preset.marginPct) < 0.2
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                marginValue = preset.marginPct
+                                marginInput = preset.marginPct.toString()
+                                markupValue = MarginMarkupSolver.marginToMarkup(preset.marginPct)
+                                markupInput = String.format(Locale.US, "%.1f", markupValue)
+                            },
+                            label = {
+                                Text(
+                                    text = preset.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = EmeraldPrimary,
+                                selectedLabelColor = Color.Black,
+                                containerColor = ExecutiveSurfaceVariant,
+                                labelColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(enabled = true, selected = isSelected, borderColor = ExecutiveBorder)
+                        )
+                    }
+                }
+            }
+
+            // Live Pricing Simulation Box (Given a Base Cost)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(ExecutiveCard)
+                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
+                    .padding(14.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "PRICING IMPACT SIMULATION",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Selling Price = Cost × ${numberFmt.format(currentMultiplier)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ElectricCyan,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FinancialInputField(
+                            label = "Base Cost of Goods",
+                            value = baseCostInput,
+                            onValueChange = { baseCostInput = it },
+                            prefix = "$",
+                            modifier = Modifier.weight(1f),
+                            testTag = "input_simulator_cost"
+                        )
+                    }
+
+                    HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("REQUIRED SELLING PRICE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(currencyFmt.format(calculatedPrice), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("NET PROFIT YIELD", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("+${currencyFmt.format(calculatedProfit)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                        }
+                    }
+
+                    if (onStrategySelected != null) {
+                        Button(
+                            onClick = {
+                                onStrategySelected(marginValue, markupValue, currentMultiplier)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .testTag("btn_apply_pricing_strategy")
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Apply to Pricing Strategy (${numberFmt.format(marginValue)}% Margin / ${numberFmt.format(currentMultiplier)}x)",
+                                color = Color.Black,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Formula Reference Callout
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(ExecutiveSurfaceVariant)
+                    .padding(10.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Mathematical Equivalence Rule:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "• Markup Multiplier = 1 / (1 - Margin%) = 1 + Markup%\n• Margin% = Markup% / (100 + Markup%)\n• Example: 33.3% Margin requires 50.0% Markup (1.50x multiplier).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp
+                    )
+                }
+            }
+        }
+    }
+}

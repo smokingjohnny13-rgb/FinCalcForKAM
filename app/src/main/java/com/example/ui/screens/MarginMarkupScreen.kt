@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.MarginMarkupSolver
 import com.example.ui.components.FinancialInputField
+import com.example.ui.components.LandedCostModeler
+import com.example.ui.components.MarginVsMarkupCalculator
 import com.example.ui.components.MetricCard
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
@@ -68,6 +70,7 @@ fun MarginMarkupScreen(
 
     var customMarginInput by remember { mutableStateOf("30") }
     var customMarkupInput by remember { mutableStateOf("42.8") }
+    var showLandedCostModeler by remember { mutableStateOf(false) }
 
     val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
 
@@ -164,6 +167,41 @@ fun MarginMarkupScreen(
                             prefix = "$",
                             modifier = Modifier.weight(1f),
                             testTag = "input_margin_price"
+                        )
+                    }
+
+                    // Landed Cost Modeler Shortcut for FOB import calculations
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(ExecutiveSurfaceVariant)
+                            .clickable { showLandedCostModeler = !showLandedCostModeler }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Рассчитать себестоимость через FOB (1.28–1.75)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = EmeraldPrimary
+                        )
+                        Text(
+                            text = if (showLandedCostModeler) "Скрыть ▴" else "Landed Cost Modeler ▾",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (showLandedCostModeler) {
+                        LandedCostModeler(
+                            initialFobPrice = marginCost.toDoubleOrNull() ?: 1000.0,
+                            onApplyToMargin = { computedCost ->
+                                viewModel.onMarginCostOrPriceChanged(newCost = computedCost.toInt().toString())
+                                showLandedCostModeler = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -274,111 +312,16 @@ fun MarginMarkupScreen(
             }
         }
 
-        // 4. Standalone Cross-Conversion Solver (Convert Any Margin% ↔ Markup%)
+        // 4. Dedicated Margin vs. Markup Calculator Component
         item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(ExecutiveSurface)
-                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(14.dp))
-                    .padding(16.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.CompareArrows,
-                                contentDescription = null,
-                                tint = ElectricCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "CROSS CONVERSION SOLVER",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ElectricCyan,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Text(
-                            text = "Any Margin ↔ Any Markup",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        FinancialInputField(
-                            label = "Any Margin (%)",
-                            value = customMarginInput,
-                            onValueChange = {
-                                customMarginInput = it
-                                val m = it.toDoubleOrNull() ?: 0.0
-                                customMarkupInput = String.format(Locale.US, "%.1f", MarginMarkupSolver.marginToMarkup(m))
-                            },
-                            suffix = "%",
-                            modifier = Modifier.weight(1f),
-                            testTag = "input_cross_margin"
-                        )
-                        FinancialInputField(
-                            label = "Resulting Markup (%)",
-                            value = customMarkupInput,
-                            onValueChange = {
-                                customMarkupInput = it
-                                val mu = it.toDoubleOrNull() ?: 0.0
-                                customMarginInput = String.format(Locale.US, "%.1f", MarginMarkupSolver.markupToMargin(mu))
-                            },
-                            suffix = "%",
-                            modifier = Modifier.weight(1f),
-                            testTag = "input_cross_markup"
-                        )
-                    }
-
-                    // Key Reference Cheat Sheet Table for BDM/KAM negotiations
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ExecutiveCard)
-                            .padding(10.dp)
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(
-                                text = "EXECUTIVE CONVERSION MATRIX",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            val matrix = listOf(
-                                "20% Margin" to "25% Markup",
-                                "25% Margin" to "33.3% Markup",
-                                "33.3% Margin" to "50% Markup",
-                                "50% Margin" to "100% Markup",
-                                "60% Margin" to "150% Markup"
-                            )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                matrix.forEach { (m, mu) ->
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(m, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 10.sp)
-                                        Text(mu, style = MaterialTheme.typography.labelSmall, color = ElectricCyan, fontSize = 10.sp)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            MarginVsMarkupCalculator(
+                initialMarginPct = marginState.marginPct,
+                sampleBaseCost = marginState.cost,
+                onStrategySelected = { selectedMargin, selectedMarkup, multiplier ->
+                    viewModel.applyMarginPercentPreset(selectedMargin)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         item {

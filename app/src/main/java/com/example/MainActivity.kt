@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -65,6 +66,7 @@ import com.example.data.repository.DealRepository
 import com.example.ui.screens.AnalyticsPnlScreen
 import com.example.ui.screens.DealVaultScreen
 import com.example.ui.screens.FinancingFxScreen
+import com.example.ui.screens.LandedCostScreen
 import com.example.ui.screens.MarginMarkupScreen
 import com.example.ui.screens.PipelineLtvScreen
 import com.example.ui.theme.BigDealTheme
@@ -77,8 +79,9 @@ import com.example.ui.viewmodel.BigDealViewModel
 
 enum class NavigationTab(val label: String, val icon: ImageVector) {
     FINANCING("Finance", Icons.Default.Payments),
-    PIPELINE("Pipeline", Icons.Default.FilterAlt),
+    LANDED("Landed", Icons.Default.LocalShipping),
     MARGIN("Margin", Icons.Default.Percent),
+    PIPELINE("Pipeline", Icons.Default.FilterAlt),
     ANALYTICS("Analytics", Icons.Default.Assessment),
     VAULT("Vault", Icons.Default.PictureAsPdf)
 }
@@ -248,10 +251,14 @@ fun BigDealAppRoot(
             Crossfade(targetState = selectedTab, label = "ScreenTransition") { tabIndex ->
                 when (tabIndex) {
                     0 -> FinancingFxScreen(viewModel = viewModel)
-                    1 -> PipelineLtvScreen(viewModel = viewModel)
+                    1 -> LandedCostScreen(
+                        viewModel = viewModel,
+                        onNavigateToMargin = { selectedTab = 2 }
+                    )
                     2 -> MarginMarkupScreen(viewModel = viewModel)
-                    3 -> AnalyticsPnlScreen(viewModel = viewModel)
-                    4 -> DealVaultScreen(viewModel = viewModel)
+                    3 -> PipelineLtvScreen(viewModel = viewModel)
+                    4 -> AnalyticsPnlScreen(viewModel = viewModel)
+                    5 -> DealVaultScreen(viewModel = viewModel)
                 }
             }
         }

@@ -5,8 +5,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.model.AmortizationSummary
+import com.example.data.model.CargoCategory
+import com.example.data.model.CountryTradeProfile
 import com.example.data.model.CurrencyRate
 import com.example.data.model.FunnelSummary
+import com.example.data.model.LandedCostResult
 import com.example.data.model.LtvMetrics
 import com.example.data.model.MarginMarkupState
 import com.example.data.model.PaymentFrequency
@@ -17,6 +20,7 @@ import com.example.data.repository.DealRepository
 import com.example.domain.calculator.AmortizationEngine
 import com.example.domain.calculator.CurrencyEngine
 import com.example.domain.calculator.FunnelCalculator
+import com.example.domain.calculator.LandedCostCalculator
 import com.example.domain.calculator.LtvCalculator
 import com.example.domain.calculator.MarginMarkupSolver
 import com.example.domain.calculator.PnlRoiEngine
@@ -80,6 +84,31 @@ class BigDealViewModel(
     val currentCrossRate = MutableStateFlow(
         CurrencyEngine.getCrossRate("USD", "EUR")
     )
+
+    // 2b. Express Multiplier & Landed Cost Matrix
+    val selectedCategory = MutableStateFlow(CargoCategory.INDUSTRIAL)
+    val selectedCountry = MutableStateFlow(LandedCostCalculator.COUNTRY_PROFILES[0]) // Belarus (EAEU)
+    val fobPriceInput = MutableStateFlow("10000")
+    val targetLandedCostInput = MutableStateFlow("14800")
+    val expressCoeffInput = MutableStateFlow("1.48")
+    val isLandedReverseMode = MutableStateFlow(false)
+
+    val customLogisticsPct = MutableStateFlow("15.0")
+    val customDutyPct = MutableStateFlow("7.5")
+    val customVatPct = MutableStateFlow("20.0")
+    val customBrokerPct = MutableStateFlow("2.5")
+
+    private val _landedCostResult = MutableStateFlow(
+        LandedCostCalculator.calculateDirect(
+            fobPrice = 10000.0,
+            coefficient = 1.48,
+            logisticsPct = 15.0,
+            dutyPct = 7.5,
+            vatPct = 20.0,
+            brokerFeesPct = 2.5
+        )
+    )
+    val landedCostResult: StateFlow<LandedCostResult> = _landedCostResult.asStateFlow()
 
     // 3. SaaS & Pipeline Economics (LTV, Churn, Funnel)
     val arpu = MutableStateFlow("2500")
@@ -190,6 +219,116 @@ class BigDealViewModel(
         )
     }
 
+    // --- Landed Cost & Express Multipliers ---
+    fun updateLandedCostCalculations() {
+        val fob = fobPriceInput.value.toDoubleOrNull() ?: 0.0
+        val targetLanded = targetLandedCostInput.value.toDoubleOrNull() ?: 0.0
+        val coeff = expressCoeffInput.value.toDoubleOrNull() ?: 1.48
+
+        val logPct = customLogisticsPct.value.toDoubleOrNull() ?: 15.0
+        val dutyPct = customDutyPct.value.toDoubleOrNull() ?: 7.5
+        val vatPct = customVatPct.value.toDoubleOrNull() ?: 20.0
+        val brokerPct = customBrokerPct.value.toDoubleOrNull() ?: 2.5
+
+        if (isLandedReverseMode.value) {
+            val result = LandedCostCalculator.calculateReverse(
+                targetLandedCost = targetLanded,
+                coefficient = coeff,
+                logisticsPct = logPct,
+                dutyPct = dutyPct,
+                vatPct = vatPct,
+                brokerFeesPct = brokerPct
+            )
+            _landedCostResult.value = result
+            fobPriceInput.value = result.fobPrice.toInt().toString()
+        } else {
+            val result = LandedCostCalculator.calculateDirect(
+                fobPrice = fob,
+                coefficient = coeff,
+                logisticsPct = logPct,
+                dutyPct = dutyPct,
+                vatPct = vatPct,
+                brokerFeesPct = brokerPct
+            )
+            _landedCostResult.value = result
+            targetLandedCostInput.value = result.landedCost.toInt().toString()
+        }
+    }
+
+    fun setLandedReverseMode(reverse: Boolean) {
+        isLandedReverseMode.value = reverse
+        updateLandedCostCalculations()
+    }
+
+    fun applyCargoCategory(category: CargoCategory) {
+        selectedCategory.value = category
+        if (category != CargoCategory.CUSTOM) {
+            expressCoeffInput.value = category.defaultCoeff.toString()
+            customLogisticsPct.value = category.avgLogisticsPct.toString()
+            customDutyPct.value = category.avgDutyPct.toString()
+        }
+        updateLandedCostCalculations()
+    }
+
+    fun applyCountryTradeProfile(country: CountryTradeProfile) {
+        selectedCountry.value = country
+        customVatPct.value = country.defaultVatPct.toString()
+        customDutyPct.value = country.defaultDutyPct.toString()
+        customLogisticsPct.value = country.defaultLogisticsPct.toString()
+        customBrokerPct.value = country.defaultBrokerFeesPct.toString()
+        recalculateCustomCoefficient()
+    }
+
+    fun recalculateCustomCoefficient() {
+        val logPct = customLogisticsPct.value.toDoubleOrNull() ?: 15.0
+        val dutyPct = customDutyPct.value.toDoubleOrNull() ?: 7.5
+        val vatPct = customVatPct.value.toDoubleOrNull() ?: 20.0
+        val brokerPct = customBrokerPct.value.toDoubleOrNull() ?: 2.5
+        val computedCoeff = LandedCostCalculator.buildCoefficientFromComponents(
+            logisticsPct = logPct,
+            dutyPct = dutyPct,
+            vatPct = vatPct,
+            brokerFeesPct = brokerPct
+        )
+        expressCoeffInput.value = computedCoeff.toString()
+        updateLandedCostCalculations()
+    }
+
+    fun calibrateCoefficientFromPrices() {
+        val fob = fobPriceInput.value.toDoubleOrNull() ?: 0.0
+        val landed = targetLandedCostInput.value.toDoubleOrNull() ?: 0.0
+        val calibrated = LandedCostCalculator.calibrateCoefficient(fob, landed)
+        expressCoeffInput.value = calibrated.toString()
+        selectedCategory.value = CargoCategory.CUSTOM
+        updateLandedCostCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Calibrated Express Multiplier: $calibrated")
+        }
+    }
+
+    fun transferLandedCostToMarginSolver() {
+        val landed = _landedCostResult.value.landedCost
+        marginCostInput.value = landed.toInt().toString()
+        val currentPrice = marginPriceInput.value.toDoubleOrNull() ?: 0.0
+        if (currentPrice <= landed) {
+            val suggestedPrice = (landed / (1.0 - 0.35)).toInt()
+            marginPriceInput.value = suggestedPrice.toString()
+        }
+        onMarginCostOrPriceChanged()
+        viewModelScope.launch {
+            _userMessage.emit("Landed Cost $${landed.toInt()} transferred to Margin & Pricing Solver")
+        }
+    }
+
+    fun transferLandedCostToDeal() {
+        val landed = _landedCostResult.value.landedCost
+        principalAmount.value = landed.toInt().toString()
+        updateFinancing()
+        viewModelScope.launch {
+            _userMessage.emit("Deal value updated with Landed Cost: $${landed.toInt()}")
+        }
+    }
+
     // --- SaaS & Funnel Triggers ---
     fun updateLtvCalculations() {
         val a = arpu.value.toDoubleOrNull() ?: 0.0
@@ -263,6 +402,19 @@ class BigDealViewModel(
             variableCostPerUnit = cUnit,
             dealDurationMonths = dur
         )
+    }
+
+    fun applyRoiPnlForecast(forecast: com.example.domain.calculator.RoiPnlForecast) {
+        pnlRevenue.value = forecast.total12MonthRevenue.toInt().toString()
+        val cogs = maxOf(0.0, forecast.total12MonthRevenue - forecast.total12MonthGrossProfit)
+        pnlCogs.value = cogs.toInt().toString()
+        pnlOpex.value = forecast.total12MonthOpex.toInt().toString()
+        pnlInvestment.value = forecast.totalCacInvestment.toInt().toString()
+        pnlDurationMonths.value = "12"
+        updatePnlCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Applied 12-Month Cohort Forecast to Contract P&L")
+        }
     }
 
     // --- Deal Saving & PDF Generation ---
@@ -349,7 +501,8 @@ class BigDealViewModel(
                 amortization = _amortization.value,
                 pnl = _pnlModel.value,
                 ltv = _ltvMetrics.value,
-                margin = _marginState.value
+                margin = _marginState.value,
+                landedCost = _landedCostResult.value
             )
 
             result.onSuccess {
