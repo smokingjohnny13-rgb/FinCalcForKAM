@@ -1,0 +1,6 @@
+{
+  "name": "BigDeal",
+  "description": "Executive BDM & KAM financial modeler, SaaS economics, payment schedules, and PDF reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

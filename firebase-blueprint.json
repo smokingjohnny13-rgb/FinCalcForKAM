@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "Deal": {
+      "title": "Deal",
+      "description": "Saved financial deal modeling scenario for BDM and KAM accounts",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the deal"
+        },
+        "title": {
+          "type": "string",
+          "description": "Deal title or contract package name"
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Target client or account name"
+        },
+        "currencyCode": {
+          "type": "string",
+          "description": "Base currency ISO code, e.g. USD, EUR, GBP"
+        },
+        "dealValue": {
+          "type": "number",
+          "description": "Total contract value / principal amount"
+        },
+        "financingTerms": {
+          "type": "string",
+          "description": "JSON serialized financing terms and payment frequency"
+        },
+        "ltvMetrics": {
+          "type": "string",
+          "description": "JSON serialized LTV, CAC, and Churn metrics"
+        },
+        "marginData": {
+          "type": "string",
+          "description": "JSON serialized margin and markup calculations"
+        },
+        "pnlMetrics": {
+          "type": "string",
+          "description": "JSON serialized PnL, EBITDA, and ROI summary"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Timestamp of last modification in epoch milliseconds"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Firebase user ID of creator"
+        }
+      },
+      "required": ["id", "title", "clientName", "dealValue", "currencyCode", "updatedAt", "createdBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/deals/{dealId}": {
+      "schema": "#/entities/Deal",
+      "description": "User private saved financial deal models and quotes"
+    },
+    "/shared_deals/{dealId}": {
+      "schema": "#/entities/Deal",
+      "description": "Shared deal models accessible to team members"
+    }
+  }
+}

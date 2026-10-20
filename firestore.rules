@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/deals/{dealId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /shared_deals/{dealId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (resource == null || resource.data.createdBy == request.auth.uid);
+    }
+  }
+}
