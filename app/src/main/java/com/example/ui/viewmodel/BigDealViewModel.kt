@@ -27,6 +27,10 @@ import com.example.domain.calculator.PaymentTermsEngine
 import com.example.domain.calculator.PaymentTermsResult
 import com.example.domain.calculator.PnlRoiEngine
 import com.example.domain.calculator.PriceWaterfallEngine
+import com.example.domain.calculator.CurrencyCreditLegInput
+import com.example.domain.calculator.CurrencyCreditLegResult
+import com.example.domain.calculator.MultiCurrencyCreditEngine
+import com.example.domain.calculator.MultiCurrencyCreditResult
 import com.example.domain.calculator.PriceWaterfallResult
 import com.example.domain.calculator.PromoBreakEvenEngine
 import com.example.domain.calculator.PromoBreakEvenResult
@@ -231,6 +235,49 @@ class BigDealViewModel(
         )
     )
     val paymentTermsResult: StateFlow<PaymentTermsResult> = _paymentTermsResult.asStateFlow()
+
+    // 9. Multi-Currency Credit & Hedging (до 4х валют)
+    val creditPrincipal = MutableStateFlow("100000")
+    val creditTenureMonths = MutableStateFlow("12")
+    val creditSelectedCurrencies = MutableStateFlow(listOf("USD", "EUR", "RUB", "CNY"))
+    val creditHedgeEnabled = MutableStateFlow(true)
+    val creditHedgeCostPct = MutableStateFlow("2.5")
+    val creditExpectedFxShiftPct = MutableStateFlow("8.0")
+    val creditCurrencyRates = MutableStateFlow(
+        mapOf(
+            "USD" to 7.5,
+            "EUR" to 5.5,
+            "RUB" to 18.5,
+            "CNY" to 4.2,
+            "BYN" to 11.5,
+            "KZT" to 14.5,
+            "AED" to 6.0,
+            "TRY" to 42.0
+        )
+    )
+    val creditAllocations = MutableStateFlow(
+        mapOf(
+            "USD" to 25.0,
+            "EUR" to 25.0,
+            "RUB" to 25.0,
+            "CNY" to 25.0
+        )
+    )
+
+    private val _multiCreditResult = MutableStateFlow(
+        MultiCurrencyCreditEngine.calculate(
+            dealAmount = 100000.0,
+            baseCurrencyCode = "USD",
+            tenureMonths = 12,
+            legsInput = listOf(
+                CurrencyCreditLegInput("USD", 7.5, 25.0, 2.5, 8.0, true),
+                CurrencyCreditLegInput("EUR", 5.5, 25.0, 2.5, 8.0, true),
+                CurrencyCreditLegInput("RUB", 18.5, 25.0, 2.5, 8.0, true),
+                CurrencyCreditLegInput("CNY", 4.2, 25.0, 2.5, 8.0, true)
+            )
+        )
+    )
+    val multiCreditResult: StateFlow<MultiCurrencyCreditResult> = _multiCreditResult.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -739,6 +786,108 @@ class BigDealViewModel(
         updateFinancing()
         viewModelScope.launch {
             _userMessage.emit("Сумма сделки скорректирована на стоимость отсрочки: ${formatCurrency(npv)}")
+        }
+    }
+
+    // --- Multi-Currency Credit & Hedging Methods ---
+    fun toggleCreditCurrency(code: String) {
+        val current = creditSelectedCurrencies.value.toMutableList()
+        if (current.contains(code)) {
+            if (current.size > 1) { // keep at least 1
+                current.remove(code)
+            }
+        } else {
+            if (current.size < 4) { // max 4
+                current.add(code)
+            }
+        }
+        creditSelectedCurrencies.value = current
+        rebalanceCreditAllocations()
+        updateMultiCreditCalculations()
+    }
+
+    fun setCreditCurrenciesCount(count: Int) {
+        val allAvailable = listOf("USD", "EUR", "CNY", "RUB", "BYN", "KZT")
+        val newCurrencies = allAvailable.take(count.coerceIn(1, 4))
+        creditSelectedCurrencies.value = newCurrencies
+        rebalanceCreditAllocations()
+        updateMultiCreditCalculations()
+    }
+
+    private fun rebalanceCreditAllocations() {
+        val currs = creditSelectedCurrencies.value
+        val equalShare = 100.0 / currs.size
+        val newAlloc = mutableMapOf<String, Double>()
+        currs.forEach { c -> newAlloc[c] = equalShare }
+        creditAllocations.value = newAlloc
+    }
+
+    fun updateCreditCurrencyRate(code: String, rate: Double) {
+        val current = creditCurrencyRates.value.toMutableMap()
+        current[code] = rate
+        creditCurrencyRates.value = current
+        updateMultiCreditCalculations()
+    }
+
+    fun updateCreditAllocation(code: String, alloc: Double) {
+        val current = creditAllocations.value.toMutableMap()
+        current[code] = alloc
+        creditAllocations.value = current
+        updateMultiCreditCalculations()
+    }
+
+    fun setCreditHedgeEnabled(enabled: Boolean) {
+        creditHedgeEnabled.value = enabled
+        updateMultiCreditCalculations()
+    }
+
+    fun updateMultiCreditCalculations() {
+        val amt = creditPrincipal.value.toDoubleOrNull() ?: 100000.0
+        val tenure = creditTenureMonths.value.toIntOrNull() ?: 12
+        val hedgeRate = creditHedgeCostPct.value.toDoubleOrNull() ?: 2.5
+        val fxShift = creditExpectedFxShiftPct.value.toDoubleOrNull() ?: 8.0
+        val isHedged = creditHedgeEnabled.value
+        val currs = creditSelectedCurrencies.value
+
+        val legs = currs.map { c ->
+            val rate = creditCurrencyRates.value[c] ?: MultiCurrencyCreditEngine.getDefaultRate(c)
+            val alloc = creditAllocations.value[c] ?: (100.0 / currs.size)
+            CurrencyCreditLegInput(
+                currencyCode = c,
+                annualRatePct = rate,
+                allocationPct = alloc,
+                hedgeCostAnnualPct = hedgeRate,
+                expectedFxShiftPct = fxShift,
+                isHedged = isHedged
+            )
+        }
+
+        _multiCreditResult.value = MultiCurrencyCreditEngine.calculate(
+            dealAmount = amt,
+            baseCurrencyCode = activeCurrency.value.code,
+            tenureMonths = tenure,
+            legsInput = legs,
+            rates = currencyRates.value
+        )
+    }
+
+    fun importDealToMultiCredit() {
+        val p = principalAmount.value.toDoubleOrNull() ?: 120000.0
+        val t = tenureMonths.value.toIntOrNull() ?: 12
+        creditPrincipal.value = p.toInt().toString()
+        creditTenureMonths.value = t.toString()
+        updateMultiCreditCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Данные сделки импортированы в мультивалютный кредитный калькулятор: ${formatCurrency(p)}")
+        }
+    }
+
+    fun applyCreditHedgedRateToFinancing() {
+        val hedgedRate = _multiCreditResult.value.weightedEffectiveRateWithHedgePct
+        annualInterestRate.value = String.format(java.util.Locale.US, "%.1f", hedgedRate)
+        updateFinancing()
+        viewModelScope.launch {
+            _userMessage.emit("Ставка финансирования сделки обновлена: ${annualInterestRate.value}% (с учетом корзины и хеджа)")
         }
     }
 }

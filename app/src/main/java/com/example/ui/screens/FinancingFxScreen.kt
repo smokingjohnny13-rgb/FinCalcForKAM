@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.PaymentFrequency
 import com.example.ui.components.FinancialInputField
 import com.example.ui.components.MetricCard
+import com.example.ui.components.MultiCurrencyCreditCard
 import com.example.ui.components.PaymentTermsCard
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
@@ -417,7 +418,15 @@ fun FinancingFxScreen(
             }
         }
 
-        // 5. Payment Terms & Working Capital Cost
+        // 5. Multi-Currency Credit Money & Hedging (до 4х валют)
+        item {
+            MultiCurrencyCreditCard(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 6. Payment Terms & Working Capital Cost
         item {
             PaymentTermsCard(
                 viewModel = viewModel,

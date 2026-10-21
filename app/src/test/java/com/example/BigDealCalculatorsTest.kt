@@ -216,4 +216,34 @@ class BigDealCalculatorsTest {
         val converted = CurrencyEngine.convert(100.0, "USD", "EUR")
         assertEquals(92.0, converted, 0.01)
     }
+
+    @Test
+    fun testMultiCurrencyCreditEngine() {
+        // Basket of 4 currencies: USD, EUR, CNY, RUB (25% each) on 100,000 USD deal for 12 months
+        val legs = listOf(
+            com.example.domain.calculator.CurrencyCreditLegInput("USD", 7.5, 25.0, 2.5, 8.0, true),
+            com.example.domain.calculator.CurrencyCreditLegInput("EUR", 5.5, 25.0, 2.5, 8.0, true),
+            com.example.domain.calculator.CurrencyCreditLegInput("CNY", 4.2, 25.0, 2.5, 8.0, true),
+            com.example.domain.calculator.CurrencyCreditLegInput("RUB", 18.5, 25.0, 2.5, 8.0, true)
+        )
+
+        val result = com.example.domain.calculator.MultiCurrencyCreditEngine.calculate(
+            dealAmount = 100000.0,
+            baseCurrencyCode = "USD",
+            tenureMonths = 12,
+            legsInput = legs
+        )
+
+        assertEquals(4, result.legs.size)
+        assertEquals(100000.0, result.totalPrincipalInBase, 0.01)
+        // Weighted rate: (7.5 + 5.5 + 4.2 + 18.5) / 4 = 8.925 -> 8.93%
+        assertEquals(8.93, result.weightedInterestRatePct, 0.05)
+        // With hedge (+2.5% on non-USD):
+        assertTrue(result.weightedEffectiveRateWithHedgePct > result.weightedInterestRatePct)
+        // Total repayment with hedge
+        assertTrue(result.totalRepaymentInBaseHedged > 100000.0)
+        // Hedging protects against the 8% devaluation scenario:
+        assertTrue(result.totalRepaymentInBaseUnhedged > result.totalRepaymentInBaseHedged)
+        assertTrue(result.isHedgeAdvantageous)
+    }
 }
