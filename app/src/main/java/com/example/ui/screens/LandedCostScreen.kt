@@ -84,6 +84,9 @@ fun LandedCostScreen(
     modifier: Modifier = Modifier,
     onNavigateToMargin: (() -> Unit)? = null
 ) {
+    val activeCurrency by viewModel.activeCurrency.collectAsState()
+    val currencySym = activeCurrency.symbol
+
     val selectedCat by viewModel.selectedCategory.collectAsState()
     val selectedCountry by viewModel.selectedCountry.collectAsState()
     val fobPrice by viewModel.fobPriceInput.collectAsState()
@@ -362,7 +365,7 @@ fun LandedCostScreen(
                                     viewModel.fobPriceInput.value = it
                                     viewModel.updateLandedCostCalculations()
                                 },
-                                prefix = "$",
+                                prefix = currencySym,
                                 modifier = Modifier.weight(1.2f),
                                 testTag = "input_fob_price"
                             )
@@ -374,7 +377,7 @@ fun LandedCostScreen(
                                     viewModel.targetLandedCostInput.value = it
                                     viewModel.updateLandedCostCalculations()
                                 },
-                                prefix = "$",
+                                prefix = currencySym,
                                 modifier = Modifier.weight(1.2f),
                                 testTag = "input_target_landed"
                             )

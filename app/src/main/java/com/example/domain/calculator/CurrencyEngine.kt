@@ -8,15 +8,24 @@ object CurrencyEngine {
     val DEFAULT_CURRENCIES = listOf(
         CurrencyRate("USD", "US Dollar", "$", 1.0),
         CurrencyRate("EUR", "Euro", "€", 0.92),
+        CurrencyRate("RUB", "Российский рубль", "₽", 92.50),
+        CurrencyRate("BYN", "Белорусский рубль", "Br", 3.25),
+        CurrencyRate("KZT", "Казахстанский тенге", "₸", 492.0),
+        CurrencyRate("CNY", "Chinese Yuan", "¥", 7.24),
         CurrencyRate("GBP", "British Pound", "£", 0.79),
-        CurrencyRate("JPY", "Japanese Yen", "¥", 154.50),
+        CurrencyRate("AED", "UAE Dirham", "AED", 3.67),
+        CurrencyRate("TRY", "Turkish Lira", "₺", 34.20),
+        CurrencyRate("PLN", "Polish Zloty", "zł", 4.02),
         CurrencyRate("CAD", "Canadian Dollar", "C$", 1.38),
-        CurrencyRate("AUD", "Australian Dollar", "A$", 1.52),
+        CurrencyRate("JPY", "Japanese Yen", "¥", 154.50),
         CurrencyRate("CHF", "Swiss Franc", "CHF", 0.89),
-        CurrencyRate("SGD", "Singapore Dollar", "S$", 1.34),
-        CurrencyRate("INR", "Indian Rupee", "₹", 83.45),
-        CurrencyRate("AED", "UAE Dirham", "AED", 3.67)
+        CurrencyRate("INR", "Indian Rupee", "₹", 83.45)
     )
+
+    fun findByCode(code: String, customList: List<CurrencyRate> = DEFAULT_CURRENCIES): CurrencyRate {
+        return customList.find { it.code.equals(code, ignoreCase = true) }
+            ?: CurrencyRate(code.uppercase(), code.uppercase(), code.uppercase(), 1.0)
+    }
 
     /**
      * Converts an amount from source currency to target currency using base USD rates.

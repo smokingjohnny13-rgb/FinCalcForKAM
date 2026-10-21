@@ -53,6 +53,9 @@ fun AnalyticsPnlScreen(
     viewModel: BigDealViewModel,
     modifier: Modifier = Modifier
 ) {
+    val activeCurrency by viewModel.activeCurrency.collectAsState()
+    val currencySym = activeCurrency.symbol
+
     val revenue by viewModel.pnlRevenue.collectAsState()
     val cogs by viewModel.pnlCogs.collectAsState()
     val opex by viewModel.pnlOpex.collectAsState()
@@ -220,7 +223,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.pnlRevenue.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_pnl_revenue"
                         )
@@ -231,7 +234,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.pnlCogs.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_pnl_cogs"
                         )
@@ -248,7 +251,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.pnlOpex.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_pnl_opex"
                         )
@@ -259,7 +262,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.pnlInvestment.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_pnl_investment"
                         )
@@ -318,7 +321,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.fixedCosts.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_fixed_costs"
                         )
@@ -329,7 +332,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.unitPrice.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_unit_price"
                         )
@@ -340,7 +343,7 @@ fun AnalyticsPnlScreen(
                                 viewModel.unitCost.value = it
                                 viewModel.updatePnlCalculations()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_unit_cost"
                         )

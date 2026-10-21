@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -63,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.repository.AuthRepository
 import com.example.data.repository.DealRepository
+import com.example.ui.components.CurrencySelectionDialog
 import com.example.ui.screens.AnalyticsPnlScreen
 import com.example.ui.screens.DealVaultScreen
 import com.example.ui.screens.FinancingFxScreen
@@ -127,10 +132,19 @@ fun BigDealAppRoot(
     snackbarHostState: SnackbarHostState
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showCurrencyDialog by remember { mutableStateOf(false) }
+    val activeCurrency by viewModel.activeCurrency.collectAsState()
     val tabs = NavigationTab.values()
     val activeDealTitle by viewModel.dealTitle.collectAsState()
     val activeClientName by viewModel.clientName.collectAsState()
     val context = LocalContext.current
+
+    if (showCurrencyDialog) {
+        CurrencySelectionDialog(
+            viewModel = viewModel,
+            onDismissRequest = { showCurrencyDialog = false }
+        )
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -184,6 +198,24 @@ fun BigDealAppRoot(
                     }
                 },
                 actions = {
+                    // Currency Selector Button
+                    Button(
+                        onClick = { showCurrencyDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("action_select_currency")
+                    ) {
+                        Text(
+                            text = "${activeCurrency.symbol} ${activeCurrency.code} ▾",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = EmeraldPrimary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
                     // Quick PDF Export icon
                     IconButton(
                         onClick = { viewModel.exportPdf(context) },

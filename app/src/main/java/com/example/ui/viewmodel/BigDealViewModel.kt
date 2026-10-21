@@ -23,7 +23,13 @@ import com.example.domain.calculator.FunnelCalculator
 import com.example.domain.calculator.LandedCostCalculator
 import com.example.domain.calculator.LtvCalculator
 import com.example.domain.calculator.MarginMarkupSolver
+import com.example.domain.calculator.PaymentTermsEngine
+import com.example.domain.calculator.PaymentTermsResult
 import com.example.domain.calculator.PnlRoiEngine
+import com.example.domain.calculator.PriceWaterfallEngine
+import com.example.domain.calculator.PriceWaterfallResult
+import com.example.domain.calculator.PromoBreakEvenEngine
+import com.example.domain.calculator.PromoBreakEvenResult
 import com.example.service.PdfExportService
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -165,6 +171,66 @@ class BigDealViewModel(
         )
     )
     val pnlModel: StateFlow<PnlModel> = _pnlModel.asStateFlow()
+
+    // Global Multi-Currency Support
+    val activeCurrency = MutableStateFlow(CurrencyEngine.findByCode("USD"))
+    val customCurrencies = MutableStateFlow(CurrencyEngine.DEFAULT_CURRENCIES)
+
+    // 6. Price Waterfall (РРЦ -> Net-Net Price)
+    val waterfallRsp = MutableStateFlow("100")
+    val waterfallVat = MutableStateFlow("20")
+    val waterfallRetailerMargin = MutableStateFlow("30")
+    val waterfallFrontDiscount = MutableStateFlow("5")
+    val waterfallBackBonus = MutableStateFlow("8")
+    val waterfallLogistics = MutableStateFlow("3.5")
+    val waterfallCogs = MutableStateFlow("25")
+
+    private val _waterfallResult = MutableStateFlow(
+        PriceWaterfallEngine.calculate(
+            shelfRspWithVat = 100.0,
+            vatRatePct = 20.0,
+            retailerMarginPct = 30.0,
+            frontDiscountPct = 5.0,
+            backBonusPct = 8.0,
+            logisticsCostPerUnit = 3.5,
+            supplierCogs = 25.0
+        )
+    )
+    val waterfallResult: StateFlow<PriceWaterfallResult> = _waterfallResult.asStateFlow()
+
+    // 7. Promo Break-Even & Elasticity Modeler
+    val promoBasePrice = MutableStateFlow("50")
+    val promoUnitCost = MutableStateFlow("30")
+    val promoDiscountPct = MutableStateFlow("20")
+    val promoBaseVolume = MutableStateFlow("1000")
+    val promoSimulatedLift = MutableStateFlow("50")
+
+    private val _promoResult = MutableStateFlow(
+        PromoBreakEvenEngine.calculate(
+            regularPrice = 50.0,
+            unitCost = 30.0,
+            promoDiscountPct = 20.0,
+            baseVolume = 1000,
+            simulatedVolumeLiftPct = 50.0
+        )
+    )
+    val promoResult: StateFlow<PromoBreakEvenResult> = _promoResult.asStateFlow()
+
+    // 8. Payment Terms & Working Capital Cost
+    val termsDealAmount = MutableStateFlow("100000")
+    val termsDays = MutableStateFlow("60")
+    val termsAnnualRate = MutableStateFlow("18")
+    val termsCashDiscount = MutableStateFlow("2")
+
+    private val _paymentTermsResult = MutableStateFlow(
+        PaymentTermsEngine.calculate(
+            dealAmount = 100000.0,
+            paymentDays = 60,
+            annualInterestRatePct = 18.0,
+            cashDiscountPct = 2.0
+        )
+    )
+    val paymentTermsResult: StateFlow<PaymentTermsResult> = _paymentTermsResult.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -530,6 +596,149 @@ class BigDealViewModel(
         authRepository.signOut()
         viewModelScope.launch {
             _userMessage.emit("Signed out of Cloud Sync")
+        }
+    }
+
+    // --- Currency Selection & Custom Currencies ---
+    fun selectActiveCurrency(code: String) {
+        selectedCurrency.value = code
+        val found = CurrencyEngine.findByCode(code, customCurrencies.value)
+        activeCurrency.value = found
+        updateCurrencyConversion()
+        viewModelScope.launch {
+            _userMessage.emit("Валюта изменена: ${found.code} (${found.symbol})")
+        }
+    }
+
+    fun addCustomCurrency(code: String, name: String, symbol: String, rateToBaseUsd: Double) {
+        val safeCode = code.uppercase().trim().ifEmpty { "CUR" }
+        val safeName = name.trim().ifEmpty { safeCode }
+        val safeSym = symbol.trim().ifEmpty { safeCode }
+        val safeRate = if (rateToBaseUsd > 0) rateToBaseUsd else 1.0
+        val newRate = CurrencyRate(safeCode, safeName, safeSym, safeRate)
+        val list = customCurrencies.value.filter { !it.code.equals(newRate.code, ignoreCase = true) } + newRate
+        customCurrencies.value = list
+        currencyRates.value = list
+        selectActiveCurrency(newRate.code)
+    }
+
+    fun formatCurrency(amount: Double): String {
+        val sym = activeCurrency.value.symbol
+        val formattedNum = java.text.NumberFormat.getNumberInstance(java.util.Locale.US).apply {
+            maximumFractionDigits = 2
+            minimumFractionDigits = 2
+        }.format(amount)
+        return if (sym.length > 2) "$formattedNum $sym" else "$sym$formattedNum"
+    }
+
+    // --- Price Waterfall Triggers ---
+    fun updateWaterfallCalculations() {
+        val rsp = waterfallRsp.value.toDoubleOrNull() ?: 100.0
+        val vat = waterfallVat.value.toDoubleOrNull() ?: 20.0
+        val retMargin = waterfallRetailerMargin.value.toDoubleOrNull() ?: 30.0
+        val frontDisc = waterfallFrontDiscount.value.toDoubleOrNull() ?: 5.0
+        val backBonus = waterfallBackBonus.value.toDoubleOrNull() ?: 8.0
+        val logistics = waterfallLogistics.value.toDoubleOrNull() ?: 3.5
+        val cogs = waterfallCogs.value.toDoubleOrNull() ?: 25.0
+
+        _waterfallResult.value = PriceWaterfallEngine.calculate(
+            shelfRspWithVat = rsp,
+            vatRatePct = vat,
+            retailerMarginPct = retMargin,
+            frontDiscountPct = frontDisc,
+            backBonusPct = backBonus,
+            logisticsCostPerUnit = logistics,
+            supplierCogs = cogs
+        )
+    }
+
+    fun importCogsFromLandedCost() {
+        val landed = _landedCostResult.value.landedCost
+        waterfallCogs.value = landed.toString()
+        updateWaterfallCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Себестоимость COGS обновлена из Landed Cost: ${formatCurrency(landed)}")
+        }
+    }
+
+    fun applyWaterfallToMarginSolver() {
+        val net = _waterfallResult.value.netNetPrice
+        val cogs = _waterfallResult.value.supplierCogs
+        onMarginCostOrPriceChanged(newCost = cogs.toString(), newPrice = net.toString())
+        viewModelScope.launch {
+            _userMessage.emit("Чистая цена (${formatCurrency(net)}) передана в расчет маржи")
+        }
+    }
+
+    fun applyWaterfallToPnl() {
+        val net = _waterfallResult.value.netNetPrice
+        val cogs = _waterfallResult.value.supplierCogs
+        unitPrice.value = net.toInt().toString()
+        unitCost.value = cogs.toInt().toString()
+        updatePnlCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Net-Net цена и себестоимость переданы в P&L / Точку безубыточности")
+        }
+    }
+
+    // --- Promo Break-Even Triggers ---
+    fun updatePromoCalculations() {
+        val price = promoBasePrice.value.toDoubleOrNull() ?: 50.0
+        val cost = promoUnitCost.value.toDoubleOrNull() ?: 30.0
+        val disc = promoDiscountPct.value.toDoubleOrNull() ?: 20.0
+        val vol = promoBaseVolume.value.toIntOrNull() ?: 1000
+        val simLift = promoSimulatedLift.value.toDoubleOrNull() ?: 50.0
+
+        _promoResult.value = PromoBreakEvenEngine.calculate(
+            regularPrice = price,
+            unitCost = cost,
+            promoDiscountPct = disc,
+            baseVolume = vol,
+            simulatedVolumeLiftPct = simLift
+        )
+    }
+
+    fun importPromoFromWaterfall() {
+        val net = _waterfallResult.value.netNetPrice
+        val cogs = _waterfallResult.value.supplierCogs
+        promoBasePrice.value = net.toString()
+        promoUnitCost.value = cogs.toString()
+        updatePromoCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Данные для промо загружены из Водопада цен (Цена: ${formatCurrency(net)}, Себестоимость: ${formatCurrency(cogs)})")
+        }
+    }
+
+    // --- Payment Terms Triggers ---
+    fun updatePaymentTermsCalculations() {
+        val amt = termsDealAmount.value.toDoubleOrNull() ?: 100000.0
+        val days = termsDays.value.toIntOrNull() ?: 60
+        val rate = termsAnnualRate.value.toDoubleOrNull() ?: 18.0
+        val cashDisc = termsCashDiscount.value.toDoubleOrNull() ?: 2.0
+
+        _paymentTermsResult.value = PaymentTermsEngine.calculate(
+            dealAmount = amt,
+            paymentDays = days,
+            annualInterestRatePct = rate,
+            cashDiscountPct = cashDisc
+        )
+    }
+
+    fun importTermsFromDeal() {
+        val p = principalAmount.value.toDoubleOrNull() ?: 120000.0
+        termsDealAmount.value = p.toInt().toString()
+        updatePaymentTermsCalculations()
+        viewModelScope.launch {
+            _userMessage.emit("Сумма сделки импортирована: ${formatCurrency(p)}")
+        }
+    }
+
+    fun applyEffectiveNetToDeal() {
+        val npv = _paymentTermsResult.value.netPresentValue
+        principalAmount.value = npv.toInt().toString()
+        updateFinancing()
+        viewModelScope.launch {
+            _userMessage.emit("Сумма сделки скорректирована на стоимость отсрочки: ${formatCurrency(npv)}")
         }
     }
 }

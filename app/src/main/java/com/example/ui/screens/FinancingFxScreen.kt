@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.PaymentFrequency
 import com.example.ui.components.FinancialInputField
 import com.example.ui.components.MetricCard
+import com.example.ui.components.PaymentTermsCard
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -70,6 +71,9 @@ fun FinancingFxScreen(
     viewModel: BigDealViewModel,
     modifier: Modifier = Modifier
 ) {
+    val activeCurrency by viewModel.activeCurrency.collectAsState()
+    val currencySym = activeCurrency.symbol
+
     val principal by viewModel.principalAmount.collectAsState()
     val downPayment by viewModel.downPayment.collectAsState()
     val interestRate by viewModel.annualInterestRate.collectAsState()
@@ -263,7 +267,7 @@ fun FinancingFxScreen(
                                 viewModel.principalAmount.value = it
                                 viewModel.updateFinancing()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_principal"
                         )
@@ -274,7 +278,7 @@ fun FinancingFxScreen(
                                 viewModel.downPayment.value = it
                                 viewModel.updateFinancing()
                             },
-                            prefix = "$",
+                            prefix = currencySym,
                             modifier = Modifier.weight(1f),
                             testTag = "input_downpayment"
                         )
@@ -413,7 +417,15 @@ fun FinancingFxScreen(
             }
         }
 
-        // 5. Expandable Amortization Schedule Preview
+        // 5. Payment Terms & Working Capital Cost
+        item {
+            PaymentTermsCard(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 6. Expandable Amortization Schedule Preview
         item {
             Box(
                 modifier = Modifier

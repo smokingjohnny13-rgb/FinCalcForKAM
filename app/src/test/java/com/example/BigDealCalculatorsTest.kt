@@ -136,4 +136,84 @@ class BigDealCalculatorsTest {
         assertTrue(forecast.paybackMonth > 0.0)
         assertTrue(forecast.customerRetention12MoPct > 70.0)
     }
+
+    @Test
+    fun testPriceWaterfallCalculation() {
+        // Shelf RSP = 120, VAT = 20% -> Ex VAT = 100
+        // Retailer Margin = 30% -> Purchase Price = 70
+        // Front Discount = 5% (of 70 = 3.5) -> Invoice Price = 66.5
+        // Back Bonus = 8% (of 66.5 = 5.32)
+        // Logistics = 3.5
+        // Net Net Price = 66.5 - 5.32 - 3.5 = 57.68
+        // COGS = 25 -> Gross Profit = 32.68
+        val waterfall = com.example.domain.calculator.PriceWaterfallEngine.calculate(
+            shelfRspWithVat = 120.0,
+            vatRatePct = 20.0,
+            retailerMarginPct = 30.0,
+            frontDiscountPct = 5.0,
+            backBonusPct = 8.0,
+            logisticsCostPerUnit = 3.5,
+            supplierCogs = 25.0
+        )
+        assertEquals(100.0, waterfall.priceExVat, 0.01)
+        assertEquals(70.0, waterfall.retailerPurchasePrice, 0.01)
+        assertEquals(66.5, waterfall.invoicePrice, 0.01)
+        assertEquals(57.68, waterfall.netNetPrice, 0.01)
+        assertEquals(32.68, waterfall.supplierGrossProfit, 0.01)
+        assertTrue(waterfall.supplierMarginPct > 50.0)
+    }
+
+    @Test
+    fun testPromoBreakEvenCalculation() {
+        // Regular price = 100, Cost = 60 -> Base Margin = 40 (40%)
+        // Promo discount = 20% -> Promo Price = 80, Promo Unit Margin = 20 (25%)
+        // Required volume lift to break even = (0.20 / (0.40 - 0.20)) * 100 = 100%
+        val promo = com.example.domain.calculator.PromoBreakEvenEngine.calculate(
+            regularPrice = 100.0,
+            unitCost = 60.0,
+            promoDiscountPct = 20.0,
+            baseVolume = 1000
+        )
+        assertEquals(40.0, promo.baseMarginPct, 0.01)
+        assertEquals(80.0, promo.promoPrice, 0.01)
+        assertEquals(20.0, promo.promoUnitMargin, 0.01)
+        assertEquals(100.0, promo.breakEvenVolumeLiftPct, 0.01)
+        assertEquals(2000.0, promo.breakEvenTotalVolume, 0.01)
+        assertTrue(promo.isFeasible)
+    }
+
+    @Test
+    fun testPaymentTermsCalculation() {
+        // Deal amount = 100,000, 60 days deferral, 18% annual rate, 2% cash discount
+        // Cost of credit = 100,000 * 0.18 * (60/365) = 2,958.90
+        // Effective discount % = 2.96%
+        // Cash discount amount (2%) = 2,000
+        // Early payment net proceeds = 98,000
+        // Net present value with deferral = 97,041.10
+        // Because 98,000 > 97,041.10, cash discount is advantageous!
+        val payment = com.example.domain.calculator.PaymentTermsEngine.calculate(
+            dealAmount = 100000.0,
+            paymentDays = 60,
+            annualInterestRatePct = 18.0,
+            cashDiscountPct = 2.0
+        )
+        assertEquals(2958.90, payment.costOfCredit, 0.1)
+        assertEquals(2.96, payment.effectiveDiscountPct, 0.05)
+        assertTrue(payment.isCashDiscountAdvantageous)
+        assertTrue(payment.netPresentValue < 100000.0)
+    }
+
+    @Test
+    fun testCurrencyEngineExtended() {
+        val byn = CurrencyEngine.findByCode("BYN")
+        org.junit.Assert.assertNotNull(byn)
+        assertEquals("BYN", byn?.code)
+
+        val rub = CurrencyEngine.findByCode("RUB")
+        org.junit.Assert.assertNotNull(rub)
+        assertEquals("₽", rub?.symbol)
+
+        val converted = CurrencyEngine.convert(100.0, "USD", "EUR")
+        assertEquals(92.0, converted, 0.01)
+    }
 }
