@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -176,7 +178,9 @@ fun RoiPnlModeler(
 
             // 1. Hero 4-Grid Outcome Cards
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
@@ -185,7 +189,9 @@ fun RoiPnlModeler(
                     subtitle = "After Initial CAC",
                     badgeText = if (forecast.total12MonthNetProfit >= 0) "Profitable" else "Deficit",
                     badgeColor = if (forecast.total12MonthNetProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_12mo_profit"
                 )
                 MetricCard(
@@ -194,13 +200,17 @@ fun RoiPnlModeler(
                     subtitle = "On CAC Capital",
                     badgeText = if (forecast.roi12MonthPct >= 100) "2x+ Return" else "Growth",
                     badgeColor = EmeraldPrimary,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_12mo_roi"
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
@@ -210,7 +220,9 @@ fun RoiPnlModeler(
                     badgeText = if (forecast.paybackMonth <= 8.0) "Fast Recovery" else "Standard",
                     badgeColor = if (forecast.paybackMonth <= 8.0) EmeraldPrimary else GoldAccent,
                     icon = Icons.Default.Timelapse,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_payback_horizon"
                 )
                 MetricCard(
@@ -220,7 +232,9 @@ fun RoiPnlModeler(
                     badgeText = "${forecast.monthlyPoints.lastOrNull()?.activeCustomers ?: 0.0} left",
                     badgeColor = ElectricCyan,
                     icon = Icons.Default.Speed,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_customer_retention"
                 )
             }

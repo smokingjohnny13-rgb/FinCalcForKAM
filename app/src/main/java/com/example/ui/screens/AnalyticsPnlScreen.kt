@@ -5,8 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -95,7 +97,9 @@ fun AnalyticsPnlScreen(
         // 1. Top KPI Row: ROI % and Payback Period
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricCard(
@@ -105,7 +109,9 @@ fun AnalyticsPnlScreen(
                     badgeText = if (pnl.roiPct >= 100) "2x+ Return" else "Positive",
                     badgeColor = EmeraldPrimary,
                     icon = Icons.Default.ShowChart,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_roi_pct"
                 )
                 MetricCard(
@@ -115,7 +121,9 @@ fun AnalyticsPnlScreen(
                     badgeText = "EBITDA: ${pnl.ebitdaMarginPct}%",
                     badgeColor = ElectricCyan,
                     icon = Icons.Default.Timelapse,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_payback_months"
                 )
             }

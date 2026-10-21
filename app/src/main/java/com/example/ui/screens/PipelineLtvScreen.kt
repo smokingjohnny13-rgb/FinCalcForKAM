@@ -5,8 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -106,7 +108,9 @@ fun PipelineLtvScreen(
         // 1. Two Primary KPI Cards (LTV and LTV:CAC Ratio)
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricCard(
@@ -114,7 +118,9 @@ fun PipelineLtvScreen(
                     value = currencyFmt.format(ltvMetrics.ltv),
                     subtitle = "Lifespan: ${String.format(Locale.US, "%.1f", ltvMetrics.avgCustomerLifetimeMonths)} mo",
                     icon = Icons.Default.Speed,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_ltv_value"
                 )
                 MetricCard(
@@ -124,7 +130,9 @@ fun PipelineLtvScreen(
                     badgeColor = healthColor,
                     subtitle = "Payback: ${String.format(Locale.US, "%.1f", ltvMetrics.monthsToRecoverCac)} mo",
                     icon = Icons.Default.PieChart,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_ltv_cac_ratio"
                 )
             }

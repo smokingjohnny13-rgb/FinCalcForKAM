@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -125,25 +127,31 @@ fun PaymentTermsCard(
 
             // Hero Outcome Cards (Cost of Credit & Hidden Discount %)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
                     title = "Стоимость отсрочки",
                     value = viewModel.formatCurrency(result.costOfCredit),
-                    subtitle = "Потери на процентах (${result.paymentDays} дн.)",
+                    subtitle = "Потери (${result.paymentDays} дн.)",
                     badgeText = "-${result.effectiveDiscountPct}% от суммы",
                     badgeColor = GoldAccent,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_terms_cost"
                 )
                 MetricCard(
                     title = "Реальная выручка (NPV)",
                     value = viewModel.formatCurrency(result.netPresentValue),
-                    subtitle = "С учетом ставки ${result.annualInterestRatePct}% годовых",
+                    subtitle = "Ставка ${result.annualInterestRatePct}% год.",
                     badgeText = "Номинал: ${viewModel.formatCurrency(result.dealAmount)}",
                     badgeColor = ElectricCyan,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_terms_npv"
                 )
             }

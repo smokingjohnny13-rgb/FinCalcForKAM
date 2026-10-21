@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -149,7 +151,9 @@ fun MarginMarkupScreen(
                 // Tab 0: MARGIN & MARKUP MATRIX
                 item {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MetricCard(
@@ -159,17 +163,21 @@ fun MarginMarkupScreen(
                             badgeText = if (marginState.marginPct >= 40.0) "High Margin" else "Standard",
                             badgeColor = if (marginState.marginPct >= 40.0) EmeraldPrimary else GoldAccent,
                             icon = Icons.Default.Percent,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
                             testTag = "card_margin_pct"
                         )
                         MetricCard(
                             title = "Markup Rate",
                             value = "${marginState.markupPct}%",
                             subtitle = "Profit / Cost",
-                            badgeText = "Price Factor: ${String.format(Locale.US, "%.2f", 1.0 + marginState.markupPct / 100.0)}x",
+                            badgeText = "Factor: ${String.format(Locale.US, "%.2f", 1.0 + marginState.markupPct / 100.0)}x",
                             badgeColor = ElectricCyan,
                             icon = Icons.Default.Percent,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
                             testTag = "card_markup_pct"
                         )
                     }

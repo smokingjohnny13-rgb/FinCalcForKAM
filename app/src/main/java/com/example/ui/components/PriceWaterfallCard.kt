@@ -7,8 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -137,7 +139,9 @@ fun PriceWaterfallCard(
 
             // Hero Outcome Cards (Net-Net Realization & Supplier Profit)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
@@ -146,7 +150,9 @@ fun PriceWaterfallCard(
                     subtitle = "Доля от РРЦ: ${String.format(Locale.US, "%.1f", 100.0 - result.totalDeductionPct)}%",
                     badgeText = "Полка: ${viewModel.formatCurrency(result.shelfRspWithVat)}",
                     badgeColor = ElectricCyan,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_waterfall_net_net"
                 )
                 MetricCard(
@@ -155,7 +161,9 @@ fun PriceWaterfallCard(
                     subtitle = "Прибыль: ${viewModel.formatCurrency(result.supplierGrossProfit)}",
                     badgeText = if (result.supplierGrossProfit >= 0) "Прибыльно" else "Убыток",
                     badgeColor = if (result.supplierGrossProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     testTag = "card_waterfall_supplier_margin"
                 )
             }
