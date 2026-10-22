@@ -46,6 +46,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.domain.calculator.CurrencyEngine
+import com.example.ui.i18n.AppLanguage
+import com.example.ui.i18n.LocalAppLanguage
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -62,6 +66,7 @@ fun CurrencySelectionDialog(
 ) {
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val allCurrencies by viewModel.customCurrencies.collectAsState()
+    val currentLang = LocalAppLanguage.current
 
     var isAddingCustom by remember { mutableStateOf(false) }
     var customCode by remember { mutableStateOf("") }
@@ -90,19 +95,22 @@ fun CurrencySelectionDialog(
                         Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "ВЫБОР ВАЛЮТЫ РАСЧЕТОВ",
+                            text = tr("SELECT BASE CURRENCY", "ВЫБОР ВАЛЮТЫ РАСЧЕТОВ"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     IconButton(onClick = onDismissRequest, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(Icons.Default.Close, contentDescription = tr("Close", "Закрыть"), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
                 Text(
-                    text = "Выберите валюту для отображения и ввода во всех калькуляторах или добавьте свою:",
+                    text = tr(
+                        "Choose the currency for display and input across all calculators or add a custom one:",
+                        "Выберите валюту для отображения и ввода во всех калькуляторах или добавьте свою:"
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp
@@ -117,6 +125,7 @@ fun CurrencySelectionDialog(
                 ) {
                     items(allCurrencies) { curr ->
                         val isSelected = curr.code.equals(activeCurrency.code, ignoreCase = true)
+                        val localizedName = CurrencyEngine.getLocalizedCurrencyName(curr.code, currentLang == AppLanguage.RU).ifBlank { curr.name }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -153,13 +162,13 @@ fun CurrencySelectionDialog(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = "${curr.code} - ${curr.name}",
+                                        text = "${curr.code} - $localizedName",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "Курс к USD: ${curr.rateToBaseUsd}",
+                                        text = "${tr("Rate to USD", "Курс к USD")}: ${curr.rateToBaseUsd}",
                                         fontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -184,7 +193,7 @@ fun CurrencySelectionDialog(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Добавить свою валюту (код, символ, курс)", fontSize = 11.sp)
+                        Text(tr("Add custom currency (code, symbol, rate)", "Добавить свою валюту (код, символ, курс)"), fontSize = 11.sp)
                     }
                 } else {
                     Column(
@@ -196,7 +205,7 @@ fun CurrencySelectionDialog(
                             .padding(10.dp)
                     ) {
                         Text(
-                            text = "ПАРАМЕТРЫ ПОЛЬЗОВАТЕЛЬСКОЙ ВАЛЮТЫ",
+                            text = tr("CUSTOM CURRENCY PARAMETERS", "ПАРАМЕТРЫ ПОЛЬЗОВАТЕЛЬСКОЙ ВАЛЮТЫ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -204,13 +213,13 @@ fun CurrencySelectionDialog(
 
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             FinancialInputField(
-                                label = "Код (e.g. UZS)",
+                                label = tr("Code (e.g. UZS)", "Код (e.g. UZS)"),
                                 value = customCode,
                                 onValueChange = { customCode = it },
                                 modifier = Modifier.weight(1f)
                             )
                             FinancialInputField(
-                                label = "Символ (e.g. so'm)",
+                                label = tr("Symbol (e.g. so'm)", "Символ (e.g. so'm)"),
                                 value = customSymbol,
                                 onValueChange = { customSymbol = it },
                                 modifier = Modifier.weight(1f)
@@ -219,13 +228,13 @@ fun CurrencySelectionDialog(
 
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             FinancialInputField(
-                                label = "Название валюты",
+                                label = tr("Currency Name", "Название валюты"),
                                 value = customName,
                                 onValueChange = { customName = it },
                                 modifier = Modifier.weight(1.3f)
                             )
                             FinancialInputField(
-                                label = "Курс к USD",
+                                label = tr("Rate to USD", "Курс к USD"),
                                 value = customRate,
                                 onValueChange = { customRate = it },
                                 modifier = Modifier.weight(1f)
@@ -252,13 +261,13 @@ fun CurrencySelectionDialog(
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f).testTag("btn_save_custom_currency")
                             ) {
-                                Text("Сохранить и выбрать", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(tr("Save and Select", "Сохранить и выбрать"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             OutlinedButton(
                                 onClick = { isAddingCustom = false },
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("Отмена", fontSize = 11.sp)
+                                Text(tr("Cancel", "Отмена"), fontSize = 11.sp)
                             }
                         }
                     }

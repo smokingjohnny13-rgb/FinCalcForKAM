@@ -57,6 +57,7 @@ import com.example.ui.components.MetricCard
 import com.example.ui.components.PaymentTermsCard
 import com.example.ui.components.PriceWaterfallCard
 import com.example.ui.components.PromoBreakEvenCard
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -83,10 +84,10 @@ fun MarginMarkupScreen(
     var showLandedCostModeler by remember { mutableStateOf(false) }
 
     val tabs = listOf(
-        "Маржа и Наценка" to Icons.Default.Percent,
-        "Водопад цен (Net-Net)" to Icons.Default.Storefront,
-        "Промо-акции" to Icons.Default.Campaign,
-        "Стоимость отсрочки" to Icons.Default.Schedule
+        tr("Margin & Markup", "Маржа и Наценка") to Icons.Default.Percent,
+        tr("Price Waterfall", "Водопад цен (Net-Net)") to Icons.Default.Storefront,
+        tr("Promo Campaigns", "Промо-акции") to Icons.Default.Campaign,
+        tr("Payment Terms", "Стоимость отсрочки") to Icons.Default.Schedule
     )
 
     LazyColumn(
@@ -106,7 +107,10 @@ fun MarginMarkupScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Ценовые матрицы, водопад цен сети, расчет промо-скидок и цена отсрочки платежей.",
+                text = tr(
+                    "Price matrices, retail waterfall deductions, promo break-even analysis, and deferred terms cost.",
+                    "Ценовые матрицы, водопад цен сети, расчет промо-скидок и цена отсрочки платежей."
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -238,13 +242,13 @@ fun MarginMarkupScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Рассчитать себестоимость через FOB (1.28–1.75)",
+                                    text = tr("Calculate unit cost from FOB (1.28–1.75)", "Рассчитать себестоимость через FOB (1.28–1.75)"),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = EmeraldPrimary
                                 )
                                 Text(
-                                    text = if (showLandedCostModeler) "Скрыть ▴" else "Landed Cost Modeler ▾",
+                                    text = if (showLandedCostModeler) tr("Hide ▴", "Скрыть ▴") else tr("Landed Cost Modeler ▾", "Landed Cost Modeler ▾"),
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

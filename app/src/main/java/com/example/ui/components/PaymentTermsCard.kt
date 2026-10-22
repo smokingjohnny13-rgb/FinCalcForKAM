@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -100,13 +101,13 @@ fun PaymentTermsCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "СТОИМОСТЬ ОТСРОЧКИ ПЛАТЕЖА",
+                            text = tr("COST OF PAYMENT TERMS", "СТОИМОСТЬ ОТСРОЧКИ ПЛАТЕЖА"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Рабочий капитал, скрытая скидка и цена денег во времени",
+                            text = tr("Working capital, hidden discount and time value of money", "Рабочий капитал, скрытая скидка и цена денег во времени"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -121,7 +122,7 @@ fun PaymentTermsCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Из сделки", fontSize = 11.sp)
+                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp)
                 }
             }
 
@@ -133,10 +134,10 @@ fun PaymentTermsCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
-                    title = "Стоимость отсрочки",
+                    title = tr("Cost of Deferred Terms", "Стоимость отсрочки"),
                     value = viewModel.formatCurrency(result.costOfCredit),
-                    subtitle = "Потери (${result.paymentDays} дн.)",
-                    badgeText = "-${result.effectiveDiscountPct}% от суммы",
+                    subtitle = "${tr("Opportunity cost", "Потери")} (${result.paymentDays} ${tr("days", "дн.")})",
+                    badgeText = "-${result.effectiveDiscountPct}% ${tr("of amount", "от суммы")}",
                     badgeColor = GoldAccent,
                     modifier = Modifier
                         .weight(1f)
@@ -144,10 +145,10 @@ fun PaymentTermsCard(
                     testTag = "card_terms_cost"
                 )
                 MetricCard(
-                    title = "Реальная выручка (NPV)",
+                    title = tr("Real Proceeds (NPV)", "Реальная выручка (NPV)"),
                     value = viewModel.formatCurrency(result.netPresentValue),
-                    subtitle = "Ставка ${result.annualInterestRatePct}% год.",
-                    badgeText = "Номинал: ${viewModel.formatCurrency(result.dealAmount)}",
+                    subtitle = "${tr("Rate", "Ставка")} ${result.annualInterestRatePct}% ${tr("p.a.", "год.")}",
+                    badgeText = "${tr("Nominal", "Номинал")}: ${viewModel.formatCurrency(result.dealAmount)}",
                     badgeColor = ElectricCyan,
                     modifier = Modifier
                         .weight(1f)
@@ -159,7 +160,7 @@ fun PaymentTermsCard(
             // Quick Payment Days Preset Chips (30, 45, 60, 90, 120)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "СРОК ОТСРОЧКИ (ДНЕЙ):",
+                    text = tr("PAYMENT TERMS (DAYS):", "СРОК ОТСРОЧКИ (ДНЕЙ):"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -173,7 +174,7 @@ fun PaymentTermsCard(
                                 viewModel.termsDays.value = d.toString()
                                 viewModel.updatePaymentTermsCalculations()
                             },
-                            label = { Text("$d дней") },
+                            label = { Text("$d ${tr("days", "дней")}") },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = EmeraldPrimary,
                                 selectedLabelColor = Color.Black,
@@ -196,7 +197,7 @@ fun PaymentTermsCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "ФИНАНСОВЫЕ ПАРАМЕТРЫ СДЕЛКИ",
+                        text = tr("FINANCIAL PARAMETERS OF THE DEAL", "ФИНАНСОВЫЕ ПАРАМЕТРЫ СДЕЛКИ"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -207,7 +208,7 @@ fun PaymentTermsCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Сумма по договору / инвойсу",
+                            label = tr("Invoice / Deal Amount", "Сумма по договору / инвойсу"),
                             value = dealAmountInput,
                             onValueChange = {
                                 viewModel.termsDealAmount.value = it
@@ -218,13 +219,13 @@ fun PaymentTermsCard(
                             testTag = "input_terms_amount"
                         )
                         FinancialInputField(
-                            label = "Отсрочка (дней)",
+                            label = tr("Terms (Days)", "Отсрочка (дней)"),
                             value = daysInput,
                             onValueChange = {
                                 viewModel.termsDays.value = it
                                 viewModel.updatePaymentTermsCalculations()
                             },
-                            suffix = "дн",
+                            suffix = tr("d", "дн"),
                             modifier = Modifier.weight(1f),
                             testTag = "input_terms_days"
                         )
@@ -235,7 +236,7 @@ fun PaymentTermsCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Ставка овердрафта / WACC (%)",
+                            label = tr("Overdraft Rate / WACC (%)", "Ставка овердрафта / WACC (%)"),
                             value = rateInput,
                             onValueChange = {
                                 viewModel.termsAnnualRate.value = it
@@ -246,7 +247,7 @@ fun PaymentTermsCard(
                             testTag = "input_terms_rate"
                         )
                         FinancialInputField(
-                            label = "Скидка за предоплату (Day 0)",
+                            label = tr("Early Pay Discount (Day 0)", "Скидка за предоплату (Day 0)"),
                             value = cashDiscInput,
                             onValueChange = {
                                 viewModel.termsCashDiscount.value = it
@@ -280,13 +281,17 @@ fun PaymentTermsCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "СРАВНЕНИЕ: ОТСРОЧКА VS. СКИДКА ЗА ПРЕДОПЛАТУ",
+                            text = tr("COMPARISON: TERMS VS. EARLY PAYMENT DISCOUNT", "СРАВНЕНИЕ: ОТСРОЧКА VS. СКИДКА ЗА ПРЕДОПЛАТУ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (result.isCashDiscountAdvantageous) "Предоплата выгоднее! 💡" else "Отсрочка допустима",
+                            text = if (result.isCashDiscountAdvantageous) {
+                                tr("Prepayment is better! 💡", "Предоплата выгоднее! 💡")
+                            } else {
+                                tr("Deferred terms acceptable", "Отсрочка допустима")
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = if (result.isCashDiscountAdvantageous) EmeraldPrimary else GoldAccent,
                             fontWeight = FontWeight.Bold
@@ -295,9 +300,15 @@ fun PaymentTermsCard(
 
                     Text(
                         text = if (result.isCashDiscountAdvantageous) {
-                            "Выгоднее предоставить скидку ${result.cashDiscountPct}% (${viewModel.formatCurrency(result.cashDiscountAmount)}) за быструю оплату: компания выиграет ${viewModel.formatCurrency(result.earlyPaymentNetAdvantage)} чистыми за счет экономии на процентах по овердрафту/капиталу!"
+                            tr(
+                                "It is more profitable to grant a ${result.cashDiscountPct}% discount (${viewModel.formatCurrency(result.cashDiscountAmount)}) for upfront payment: net gain of ${viewModel.formatCurrency(result.earlyPaymentNetAdvantage)} by saving overdraft / capital interest!",
+                                "Выгоднее предоставить скидку ${result.cashDiscountPct}% (${viewModel.formatCurrency(result.cashDiscountAmount)}) за быструю оплату: компания выиграет ${viewModel.formatCurrency(result.earlyPaymentNetAdvantage)} чистыми за счет экономии на процентах по овердрафту/капиталу!"
+                            )
                         } else {
-                            "Скидка за предоплату ${result.cashDiscountPct}% превышает стоимость финансирования отсрочки (${result.effectiveDiscountPct}%). Выгоднее согласиться на отсрочку, чем давать такую скидку."
+                            tr(
+                                "Cash discount of ${result.cashDiscountPct}% exceeds the cost of financing deferred terms (${result.effectiveDiscountPct}%). More profitable to offer deferred terms.",
+                                "Скидка за предоплату ${result.cashDiscountPct}% превышает стоимость финансирования отсрочки (${result.effectiveDiscountPct}%). Выгоднее согласиться на отсрочку, чем давать такую скидку."
+                            )
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -310,14 +321,14 @@ fun PaymentTermsCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Деньги при предоплате (Day 0):", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(tr("Cash at Prepayment (Day 0):", "Деньги при предоплате (Day 0):"), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(viewModel.formatCurrency(result.cashDiscountNetProceeds), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Чистая стоимость денег при отсрочке:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(tr("Net present value of deferred terms:", "Чистая стоимость денег при отсрочке:"), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(viewModel.formatCurrency(result.netPresentValue), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GoldAccent)
                     }
                 }
@@ -330,7 +341,12 @@ fun PaymentTermsCard(
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.fillMaxWidth().testTag("btn_apply_npv_to_deal")
             ) {
-                Text("Скорректировать сумму сделки на стоимость отсрочки (NPV)", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = tr("Adjust deal amount by terms cost (NPV)", "Скорректировать сумму сделки на стоимость отсрочки (NPV)"),
+                    color = Color.Black,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

@@ -67,6 +67,8 @@ import com.example.data.model.CargoCategory
 import com.example.data.model.CountryTradeProfile
 import com.example.domain.calculator.LandedCostCalculator
 import com.example.ui.components.FinancialInputField
+import com.example.ui.i18n.LocalAppLanguage
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -84,6 +86,7 @@ fun LandedCostScreen(
     modifier: Modifier = Modifier,
     onNavigateToMargin: (() -> Unit)? = null
 ) {
+    val currentLang = LocalAppLanguage.current
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val currencySym = activeCurrency.symbol
 
@@ -130,14 +133,14 @@ fun LandedCostScreen(
             ) {
                 Column {
                     Text(
-                        text = "ЭКСПРЕСС-КОЭФФИЦИЕНТЫ И СЕБЕСТОИМОСТЬ",
+                        text = tr("EXPRESS COEFFICIENTS & LANDED COST", "ЭКСПРЕСС-КОЭФФИЦИЕНТЫ И СЕБЕСТОИМОСТЬ"),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 1.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Мгновенный расчет Landed Cost (склад) и реверсивная цена FOB",
+                        text = tr("Instant Landed Cost (warehouse) and reverse FOB target pricing", "Мгновенный расчет Landed Cost (склад) и реверсивная цена FOB"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -167,9 +170,9 @@ fun LandedCostScreen(
                             DropdownMenuItem(
                                 text = {
                                     Column {
-                                        Text("${country.flag} ${country.nameRu}")
+                                        Text("${country.flag} ${country.name(currentLang)}")
                                         Text(
-                                            "НДС: ${country.defaultVatPct}%, Пошлина: ${country.defaultDutyPct}%, Диапазон: ${country.typicalCoeffRange}",
+                                            "${tr("VAT", "НДС")}: ${country.defaultVatPct}%, ${tr("Duty", "Пошлина")}: ${country.defaultDutyPct}%, ${tr("Range", "Диапазон")}: ${country.typicalCoeffRange}",
                                             fontSize = 10.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -203,7 +206,7 @@ fun LandedCostScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.ArrowDownward, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Прямой: FOB → Склад", fontSize = 11.sp, fontWeight = if (!isReverse) FontWeight.Bold else FontWeight.Normal)
+                            Text(tr("Direct: FOB → Warehouse", "Прямой: FOB → Склад"), fontSize = 11.sp, fontWeight = if (!isReverse) FontWeight.Bold else FontWeight.Normal)
                         }
                     }
                 )
@@ -214,7 +217,7 @@ fun LandedCostScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Реверс: Склад → FOB", fontSize = 11.sp, fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal)
+                            Text(tr("Reverse: Warehouse → FOB", "Реверс: Склад → FOB"), fontSize = 11.sp, fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal)
                         }
                     }
                 )
@@ -238,7 +241,11 @@ fun LandedCostScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (!isReverse) "ИТОГОВАЯ СТОИМОСТЬ НА СКЛАДЕ (LANDED COST)" else "МАКС. ДОПУСТИМАЯ ЦЕНА ЗАКУПКИ (FOB ФАБРИКА)",
+                            text = if (!isReverse) {
+                                tr("FINAL WAREHOUSE COST (LANDED COST)", "ИТОГОВАЯ СТОИМОСТЬ НА СКЛАДЕ (LANDED COST)")
+                            } else {
+                                tr("MAX ALLOWABLE PURCHASE PRICE (FOB FACTORY)", "МАКС. ДОПУСТИМАЯ ЦЕНА ЗАКУПКИ (FOB ФАБРИКА)")
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 0.8.sp,
@@ -274,7 +281,7 @@ fun LandedCostScreen(
                     ) {
                         Column {
                             Text(
-                                text = if (!isReverse) "ЦЕНА ЗАВОДА (FOB)" else "ЦЕЛЕВАЯ СЕБЕСТОИМОСТЬ СКЛАДА",
+                                text = if (!isReverse) tr("FACTORY PRICE (FOB)", "ЦЕНА ЗАВОДА (FOB)") else tr("TARGET WAREHOUSE COST", "ЦЕЛЕВАЯ СЕБЕСТОИМОСТЬ СКЛАДА"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -287,7 +294,7 @@ fun LandedCostScreen(
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "ДОСТАВКА + ТАМОЖНЯ + НДС",
+                                text = tr("FREIGHT + CUSTOMS + VAT", "ДОСТАВКА + ТАМОЖНЯ + НДС"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -320,7 +327,7 @@ fun LandedCostScreen(
                         ) {
                             Icon(Icons.Default.Calculate, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Передать в расчет маржи", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(tr("Transfer to Margin Solver", "Передать в расчет маржи"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
@@ -328,7 +335,7 @@ fun LandedCostScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.testTag("btn_transfer_to_deal")
                         ) {
-                            Text("В сделку", fontSize = 11.sp)
+                            Text(tr("To Deal", "В сделку"), fontSize = 11.sp)
                         }
                     }
                 }
@@ -347,7 +354,11 @@ fun LandedCostScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = if (!isReverse) "ВВОД ПАРАМЕТРОВ ЗАКУПКИ (FOB)" else "ВВОД ЦЕЛЕВОЙ СЕБЕСТОИМОСТИ (СКЛАД)",
+                        text = if (!isReverse) {
+                            tr("PURCHASE PARAMETERS (FOB)", "ВВОД ПАРАМЕТРОВ ЗАКУПКИ (FOB)")
+                        } else {
+                            tr("TARGET WAREHOUSE COST INPUT", "ВВОД ЦЕЛЕВОЙ СЕБЕСТОИМОСТИ (СКЛАД)")
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -359,7 +370,7 @@ fun LandedCostScreen(
                     ) {
                         if (!isReverse) {
                             FinancialInputField(
-                                label = "Цена FOB (Китай/завод)",
+                                label = tr("FOB Price (Factory)", "Цена FOB (Китай/завод)"),
                                 value = fobPrice,
                                 onValueChange = {
                                     viewModel.fobPriceInput.value = it
@@ -371,7 +382,7 @@ fun LandedCostScreen(
                             )
                         } else {
                             FinancialInputField(
-                                label = "Бюджет на складе (Landed Cost)",
+                                label = tr("Warehouse Budget (Landed Cost)", "Бюджет на складе (Landed Cost)"),
                                 value = targetLanded,
                                 onValueChange = {
                                     viewModel.targetLandedCostInput.value = it
@@ -384,7 +395,7 @@ fun LandedCostScreen(
                         }
 
                         FinancialInputField(
-                            label = "Экспресс-коэффициент",
+                            label = tr("Express Coefficient", "Экспресс-коэффициент"),
                             value = expressCoeff,
                             onValueChange = {
                                 viewModel.expressCoeffInput.value = it
@@ -403,7 +414,7 @@ fun LandedCostScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Есть точный счет от брокера?",
+                            text = tr("Have exact broker invoice?", "Есть точный счет от брокера?"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -414,7 +425,7 @@ fun LandedCostScreen(
                         ) {
                             Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Вычислить реальный K", fontSize = 10.sp)
+                            Text(tr("Calculate actual K", "Вычислить реальный K"), fontSize = 10.sp)
                         }
                     }
                 }
@@ -430,13 +441,13 @@ fun LandedCostScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "МАТРИЦА КАТЕГОРИЙ ГРУЗА",
+                        text = tr("FREIGHT CATEGORY MATRIX", "МАТРИЦА КАТЕГОРИЙ ГРУЗА"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Нажмите для применения",
+                        text = tr("Tap to apply", "Нажмите для применения"),
                         style = MaterialTheme.typography.labelSmall,
                         color = ElectricCyan,
                         fontSize = 10.sp
@@ -467,7 +478,7 @@ fun LandedCostScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = cat.titleRu,
+                                        text = cat.title(currentLang),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurface
@@ -480,18 +491,18 @@ fun LandedCostScreen(
                                                 .background(GoldAccent.copy(alpha = 0.2f))
                                                 .padding(horizontal = 4.dp, vertical = 2.dp)
                                         ) {
-                                            Text("Идеальный средний", fontSize = 8.sp, color = GoldAccent, fontWeight = FontWeight.Bold)
+                                            Text(tr("Ideal benchmark", "Идеальный средний"), fontSize = 8.sp, color = GoldAccent, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
                                 Text(
-                                    text = cat.description,
+                                    text = cat.desc(currentLang),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
                                 )
                                 Text(
-                                    text = "Логистика ≈ ${cat.avgLogisticsPct}% | Пошлина ≈ ${cat.avgDutyPct}%",
+                                    text = "${tr("Freight", "Логистика")} ≈ ${cat.avgLogisticsPct}% | ${tr("Duty", "Пошлина")} ≈ ${cat.avgDutyPct}%",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                     fontSize = 10.sp
@@ -506,7 +517,7 @@ fun LandedCostScreen(
                                     color = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Коэффициент",
+                                    text = tr("Multiplier", "Коэффициент"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 9.sp
@@ -533,13 +544,16 @@ fun LandedCostScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Универсальное правило для быстрой оценки в уме:",
+                            text = tr("Universal rule of thumb for quick mental estimation:", "Универсальное правило для быстрой оценки в уме:"),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = GoldAccent
                         )
                         Text(
-                            text = "Если товар стандартный (не кирпичи и не золото), смело умножайте цену FOB на 1.45 – 1.50. Вы получите максимально близкую к реальности конечную себестоимость на складе, в которую уже заложены доставка, пошлина ЕАЭС, НДС и брокеры.",
+                            text = tr(
+                                "If the cargo is standard industrial or consumer merchandise, multiply the FOB price by 1.45 – 1.50. You will arrive at an accurate landed warehouse cost incorporating freight, customs duty, import VAT, and broker terminal clearance.",
+                                "Если товар стандартный (не кирпичи и не золото), смело умножайте цену FOB на 1.45 – 1.50. Вы получите максимально близкую к реальности конечную себестоимость на складе, в которую уже заложены доставка, пошлина ЕАЭС, НДС и брокеры."
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
@@ -569,7 +583,7 @@ fun LandedCostScreen(
                         Icon(Icons.Default.Tune, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Точный калькулятор пошлины, логистики и НДС",
+                            text = tr("Detailed Duty, Logistics & VAT Calculator", "Точный калькулятор пошлины, логистики и НДС"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -595,7 +609,7 @@ fun LandedCostScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            text = "КОМПОНЕНТЫ СЕБЕСТОИМОСТИ (${selectedCountry.nameRu})",
+                            text = "${tr("COST COMPONENTS", "КОМПОНЕНТЫ СЕБЕСТОИМОСТИ")} (${selectedCountry.name(currentLang)})",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -606,7 +620,7 @@ fun LandedCostScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FinancialInputField(
-                                label = "Логистика / Фрахт (%)",
+                                label = tr("Freight / Logistics (%)", "Логистика / Фрахт (%)"),
                                 value = logPct,
                                 onValueChange = {
                                     viewModel.customLogisticsPct.value = it
@@ -617,7 +631,7 @@ fun LandedCostScreen(
                                 testTag = "input_custom_logistics"
                             )
                             FinancialInputField(
-                                label = "Пошлина таможни (%)",
+                                label = tr("Customs Duty (%)", "Пошлина таможни (%)"),
                                 value = dutyPct,
                                 onValueChange = {
                                     viewModel.customDutyPct.value = it
@@ -634,7 +648,7 @@ fun LandedCostScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FinancialInputField(
-                                label = "Ввозной НДС (%)",
+                                label = tr("Import VAT (%)", "Ввозной НДС (%)"),
                                 value = vatPct,
                                 onValueChange = {
                                     viewModel.customVatPct.value = it
@@ -645,7 +659,7 @@ fun LandedCostScreen(
                                 testTag = "input_custom_vat"
                             )
                             FinancialInputField(
-                                label = "Брокер, СВХ, сборы (%)",
+                                label = tr("Broker & Terminal Fees (%)", "Брокер, СВХ, сборы (%)"),
                                 value = brokerPct,
                                 onValueChange = {
                                     viewModel.customBrokerPct.value = it
@@ -667,7 +681,7 @@ fun LandedCostScreen(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    text = "Формула расчета экспресс-коэффициента:",
+                                    text = tr("Express multiplier formula:", "Формула расчета экспресс-коэффициента:"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -683,13 +697,13 @@ fun LandedCostScreen(
                         // Itemized Breakdown Table
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                            BreakdownRow("1. Цена товара FOB", currencyFmt.format(result.fobPrice))
-                            BreakdownRow("2. Доставка и страховка", "+ ${currencyFmt.format(result.freightAmount)}")
-                            BreakdownRow("3. Таможенная пошлина", "+ ${currencyFmt.format(result.customsDutyAmount)}")
-                            BreakdownRow("4. Ввозной НДС", "+ ${currencyFmt.format(result.importVatAmount)}")
-                            BreakdownRow("5. Брокер и терминальные сборы", "+ ${currencyFmt.format(result.brokerFeesAmount)}")
+                            BreakdownRow(tr("1. FOB Goods Price", "1. Цена товара FOB"), currencyFmt.format(result.fobPrice))
+                            BreakdownRow(tr("2. Freight & Insurance", "2. Доставка и страховка"), "+ ${currencyFmt.format(result.freightAmount)}")
+                            BreakdownRow(tr("3. Customs Duty", "3. Таможенная пошлина"), "+ ${currencyFmt.format(result.customsDutyAmount)}")
+                            BreakdownRow(tr("4. Import VAT", "4. Ввозной НДС"), "+ ${currencyFmt.format(result.importVatAmount)}")
+                            BreakdownRow(tr("5. Broker & Clearance Fees", "5. Брокер и терминальные сборы"), "+ ${currencyFmt.format(result.brokerFeesAmount)}")
                             HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
-                            BreakdownRow("ИТОГО НА СКЛАДЕ (LANDED COST)", currencyFmt.format(result.landedCost), isBold = true, color = EmeraldPrimary)
+                            BreakdownRow(tr("TOTAL WAREHOUSE COST (LANDED COST)", "ИТОГО НА СКЛАДЕ (LANDED COST)"), currencyFmt.format(result.landedCost), isBold = true, color = EmeraldPrimary)
                         }
                     }
                 }

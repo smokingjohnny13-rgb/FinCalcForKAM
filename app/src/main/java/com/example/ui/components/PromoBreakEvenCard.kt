@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -111,13 +112,13 @@ fun PromoBreakEvenCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "МОДЕЛИРОВАНИЕ ПРОМО-АКЦИЙ",
+                            text = tr("PROMO CAMPAIGN MODELING", "МОДЕЛИРОВАНИЕ ПРОМО-АКЦИЙ"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Безубыточный прирост объема и эластичность спроса",
+                            text = tr("Break-even volume lift and price elasticity of demand", "Безубыточный прирост объема и эластичность спроса"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -132,7 +133,7 @@ fun PromoBreakEvenCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Из Водопада", fontSize = 11.sp)
+                    Text(tr("From Waterfall", "Из Водопада"), fontSize = 11.sp)
                 }
             }
 
@@ -153,7 +154,7 @@ fun PromoBreakEvenCard(
                     ) {
                         Column(modifier = Modifier.weight(1.2f)) {
                             Text(
-                                text = "ТРЕБУЕМЫЙ РОСТ ПРОДАЖ (ШТУК)",
+                                text = tr("REQUIRED SALES LIFT (UNITS)", "ТРЕБУЕМЫЙ РОСТ ПРОДАЖ (ШТУК)"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
@@ -165,7 +166,7 @@ fun PromoBreakEvenCard(
                                 color = EmeraldPrimary
                             )
                             Text(
-                                text = "Нужно продать: ${result.breakEvenTotalVolume.toInt()} шт (+${result.breakEvenDeltaUnits.toInt()} шт)",
+                                text = "${tr("Must sell", "Нужно продать")}: ${result.breakEvenTotalVolume.toInt()} ${tr("units", "шт")} (+${result.breakEvenDeltaUnits.toInt()} ${tr("units", "шт")})",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -176,7 +177,7 @@ fun PromoBreakEvenCard(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "ТРЕБУЕМАЯ ЭЛАСТИЧНОСТЬ",
+                                text = tr("REQUIRED ELASTICITY", "ТРЕБУЕМАЯ ЭЛАСТИЧНОСТЬ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
@@ -188,7 +189,7 @@ fun PromoBreakEvenCard(
                                 color = ElectricCyan
                             )
                             Text(
-                                text = "Базовая прибыль: ${viewModel.formatCurrency(result.baseGrossProfit)}",
+                                text = "${tr("Base profit", "Базовая прибыль")}: ${viewModel.formatCurrency(result.baseGrossProfit)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 10.sp
@@ -211,13 +212,13 @@ fun PromoBreakEvenCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Скидка (${result.promoDiscountPct}%) превышает или равна марже (${result.baseMarginPct}%)!",
+                                text = "${tr("Discount", "Скидка")} (${result.promoDiscountPct}%) ${tr("exceeds or equals margin", "превышает или равна марже")} (${result.baseMarginPct}%)!",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error,
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = "Промо-цена ниже себестоимости. Продажи в любой объем принесут гарантированный чистый убыток.",
+                                text = tr("Promo price is below unit cost. Any volume will generate guaranteed net operating loss.", "Промо-цена ниже себестоимости. Продажи в любой объем принесут гарантированный чистый убыток."),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 11.sp
                             )
@@ -229,7 +230,7 @@ fun PromoBreakEvenCard(
             // Quick Preset Discount Chips
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "БЫСТРЫЙ ВЫБОР ПРОМО-СКИДКИ:",
+                    text = tr("QUICK PROMO DISCOUNT PRESETS:", "БЫСТРЫЙ ВЫБОР ПРОМО-СКИДКИ:"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -266,7 +267,7 @@ fun PromoBreakEvenCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "ВХОДНЫЕ ДАННЫЕ ПРОМО",
+                        text = tr("PROMO INPUT DATA", "ВХОДНЫЕ ДАННЫЕ ПРОМО"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -277,7 +278,7 @@ fun PromoBreakEvenCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Регулярная цена",
+                            label = tr("Regular Price", "Регулярная цена"),
                             value = basePriceInput,
                             onValueChange = {
                                 viewModel.promoBasePrice.value = it
@@ -288,7 +289,7 @@ fun PromoBreakEvenCard(
                             testTag = "input_promo_price"
                         )
                         FinancialInputField(
-                            label = "Себестоимость COGS",
+                            label = tr("Cost of Goods (COGS)", "Себестоимость COGS"),
                             value = unitCostInput,
                             onValueChange = {
                                 viewModel.promoUnitCost.value = it
@@ -305,7 +306,7 @@ fun PromoBreakEvenCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Промо-скидка (%)",
+                            label = tr("Promo Discount (%)", "Промо-скидка (%)"),
                             value = discountInput,
                             onValueChange = {
                                 viewModel.promoDiscountPct.value = it
@@ -316,13 +317,13 @@ fun PromoBreakEvenCard(
                             testTag = "input_promo_discount"
                         )
                         FinancialInputField(
-                            label = "Базовый объем (шт)",
+                            label = tr("Base Volume (units)", "Базовый объем (шт)"),
                             value = volumeInput,
                             onValueChange = {
                                 viewModel.promoBaseVolume.value = it
                                 viewModel.updatePromoCalculations()
                             },
-                            suffix = "шт",
+                            suffix = tr("pcs", "шт"),
                             modifier = Modifier.weight(1f),
                             testTag = "input_promo_volume"
                         )
@@ -346,13 +347,13 @@ fun PromoBreakEvenCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "СИМУЛЯТОР ФАКТИЧЕСКОГО ПРИРОСТА",
+                            text = tr("ACTUAL LIFT SIMULATOR", "СИМУЛЯТОР ФАКТИЧЕСКОГО ПРИРОСТА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Ожидаемый рост: +${simLiftInput}%",
+                            text = "${tr("Expected Lift", "Ожидаемый рост")}: +${simLiftInput}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
                             fontWeight = FontWeight.Bold
@@ -379,11 +380,11 @@ fun PromoBreakEvenCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("ПРОГНОЗНЫЙ ОБЪЕМ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${result.simulatedUnits.toInt()} шт", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(tr("PROJECTED VOLUME", "ПРОГНОЗНЫЙ ОБЪЕМ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${result.simulatedUnits.toInt()} ${tr("units", "шт")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("ВАЛОВАЯ ПРИБЫЛЬ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(tr("GROSS PROFIT", "ВАЛОВАЯ ПРИБЫЛЬ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
                                 text = "${viewModel.formatCurrency(result.simulatedProfit)} (${if (result.simulatedProfitDelta >= 0) "+" else ""}${viewModel.formatCurrency(result.simulatedProfitDelta)})",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -410,7 +411,7 @@ fun PromoBreakEvenCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Матрица сценариев эластичности (+10% ... +150%)",
+                        text = tr("Elasticity Scenarios Matrix (+10% ... +150%)", "Матрица сценариев эластичности (+10% ... +150%)"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -436,10 +437,10 @@ fun PromoBreakEvenCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Рост %", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                        Text("Штук", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                        Text("Выручка", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.3f))
-                        Text("Прибыль", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.3f))
+                        Text(tr("Lift %", "Рост %"), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        Text(tr("Units", "Штук"), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        Text(tr("Revenue", "Выручка"), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.3f))
+                        Text(tr("Profit", "Прибыль"), fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.3f))
                     }
                     HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
 
@@ -449,7 +450,7 @@ fun PromoBreakEvenCard(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("+${sc.volumeLiftPct.toInt()}%", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                            Text("${sc.unitsSold.toInt()} шт", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                            Text("${sc.unitsSold.toInt()} ${tr("pcs", "шт")}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                             Text(viewModel.formatCurrency(sc.totalRevenue), fontSize = 10.sp, color = ElectricCyan, modifier = Modifier.weight(1.3f))
                             Text(
                                 text = "${viewModel.formatCurrency(sc.totalGrossProfit)}",

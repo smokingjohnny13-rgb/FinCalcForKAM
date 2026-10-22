@@ -38,6 +38,7 @@ import com.example.service.PdfExportService
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.ui.i18n.str
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -176,7 +177,17 @@ class BigDealViewModel(
     )
     val pnlModel: StateFlow<PnlModel> = _pnlModel.asStateFlow()
 
-    // Global Multi-Currency Support
+    // Global Multi-Currency & Language Support
+    val appLanguage = MutableStateFlow(com.example.ui.i18n.AppLanguage.EN)
+
+    fun toggleLanguage() {
+        appLanguage.value = appLanguage.value.toggle()
+    }
+
+    fun setLanguage(lang: com.example.ui.i18n.AppLanguage) {
+        appLanguage.value = lang
+    }
+
     val activeCurrency = MutableStateFlow(CurrencyEngine.findByCode("USD"))
     val customCurrencies = MutableStateFlow(CurrencyEngine.DEFAULT_CURRENCIES)
 
@@ -653,7 +664,7 @@ class BigDealViewModel(
         activeCurrency.value = found
         updateCurrencyConversion()
         viewModelScope.launch {
-            _userMessage.emit("Валюта изменена: ${found.code} (${found.symbol})")
+            _userMessage.emit(str("Currency changed: ${found.code} (${found.symbol})", "Валюта изменена: ${found.code} (${found.symbol})", appLanguage.value))
         }
     }
 
@@ -704,7 +715,7 @@ class BigDealViewModel(
         waterfallCogs.value = landed.toString()
         updateWaterfallCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Себестоимость COGS обновлена из Landed Cost: ${formatCurrency(landed)}")
+            _userMessage.emit(str("COGS updated from Landed Cost: ${formatCurrency(landed)}", "Себестоимость COGS обновлена из Landed Cost: ${formatCurrency(landed)}", appLanguage.value))
         }
     }
 
@@ -713,7 +724,7 @@ class BigDealViewModel(
         val cogs = _waterfallResult.value.supplierCogs
         onMarginCostOrPriceChanged(newCost = cogs.toString(), newPrice = net.toString())
         viewModelScope.launch {
-            _userMessage.emit("Чистая цена (${formatCurrency(net)}) передана в расчет маржи")
+            _userMessage.emit(str("Net-Net price (${formatCurrency(net)}) transferred to margin solver", "Чистая цена (${formatCurrency(net)}) передана в расчет маржи", appLanguage.value))
         }
     }
 
@@ -724,7 +735,7 @@ class BigDealViewModel(
         unitCost.value = cogs.toInt().toString()
         updatePnlCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Net-Net цена и себестоимость переданы в P&L / Точку безубыточности")
+            _userMessage.emit(str("Net-Net price and cost transferred to P&L / Break-Even", "Net-Net цена и себестоимость переданы в P&L / Точку безубыточности", appLanguage.value))
         }
     }
 
@@ -752,7 +763,7 @@ class BigDealViewModel(
         promoUnitCost.value = cogs.toString()
         updatePromoCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Данные для промо загружены из Водопада цен (Цена: ${formatCurrency(net)}, Себестоимость: ${formatCurrency(cogs)})")
+            _userMessage.emit(str("Promo data loaded from Price Waterfall (Price: ${formatCurrency(net)}, Cost: ${formatCurrency(cogs)})", "Данные для промо загружены из Водопада цен (Цена: ${formatCurrency(net)}, Себестоимость: ${formatCurrency(cogs)})", appLanguage.value))
         }
     }
 
@@ -776,7 +787,7 @@ class BigDealViewModel(
         termsDealAmount.value = p.toInt().toString()
         updatePaymentTermsCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Сумма сделки импортирована: ${formatCurrency(p)}")
+            _userMessage.emit(str("Deal amount imported: ${formatCurrency(p)}", "Сумма сделки импортирована: ${formatCurrency(p)}", appLanguage.value))
         }
     }
 
@@ -785,7 +796,7 @@ class BigDealViewModel(
         principalAmount.value = npv.toInt().toString()
         updateFinancing()
         viewModelScope.launch {
-            _userMessage.emit("Сумма сделки скорректирована на стоимость отсрочки: ${formatCurrency(npv)}")
+            _userMessage.emit(str("Deal amount adjusted for terms cost (NPV): ${formatCurrency(npv)}", "Сумма сделки скорректирована на стоимость отсрочки: ${formatCurrency(npv)}", appLanguage.value))
         }
     }
 
@@ -878,7 +889,7 @@ class BigDealViewModel(
         creditTenureMonths.value = t.toString()
         updateMultiCreditCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Данные сделки импортированы в мультивалютный кредитный калькулятор: ${formatCurrency(p)}")
+            _userMessage.emit(str("Deal data imported to multi-currency credit calculator: ${formatCurrency(p)}", "Данные сделки импортированы в мультивалютный кредитный калькулятор: ${formatCurrency(p)}", appLanguage.value))
         }
     }
 
@@ -887,7 +898,7 @@ class BigDealViewModel(
         annualInterestRate.value = String.format(java.util.Locale.US, "%.1f", hedgedRate)
         updateFinancing()
         viewModelScope.launch {
-            _userMessage.emit("Ставка финансирования сделки обновлена: ${annualInterestRate.value}% (с учетом корзины и хеджа)")
+            _userMessage.emit(str("Deal financing rate updated: ${annualInterestRate.value}% (basket & hedge adjusted)", "Ставка финансирования сделки обновлена: ${annualInterestRate.value}% (с учетом корзины и хеджа)", appLanguage.value))
         }
     }
 }

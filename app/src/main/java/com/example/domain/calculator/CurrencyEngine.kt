@@ -8,9 +8,9 @@ object CurrencyEngine {
     val DEFAULT_CURRENCIES = listOf(
         CurrencyRate("USD", "US Dollar", "$", 1.0),
         CurrencyRate("EUR", "Euro", "€", 0.92),
-        CurrencyRate("RUB", "Российский рубль", "₽", 92.50),
-        CurrencyRate("BYN", "Белорусский рубль", "Br", 3.25),
-        CurrencyRate("KZT", "Казахстанский тенге", "₸", 492.0),
+        CurrencyRate("RUB", "Russian Ruble", "₽", 92.50),
+        CurrencyRate("BYN", "Belarusian Ruble", "Br", 3.25),
+        CurrencyRate("KZT", "Kazakhstani Tenge", "₸", 492.0),
         CurrencyRate("CNY", "Chinese Yuan", "¥", 7.24),
         CurrencyRate("GBP", "British Pound", "£", 0.79),
         CurrencyRate("AED", "UAE Dirham", "AED", 3.67),
@@ -21,6 +21,26 @@ object CurrencyEngine {
         CurrencyRate("CHF", "Swiss Franc", "CHF", 0.89),
         CurrencyRate("INR", "Indian Rupee", "₹", 83.45)
     )
+
+    fun getLocalizedCurrencyName(code: String, isRussian: Boolean): String {
+        return when (code.uppercase()) {
+            "USD" -> if (isRussian) "Доллар США" else "US Dollar"
+            "EUR" -> if (isRussian) "Евро" else "Euro"
+            "RUB" -> if (isRussian) "Российский рубль" else "Russian Ruble"
+            "BYN" -> if (isRussian) "Белорусский рубль" else "Belarusian Ruble"
+            "KZT" -> if (isRussian) "Казахстанский тенге" else "Kazakhstani Tenge"
+            "CNY" -> if (isRussian) "Китайский юань" else "Chinese Yuan"
+            "GBP" -> if (isRussian) "Британский фунт" else "British Pound"
+            "AED" -> if (isRussian) "Дирхам ОАЭ" else "UAE Dirham"
+            "TRY" -> if (isRussian) "Турецкая лира" else "Turkish Lira"
+            "PLN" -> if (isRussian) "Польский злотый" else "Polish Zloty"
+            "CAD" -> if (isRussian) "Канадский доллар" else "Canadian Dollar"
+            "JPY" -> if (isRussian) "Японская иена" else "Japanese Yen"
+            "CHF" -> if (isRussian) "Швейцарский франк" else "Swiss Franc"
+            "INR" -> if (isRussian) "Индийская рупия" else "Indian Rupee"
+            else -> code
+        }
+    }
 
     fun findByCode(code: String, customList: List<CurrencyRate> = DEFAULT_CURRENCIES): CurrencyRate {
         return customList.find { it.code.equals(code, ignoreCase = true) }

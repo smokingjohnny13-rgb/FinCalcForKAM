@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.CurrencyCreditLegResult
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -112,13 +113,13 @@ fun MultiCurrencyCreditCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "КРЕДИТ В 1–4 ВАЛЮТАХ С ХЕДЖИРОВАНИЕМ",
+                            text = tr("CREDIT IN 1–4 CURRENCIES WITH HEDGING", "КРЕДИТ В 1–4 ВАЛЮТАХ С ХЕДЖИРОВАНИЕМ"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Кросс-курсы, валютная корзина и фиксация цены на день расчетов",
+                            text = tr("Cross-rates, currency basket and settlement date hedging", "Кросс-курсы, валютная корзина и фиксация цены на день расчетов"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -133,7 +134,7 @@ fun MultiCurrencyCreditCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Из сделки", fontSize = 11.sp)
+                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp)
                 }
             }
 
@@ -145,13 +146,13 @@ fun MultiCurrencyCreditCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ВЫБОР ВАЛЮТ (ОТ 1 ДО 4):",
+                        text = tr("CURRENCY SELECTION (1 TO 4):", "ВЫБОР ВАЛЮТ (ОТ 1 ДО 4):"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Выбрано: ${selectedCurrencies.size} из 4",
+                        text = "${tr("Selected", "Выбрано")}: ${selectedCurrencies.size} ${tr("of", "из")} 4",
                         style = MaterialTheme.typography.labelSmall,
                         color = ElectricCyan,
                         fontWeight = FontWeight.Bold
@@ -193,10 +194,10 @@ fun MultiCurrencyCreditCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
-                    title = "Ставка с хеджем",
+                    title = tr("Rate with Hedge", "Ставка с хеджем"),
                     value = "${result.weightedEffectiveRateWithHedgePct}%",
-                    subtitle = "Базовая ставка: ${result.weightedInterestRatePct}%",
-                    badgeText = if (isHedgeEnabled) "+${hedgeCostInput}% страховка" else "Без страховки",
+                    subtitle = "${tr("Base rate", "Базовая ставка")}: ${result.weightedInterestRatePct}%",
+                    badgeText = if (isHedgeEnabled) "+${hedgeCostInput}% ${tr("insurance", "страховка")}" else tr("No hedge", "Без страховки"),
                     badgeColor = if (isHedgeEnabled) EmeraldPrimary else GoldAccent,
                     modifier = Modifier
                         .weight(1f)
@@ -204,13 +205,13 @@ fun MultiCurrencyCreditCard(
                     testTag = "card_credit_rate"
                 )
                 MetricCard(
-                    title = "Итого к возврату",
+                    title = tr("Total Repayment", "Итого к возврату"),
                     value = viewModel.formatCurrency(if (isHedgeEnabled) result.totalRepaymentInBaseHedged else result.totalRepaymentInBaseUnhedged),
-                    subtitle = if (isHedgeEnabled) "С фиксацией курса" else "С риском девальвации",
+                    subtitle = if (isHedgeEnabled) tr("Fixed forward rate", "С фиксацией курса") else tr("Devaluation risk", "С риском девальвации"),
                     badgeText = if (result.isHedgeAdvantageous && isHedgeEnabled) {
-                        "Выгода: ${viewModel.formatCurrency(result.totalFxRiskDeltaInBase)}"
+                        "${tr("Benefit", "Выгода")}: ${viewModel.formatCurrency(result.totalFxRiskDeltaInBase)}"
                     } else {
-                        "Номинал: ${viewModel.formatCurrency(result.dealAmountInBase)}"
+                        "${tr("Nominal", "Номинал")}: ${viewModel.formatCurrency(result.dealAmountInBase)}"
                     },
                     badgeColor = if (result.isHedgeAdvantageous && isHedgeEnabled) EmeraldPrimary else ElectricCyan,
                     modifier = Modifier
@@ -230,7 +231,7 @@ fun MultiCurrencyCreditCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "ПАРАМЕТРЫ КРЕДИТОВАНИЯ И ХЕДЖИРОВАНИЯ",
+                        text = tr("CREDIT & HEDGING PARAMETERS", "ПАРАМЕТРЫ КРЕДИТОВАНИЯ И ХЕДЖИРОВАНИЯ"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -241,7 +242,7 @@ fun MultiCurrencyCreditCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Объем кредита (${activeCurrency.code})",
+                            label = "${tr("Credit Principal", "Объем кредита")} (${activeCurrency.code})",
                             value = creditPrincipalInput,
                             onValueChange = {
                                 viewModel.creditPrincipal.value = it
@@ -252,13 +253,13 @@ fun MultiCurrencyCreditCard(
                             testTag = "input_credit_principal"
                         )
                         FinancialInputField(
-                            label = "Срок кредита",
+                            label = tr("Credit Tenure", "Срок кредита"),
                             value = creditTenureInput,
                             onValueChange = {
                                 viewModel.creditTenureMonths.value = it
                                 viewModel.updateMultiCreditCalculations()
                             },
-                            suffix = "мес",
+                            suffix = tr("mo", "мес"),
                             modifier = Modifier.weight(1f),
                             testTag = "input_credit_tenure"
                         )
@@ -284,13 +285,17 @@ fun MultiCurrencyCreditCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "Хеджирование на дату платежа",
+                                    text = tr("Hedging on Payment Date", "Хеджирование на дату платежа"),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = if (isHedgeEnabled) "Фиксация форвардного курса покупки" else "Открытая валютная позиция (риск)",
+                                    text = if (isHedgeEnabled) {
+                                        tr("Locked forward purchase FX rate", "Фиксация форвардного курса покупки")
+                                    } else {
+                                        tr("Open currency position (risk)", "Открытая валютная позиция (риск)")
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -314,7 +319,7 @@ fun MultiCurrencyCreditCard(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FinancialInputField(
-                                label = "Стоимость хеджа (% год.)",
+                                label = tr("Hedge Cost (% p.a.)", "Стоимость хеджа (% год.)"),
                                 value = hedgeCostInput,
                                 onValueChange = {
                                     viewModel.creditHedgeCostPct.value = it
@@ -325,7 +330,7 @@ fun MultiCurrencyCreditCard(
                                 testTag = "input_credit_hedge_cost"
                             )
                             FinancialInputField(
-                                label = "Сценарий скачка валюты (%)",
+                                label = tr("Expected FX Shock (%)", "Сценарий скачка валюты (%)"),
                                 value = fxShiftInput,
                                 onValueChange = {
                                     viewModel.creditExpectedFxShiftPct.value = it
@@ -355,7 +360,7 @@ fun MultiCurrencyCreditCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "РАЗБИВКА ПО ВАЛЮТАМ (${result.legs.size}):",
+                        text = "${tr("CURRENCY BREAKDOWN", "РАЗБИВКА ПО ВАЛЮТАМ")} (${result.legs.size}):",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -397,7 +402,7 @@ fun MultiCurrencyCreditCard(
                 Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Применить ставку ${result.weightedEffectiveRateWithHedgePct}% к финансированию сделки",
+                    text = "${tr("Apply rate", "Применить ставку")} ${result.weightedEffectiveRateWithHedgePct}% ${tr("to deal financing", "к финансированию сделки")}",
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     fontSize = 12.sp
@@ -453,7 +458,7 @@ private fun CurrencyLegCardItem(
                 }
 
                 Text(
-                    text = "Доля: ${leg.allocationPct}%",
+                    text = "${tr("Share", "Доля")}: ${leg.allocationPct}%",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
@@ -469,7 +474,7 @@ private fun CurrencyLegCardItem(
             ) {
                 Column {
                     Text(
-                        text = "Тело кредита",
+                        text = tr("Credit Principal", "Тело кредита"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp
@@ -484,13 +489,13 @@ private fun CurrencyLegCardItem(
 
                 Column {
                     Text(
-                        text = "Ставка займа",
+                        text = tr("Loan Rate", "Ставка займа"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp
                     )
                     Text(
-                        text = "${leg.annualRatePct}% год.",
+                        text = "${leg.annualRatePct}% ${tr("p.a.", "год.")}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = GoldAccent
@@ -499,7 +504,7 @@ private fun CurrencyLegCardItem(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Возврат (с хеджем)",
+                        text = tr("Repayment (Hedged)", "Возврат (с хеджем)"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp
@@ -519,7 +524,7 @@ private fun CurrencyLegCardItem(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Без хеджа при скачке курса:",
+                        text = tr("Without hedge under FX surge:", "Без хеджа при скачке курса:"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 9.sp

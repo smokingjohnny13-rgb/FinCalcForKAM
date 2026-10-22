@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.PriceWaterfallResult
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -108,13 +109,13 @@ fun PriceWaterfallCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "ВОДОПАД ЦЕН (PRICE WATERFALL)",
+                            text = tr("PRICE WATERFALL", "ВОДОПАД ЦЕН (PRICE WATERFALL)"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "От РРЦ (Полки) до чистой реализации (Net-Net Price)",
+                            text = tr("From Shelf RSP down to Supplier Net-Net Realization", "От РРЦ (Полки) до чистой реализации (Net-Net Price)"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -145,10 +146,10 @@ fun PriceWaterfallCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
-                    title = "Чистая цена (Net-Net)",
+                    title = tr("Net-Net Price", "Чистая цена (Net-Net)"),
                     value = viewModel.formatCurrency(result.netNetPrice),
-                    subtitle = "Доля от РРЦ: ${String.format(Locale.US, "%.1f", 100.0 - result.totalDeductionPct)}%",
-                    badgeText = "Полка: ${viewModel.formatCurrency(result.shelfRspWithVat)}",
+                    subtitle = "${tr("Share of RSP", "Доля от РРЦ")}: ${String.format(Locale.US, "%.1f", 100.0 - result.totalDeductionPct)}%",
+                    badgeText = "${tr("Shelf", "Полка")}: ${viewModel.formatCurrency(result.shelfRspWithVat)}",
                     badgeColor = ElectricCyan,
                     modifier = Modifier
                         .weight(1f)
@@ -156,10 +157,10 @@ fun PriceWaterfallCard(
                     testTag = "card_waterfall_net_net"
                 )
                 MetricCard(
-                    title = "Маржа поставщика",
+                    title = tr("Supplier Margin", "Маржа поставщика"),
                     value = "${result.supplierMarginPct}%",
-                    subtitle = "Прибыль: ${viewModel.formatCurrency(result.supplierGrossProfit)}",
-                    badgeText = if (result.supplierGrossProfit >= 0) "Прибыльно" else "Убыток",
+                    subtitle = "${tr("Profit", "Прибыль")}: ${viewModel.formatCurrency(result.supplierGrossProfit)}",
+                    badgeText = if (result.supplierGrossProfit >= 0) tr("Profitable", "Прибыльно") else tr("Loss", "Убыток"),
                     badgeColor = if (result.supplierGrossProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .weight(1f)
@@ -180,7 +181,7 @@ fun PriceWaterfallCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Из Landed Cost", fontSize = 11.sp)
+                    Text(tr("From Landed Cost", "Из Landed Cost"), fontSize = 11.sp)
                 }
                 OutlinedButton(
                     onClick = { viewModel.applyWaterfallToMarginSolver() },
@@ -189,7 +190,7 @@ fun PriceWaterfallCard(
                 ) {
                     Icon(Icons.Default.Calculate, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("В расчет маржи", fontSize = 11.sp)
+                    Text(tr("To Margin Solver", "В расчет маржи"), fontSize = 11.sp)
                 }
             }
 
@@ -203,7 +204,7 @@ fun PriceWaterfallCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "ПАРАМЕТРЫ ЦЕПОЧКИ ЦЕНООБРАЗОВАНИЯ",
+                        text = tr("PRICING WATERFALL PARAMETERS", "ПАРАМЕТРЫ ЦЕПОЧКИ ЦЕНООБРАЗОВАНИЯ"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -214,7 +215,7 @@ fun PriceWaterfallCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "РРЦ на полке (с НДС)",
+                            label = tr("Shelf RSP (incl. VAT)", "РРЦ на полке (с НДС)"),
                             value = rspInput,
                             onValueChange = {
                                 viewModel.waterfallRsp.value = it
@@ -225,7 +226,7 @@ fun PriceWaterfallCard(
                             testTag = "input_waterfall_rsp"
                         )
                         FinancialInputField(
-                            label = "Ставка НДС (%)",
+                            label = tr("VAT Rate (%)", "Ставка НДС (%)"),
                             value = vatInput,
                             onValueChange = {
                                 viewModel.waterfallVat.value = it
@@ -242,7 +243,7 @@ fun PriceWaterfallCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Маржа сети (%)",
+                            label = tr("Retailer Margin (%)", "Маржа сети (%)"),
                             value = retMarginInput,
                             onValueChange = {
                                 viewModel.waterfallRetailerMargin.value = it
@@ -253,7 +254,7 @@ fun PriceWaterfallCard(
                             testTag = "input_waterfall_retailer_margin"
                         )
                         FinancialInputField(
-                            label = "Фронт-скидка (%)",
+                            label = tr("Front Discount (%)", "Фронт-скидка (%)"),
                             value = frontDiscInput,
                             onValueChange = {
                                 viewModel.waterfallFrontDiscount.value = it
@@ -270,7 +271,7 @@ fun PriceWaterfallCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Бэк-бонусы/Ретро (%)",
+                            label = tr("Back Bonus / Rebate (%)", "Бэк-бонусы/Ретро (%)"),
                             value = backBonusInput,
                             onValueChange = {
                                 viewModel.waterfallBackBonus.value = it
@@ -281,7 +282,7 @@ fun PriceWaterfallCard(
                             testTag = "input_waterfall_back_bonus"
                         )
                         FinancialInputField(
-                            label = "Логистика до РЦ",
+                            label = tr("DC Logistics", "Логистика до РЦ"),
                             value = logInput,
                             onValueChange = {
                                 viewModel.waterfallLogistics.value = it
@@ -298,7 +299,7 @@ fun PriceWaterfallCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Себестоимость COGS (за ед.)",
+                            label = tr("COGS (per unit)", "Себестоимость COGS (за ед.)"),
                             value = cogsInput,
                             onValueChange = {
                                 viewModel.waterfallCogs.value = it
@@ -327,7 +328,7 @@ fun PriceWaterfallCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Детализация шагов удержаний",
+                        text = tr("Waterfall Deductions Breakdown", "Детализация шагов удержаний"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -350,60 +351,60 @@ fun PriceWaterfallCard(
                         .padding(12.dp)
                 ) {
                     WaterfallRow(
-                        label = "1. Полка: РРЦ с НДС",
+                        label = tr("1. Shelf: RSP incl. VAT", "1. Полка: РРЦ с НДС"),
                         amount = viewModel.formatCurrency(result.shelfRspWithVat),
                         isPrimary = true,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     WaterfallRow(
-                        label = "2. НДС (${result.vatRatePct}%)",
+                        label = "${tr("2. VAT", "2. НДС")} (${result.vatRatePct}%)",
                         amount = "- ${viewModel.formatCurrency(result.vatAmount)}",
                         isDeduction = true
                     )
                     WaterfallRow(
-                        label = "3. База без НДС",
+                        label = tr("3. Base excl. VAT", "3. База без НДС"),
                         amount = viewModel.formatCurrency(result.priceExVat),
                         color = ElectricCyan
                     )
                     WaterfallRow(
-                        label = "4. Маржа ритейлера (${result.retailerMarginPct}%)",
+                        label = "${tr("4. Retailer Margin", "4. Маржа ритейлера")} (${result.retailerMarginPct}%)",
                         amount = "- ${viewModel.formatCurrency(result.retailerMarginAmount)}",
                         isDeduction = true
                     )
                     WaterfallRow(
-                        label = "5. Фронт-скидка в накладной (${result.frontDiscountPct}%)",
+                        label = "${tr("5. Front Invoice Discount", "5. Фронт-скидка в накладной")} (${result.frontDiscountPct}%)",
                         amount = "- ${viewModel.formatCurrency(result.frontDiscountAmount)}",
                         isDeduction = true
                     )
                     WaterfallRow(
-                        label = "6. Цена по накладной (Invoice)",
+                        label = tr("6. Invoice Price", "6. Цена по накладной (Invoice)"),
                         amount = viewModel.formatCurrency(result.invoicePrice),
                         color = GoldAccent
                     )
                     WaterfallRow(
-                        label = "7. Бэк-бонусы и ретро (${result.backBonusPct}%)",
+                        label = "${tr("7. Back Bonuses & Rebates", "7. Бэк-бонусы и ретро")} (${result.backBonusPct}%)",
                         amount = "- ${viewModel.formatCurrency(result.backBonusAmount)}",
                         isDeduction = true
                     )
                     WaterfallRow(
-                        label = "8. Доставка / Логистика до РЦ",
+                        label = tr("8. DC Delivery / Logistics", "8. Доставка / Логистика до РЦ"),
                         amount = "- ${viewModel.formatCurrency(result.logisticsCostPerUnit)}",
                         isDeduction = true
                     )
                     HorizontalDivider(color = EmeraldPrimary, thickness = 1.dp)
                     WaterfallRow(
-                        label = "9. Чистая цена поставщика (Net-Net)",
+                        label = tr("9. Supplier Net-Net Price", "9. Чистая цена поставщика (Net-Net)"),
                         amount = viewModel.formatCurrency(result.netNetPrice),
                         isPrimary = true,
                         color = EmeraldPrimary
                     )
                     WaterfallRow(
-                        label = "10. Себестоимость поставщика (COGS)",
+                        label = tr("10. Supplier Cost (COGS)", "10. Себестоимость поставщика (COGS)"),
                         amount = "- ${viewModel.formatCurrency(result.supplierCogs)}",
                         isDeduction = true
                     )
                     WaterfallRow(
-                        label = "Прибыль на единицу продукции",
+                        label = tr("Gross Profit per unit", "Прибыль на единицу продукции"),
                         amount = viewModel.formatCurrency(result.supplierGrossProfit),
                         isPrimary = true,
                         color = if (result.supplierGrossProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error
@@ -424,7 +425,7 @@ fun PriceWaterfallCard(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f).testTag("btn_apply_waterfall_to_pnl")
                 ) {
-                    Text("В P&L сделки", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(tr("To Deal P&L", "В P&L сделки"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 if (onNavigateToPromo != null) {
                     Button(
@@ -436,7 +437,7 @@ fun PriceWaterfallCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f).testTag("btn_apply_waterfall_to_promo")
                     ) {
-                        Text("В расчет промо", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(tr("To Promo Modeler", "В расчет промо"), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
