@@ -246,4 +246,95 @@ class BigDealCalculatorsTest {
         assertTrue(result.totalRepaymentInBaseUnhedged > result.totalRepaymentInBaseHedged)
         assertTrue(result.isHedgeAdvantageous)
     }
+
+    @Test
+    fun testCashGapAndCccCalculation() {
+        // Revenue 100,000, COGS 70,000, 20% upfront (14,000)
+        // Supplier DPO = 30d, Customer DSO = 60d, Inventory DIO = 15d
+        // CCC = 15 + 60 - 30 = 45 days
+        // Total cash out days = 15 + 60 = 75 days
+        // Overdraft rate = 22%
+        val res = com.example.domain.calculator.CashGapEngine.calculate(
+            dealRevenue = 100000.0,
+            cogsTotal = 70000.0,
+            prepaidPct = 20.0,
+            supplierPayDays = 30,
+            customerPayDays = 60,
+            inventoryDays = 15,
+            overdraftRatePct = 22.0
+        )
+
+        assertEquals(45, res.cashConversionCycleDays)
+        assertEquals(75, res.totalCashGapDays)
+        assertEquals(70000.0, res.peakCashDeficit, 0.01)
+        assertEquals(14000.0, res.prepaymentsDayZero, 0.01)
+        assertEquals(56000.0, res.supplierBalance, 0.01)
+        assertEquals(30000.0, res.nominalProfit, 0.01)
+        assertEquals(30.0, res.nominalMarginPct, 0.01)
+        assertTrue(res.overdraftCost > 0.0)
+        assertTrue(res.cashAdjustedProfit < res.nominalProfit)
+        assertTrue(res.cashAdjustedMarginPct < res.nominalMarginPct)
+    }
+
+    @Test
+    fun testFxStressTestAndWipeoutThreshold() {
+        // Contract price = 1,000,000 RUB, Foreign COGS = 8,000 USD
+        // Spot rate = 95.0, 30% hedged at 96.0, Domestic cost = 50,000 RUB
+        // Hedged part = 2,400 USD * 96.0 = 230,400 RUB
+        // Unhedged part = 5,600 USD
+        // Spot base cost = 230,400 + 5,600 * 95.0 + 50,000 = 812,400 RUB
+        // Profit = 187,600 RUB (Margin = 18.76%)
+        // Wipeout rate = (1,000,000 - 50,000 - 230,400) / 5,600 = 719,600 / 5,600 = 128.5 RUB/USD
+        val res = com.example.domain.calculator.FxStressTestEngine.calculate(
+            contractPrice = 1000000.0,
+            cogsForeignAmount = 8000.0,
+            foreignCurrencyCode = "USD",
+            spotRate = 95.0,
+            hedgedPct = 30.0,
+            hedgeRate = 96.0,
+            domesticCost = 50000.0
+        )
+
+        assertEquals(18.76, res.baseMarginPct, 0.05)
+        assertEquals(187600.0, res.baseProfit, 1.0)
+        assertEquals(128.5, res.marginWipeoutRate, 0.1)
+        assertEquals(33.5, res.safetyBufferPoints, 0.1)
+        assertTrue(res.safetyBufferPct > 35.0)
+        org.junit.Assert.assertFalse(res.isAlreadyNegative)
+        assertEquals(7, res.scenarios.size)
+    }
+
+    @Test
+    fun testHurdleRoicGuardrail() {
+        // Deal Revenue = 100,000, Net Profit = 7,000 (7% margin)
+        // Tied-up capital = 65,000, Cycle days = 90d (4.05 turns/yr)
+        // Corporate Hurdle Rate = 20%
+        // Annualized ROIC = (7,000 / 65,000) * (365 / 90) = 10.77% * 4.055 = 43.69%
+        // Since 43.69% >= 20%, it is value accretive!
+        val accretive = com.example.domain.calculator.HurdleRoicEngine.calculate(
+            dealRevenue = 100000.0,
+            dealNetProfit = 7000.0,
+            tiedUpCapital = 65000.0,
+            cycleDays = 90,
+            corporateHurdleRatePct = 20.0
+        )
+        assertTrue(accretive.isValueAccretive)
+        assertTrue(accretive.annualizedRoicPct > 40.0)
+        assertTrue(accretive.economicValueAdded > 0.0)
+
+        // Value destructive deal: low profit 1,500 on 70,000 tied-up capital for 120 days
+        // Turns = 365 / 120 = 3.04 turns/yr
+        // Annualized ROIC = (1,500 / 70,000) * 3.04 = 6.51%
+        // Hurdle = 20% -> Destructive!
+        val destructive = com.example.domain.calculator.HurdleRoicEngine.calculate(
+            dealRevenue = 100000.0,
+            dealNetProfit = 1500.0,
+            tiedUpCapital = 70000.0,
+            cycleDays = 120,
+            corporateHurdleRatePct = 20.0
+        )
+        org.junit.Assert.assertFalse(destructive.isValueAccretive)
+        assertTrue(destructive.annualizedRoicPct < 10.0)
+        assertTrue(destructive.economicValueAdded < 0.0)
+    }
 }

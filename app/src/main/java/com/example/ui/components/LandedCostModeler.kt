@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CargoCategory
 import com.example.domain.calculator.LandedCostCalculator
+import com.example.ui.i18n.LocalAppLanguage
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -73,11 +75,13 @@ import java.util.Locale
 fun LandedCostModeler(
     modifier: Modifier = Modifier,
     initialFobPrice: Double = 10000.0,
+    currencySymbol: String = "$",
     initialCategory: CargoCategory = CargoCategory.INDUSTRIAL,
     onLandedCostCalculated: ((Double) -> Unit)? = null,
     onApplyToMargin: ((Double) -> Unit)? = null,
     testTag: String = "landed_cost_modeler"
 ) {
+    val currentLang = LocalAppLanguage.current
     var selectedCategory by remember { mutableStateOf(initialCategory) }
     var fobPriceInput by remember { mutableStateOf(initialFobPrice.toInt().toString()) }
     var targetLandedCostInput by remember { mutableStateOf((initialFobPrice * initialCategory.defaultCoeff).toInt().toString()) }
@@ -92,8 +96,17 @@ fun LandedCostModeler(
     var overrideVatPct by remember { mutableStateOf("20.0") }
     var overrideBrokerPct by remember { mutableStateOf("2.5") }
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
+    val formatMoney = remember(currencySymbol) {
+        { amount: Double ->
+            val formattedNum = numberFmt.format(amount)
+            if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽" || currencySymbol == "£" || currencySymbol == "¥") {
+                "$currencySymbol$formattedNum"
+            } else {
+                "$currencySymbol $formattedNum"
+            }
+        }
+    }
 
     val categories = listOf(
         CargoCategory.ELECTRONICS,
@@ -155,7 +168,7 @@ fun LandedCostModeler(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "LANDED COST MODELER",
+                        text = tr("LANDED COST MODELER", "МОДЕЛЕР СЕБЕСТОИМОСТИ (FOB → СКЛАД)"),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -178,7 +191,7 @@ fun LandedCostModeler(
                     Icon(Icons.Default.SwapHoriz, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (!isReverseMode) "FOB → Landed" else "Landed → FOB",
+                        text = if (!isReverseMode) tr("FOB → Landed", "FOB → Склад") else tr("Landed → FOB", "Склад → FOB"),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -188,7 +201,7 @@ fun LandedCostModeler(
             // 1. Category Selection Chips (1.28 – 1.75 Matrix)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "SELECT CARGO CATEGORY (EXPRESS COEFFICIENTS)",
+                    text = tr("SELECT CARGO CATEGORY (EXPRESS COEFFICIENTS)", "КАТЕГОРИЯ ГРУЗА (ЭКСПРЕСС-КОЭФФИЦИЕНТЫ)"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -215,7 +228,7 @@ fun LandedCostModeler(
                             },
                             label = {
                                 Text(
-                                    text = "${cat.titleRu} (${cat.defaultCoeff})",
+                                    text = "${cat.title(currentLang)} (${cat.defaultCoeff})",
                                     fontSize = 11.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -245,13 +258,13 @@ fun LandedCostModeler(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Express Multiplier: K = ${numberFmt.format(expressCoeff)}",
+                        text = "${tr("Express Multiplier", "Экспресс-множитель")}: K = ${numberFmt.format(expressCoeff)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = EmeraldPrimary,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Range: ${selectedCategory.minCoeff} – ${selectedCategory.maxCoeff}",
+                        text = "${tr("Range", "Диапазон")}: ${selectedCategory.minCoeff} – ${selectedCategory.maxCoeff}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -279,27 +292,27 @@ fun LandedCostModeler(
             ) {
                 if (!isReverseMode) {
                     FinancialInputField(
-                        label = "Factory FOB Price",
+                        label = tr("Factory FOB Price", "Цена завода FOB"),
                         value = fobPriceInput,
                         onValueChange = {
                             fobPriceInput = it
                             val fob = it.toDoubleOrNull() ?: 0.0
                             targetLandedCostInput = (fob * expressCoeff).toInt().toString()
                         },
-                        prefix = "$",
+                        prefix = currencySymbol,
                         modifier = Modifier.weight(1f),
                         testTag = "modeler_input_fob"
                     )
                 } else {
                     FinancialInputField(
-                        label = "Target Warehouse Landed Cost",
+                        label = tr("Target Warehouse Landed Cost", "Целевая себестоимость на складе"),
                         value = targetLandedCostInput,
                         onValueChange = {
                             targetLandedCostInput = it
                             val landed = it.toDoubleOrNull() ?: 0.0
                             fobPriceInput = (landed / expressCoeff).toInt().toString()
                         },
-                        prefix = "$",
+                        prefix = currencySymbol,
                         modifier = Modifier.weight(1f),
                         testTag = "modeler_input_target_landed"
                     )
@@ -322,20 +335,20 @@ fun LandedCostModeler(
                 ) {
                     Column {
                         Text(
-                            text = if (!isReverseMode) "FINAL LANDED COST ON WAREHOUSE" else "MAX ALLOWABLE FOB FACTORY PRICE",
+                            text = if (!isReverseMode) tr("FINAL LANDED COST ON WAREHOUSE", "СЕБЕСТОИМОСТЬ НА СКЛАДЕ (LANDED)") else tr("MAX ALLOWABLE FOB FACTORY PRICE", "МАКСИМАЛЬНАЯ ЦЕНА FOB ЗАВОДА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 0.8.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (!isReverseMode) currencyFmt.format(result.landedCost) else currencyFmt.format(result.fobPrice),
+                            text = if (!isReverseMode) formatMoney(result.landedCost) else formatMoney(result.fobPrice),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Overhead: +${currencyFmt.format(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
+                            text = "${tr("Overhead", "Накладные расходы")}: +${formatMoney(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
                             style = MaterialTheme.typography.bodySmall,
                             color = GoldAccent
                         )
@@ -348,7 +361,7 @@ fun LandedCostModeler(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.testTag("modeler_btn_apply_margin")
                         ) {
-                            Text("To Margin", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(tr("To Margin", "В расчет маржи"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -372,7 +385,7 @@ fun LandedCostModeler(
                         Icon(Icons.Default.Tune, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Manual Overrides (Logistics, Duty, Tax, Fees)",
+                            text = tr("Manual Overrides (Logistics, Duty, Tax, Fees)", "Ручная настройка (логистика, пошлина, НДС, сборы)"),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -400,7 +413,7 @@ fun LandedCostModeler(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Logistics (%)",
+                            label = tr("Logistics (%)", "Логистика / Фрахт (%)"),
                             value = overrideLogisticsPct,
                             onValueChange = {
                                 overrideLogisticsPct = it
@@ -416,7 +429,7 @@ fun LandedCostModeler(
                             modifier = Modifier.weight(1f)
                         )
                         FinancialInputField(
-                            label = "Customs Duty (%)",
+                            label = tr("Customs Duty (%)", "Таможенная пошлина (%)"),
                             value = overrideDutyPct,
                             onValueChange = {
                                 overrideDutyPct = it
@@ -438,7 +451,7 @@ fun LandedCostModeler(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Import VAT (%)",
+                            label = tr("Import VAT (%)", "Ввозной НДС (%)"),
                             value = overrideVatPct,
                             onValueChange = {
                                 overrideVatPct = it
@@ -454,7 +467,7 @@ fun LandedCostModeler(
                             modifier = Modifier.weight(1f)
                         )
                         FinancialInputField(
-                            label = "Broker / Terminal (%)",
+                            label = tr("Broker / Terminal (%)", "Брокер / Терминал (%)"),
                             value = overrideBrokerPct,
                             onValueChange = {
                                 overrideBrokerPct = it
@@ -477,9 +490,9 @@ fun LandedCostModeler(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Freight: ${currencyFmt.format(result.freightAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Duty: ${currencyFmt.format(result.customsDutyAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("VAT: ${currencyFmt.format(result.importVatAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${tr("Freight", "Фрахт")}: ${formatMoney(result.freightAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${tr("Duty", "Пошлина")}: ${formatMoney(result.customsDutyAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${tr("VAT", "НДС")}: ${formatMoney(result.importVatAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

@@ -106,7 +106,6 @@ fun LandedCostScreen(
     var showCustomBuilder by remember { mutableStateOf(false) }
     var countryMenuExpanded by remember { mutableStateOf(false) }
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
 
     val categories = listOf(
@@ -267,7 +266,7 @@ fun LandedCostScreen(
                     }
 
                     Text(
-                        text = if (!isReverse) currencyFmt.format(result.landedCost) else currencyFmt.format(result.fobPrice),
+                        text = if (!isReverse) viewModel.formatCurrency(result.landedCost) else viewModel.formatCurrency(result.fobPrice),
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black
@@ -286,7 +285,7 @@ fun LandedCostScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = if (!isReverse) currencyFmt.format(result.fobPrice) else currencyFmt.format(result.landedCost),
+                                text = if (!isReverse) viewModel.formatCurrency(result.fobPrice) else viewModel.formatCurrency(result.landedCost),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -299,7 +298,7 @@ fun LandedCostScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "+${currencyFmt.format(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
+                                text = "+${viewModel.formatCurrency(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = GoldAccent
@@ -697,13 +696,13 @@ fun LandedCostScreen(
                         // Itemized Breakdown Table
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                            BreakdownRow(tr("1. FOB Goods Price", "1. Цена товара FOB"), currencyFmt.format(result.fobPrice))
-                            BreakdownRow(tr("2. Freight & Insurance", "2. Доставка и страховка"), "+ ${currencyFmt.format(result.freightAmount)}")
-                            BreakdownRow(tr("3. Customs Duty", "3. Таможенная пошлина"), "+ ${currencyFmt.format(result.customsDutyAmount)}")
-                            BreakdownRow(tr("4. Import VAT", "4. Ввозной НДС"), "+ ${currencyFmt.format(result.importVatAmount)}")
-                            BreakdownRow(tr("5. Broker & Clearance Fees", "5. Брокер и терминальные сборы"), "+ ${currencyFmt.format(result.brokerFeesAmount)}")
+                            BreakdownRow(tr("1. FOB Goods Price", "1. Цена товара FOB"), viewModel.formatCurrency(result.fobPrice))
+                            BreakdownRow(tr("2. Freight & Insurance", "2. Доставка и страховка"), "+ ${viewModel.formatCurrency(result.freightAmount)}")
+                            BreakdownRow(tr("3. Customs Duty", "3. Таможенная пошлина"), "+ ${viewModel.formatCurrency(result.customsDutyAmount)}")
+                            BreakdownRow(tr("4. Import VAT", "4. Ввозной НДС"), "+ ${viewModel.formatCurrency(result.importVatAmount)}")
+                            BreakdownRow(tr("5. Broker & Clearance Fees", "5. Брокер и терминальные сборы"), "+ ${viewModel.formatCurrency(result.brokerFeesAmount)}")
                             HorizontalDivider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
-                            BreakdownRow(tr("TOTAL WAREHOUSE COST (LANDED COST)", "ИТОГО НА СКЛАДЕ (LANDED COST)"), currencyFmt.format(result.landedCost), isBold = true, color = EmeraldPrimary)
+                            BreakdownRow(tr("TOTAL WAREHOUSE COST (LANDED COST)", "ИТОГО НА СКЛАДЕ (LANDED COST)"), viewModel.formatCurrency(result.landedCost), isBold = true, color = EmeraldPrimary)
                         }
                     }
                 }

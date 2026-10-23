@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.FinancialInputField
 import com.example.ui.components.MetricCard
 import com.example.ui.components.RoiPnlModeler
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -68,9 +69,6 @@ fun AnalyticsPnlScreen(
     val unitCost by viewModel.unitCost.collectAsState()
     val pnl by viewModel.pnlModel.collectAsState()
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
-    val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US) }
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -81,14 +79,17 @@ fun AnalyticsPnlScreen(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "BUSINESS PERFORMANCE & P&L",
+                text = tr("BUSINESS PERFORMANCE & P&L", "ФИНАНСОВЫЙ РЕЗУЛЬТАТ И P&L"),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Evaluate deal profitability, net margins, EBITDA, ROI, payback horizon, and break-even volume.",
+                text = tr(
+                    "Evaluate deal profitability, net margins, EBITDA, ROI, payback horizon, and break-even volume.",
+                    "Оценка рентабельности сделки, чистой маржи, EBITDA, ROI, окупаемости и точки безубыточности."
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -103,10 +104,10 @@ fun AnalyticsPnlScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricCard(
-                    title = "Projected ROI",
+                    title = tr("Projected ROI", "Прогнозный ROI"),
                     value = "${pnl.roiPct}%",
-                    subtitle = "Gain on Investment",
-                    badgeText = if (pnl.roiPct >= 100) "2x+ Return" else "Positive",
+                    subtitle = tr("Gain on Investment", "Доходность на вложенный капитал"),
+                    badgeText = if (pnl.roiPct >= 100) tr("2x+ Return", "Доходность 2x+") else tr("Positive", "В плюсе"),
                     badgeColor = EmeraldPrimary,
                     icon = Icons.Default.ShowChart,
                     modifier = Modifier
@@ -115,9 +116,9 @@ fun AnalyticsPnlScreen(
                     testTag = "card_roi_pct"
                 )
                 MetricCard(
-                    title = "Payback Horizon",
-                    value = "${pnl.paybackMonths} mo",
-                    subtitle = "Capital Recovery",
+                    title = tr("Payback Horizon", "Срок окупаемости"),
+                    value = "${pnl.paybackMonths} ${tr("mo", "мес")}",
+                    subtitle = tr("Capital Recovery", "Возврат инвестиций"),
                     badgeText = "EBITDA: ${pnl.ebitdaMarginPct}%",
                     badgeColor = ElectricCyan,
                     icon = Icons.Default.Timelapse,
@@ -136,6 +137,7 @@ fun AnalyticsPnlScreen(
                 initialLtv = viewModel.ltvMetrics.value.ltv,
                 initialChurnRatePct = viewModel.churnRatePct.value.toDoubleOrNull() ?: 2.5,
                 initialGrossMarginPct = viewModel.grossMarginPct.value.toDoubleOrNull() ?: 75.0,
+                currencySymbol = currencySym,
                 onApplyForecastToPnl = { forecast ->
                     viewModel.applyRoiPnlForecast(forecast)
                 },
@@ -168,7 +170,7 @@ fun AnalyticsPnlScreen(
                             )
                             Spacer(modifier = Modifier.size(6.dp))
                             Text(
-                                text = "CONTRACT P&L STATEMENT",
+                                text = tr("CONTRACT P&L STATEMENT", "ОТЧЕТ О ПРИБЫЛЯХ И УБЫТКАХ (P&L)"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
@@ -176,7 +178,7 @@ fun AnalyticsPnlScreen(
                         }
 
                         Text(
-                            text = "Net Margin: ${pnl.netMarginPct}%",
+                            text = "${tr("Net Margin", "Чистая маржа")}: ${pnl.netMarginPct}%",
                             style = MaterialTheme.typography.labelSmall,
                             color = EmeraldPrimary,
                             fontWeight = FontWeight.Bold
@@ -184,25 +186,25 @@ fun AnalyticsPnlScreen(
                     }
 
                     // Financial line items
-                    PnlRowItem("Gross Contract Revenue", currencyFmt.format(pnl.grossRevenue), isPositive = true)
-                    PnlRowItem("Direct Delivery / COGS", "- ${currencyFmt.format(pnl.cogs)}", isDeduction = true)
+                    PnlRowItem(tr("Gross Contract Revenue", "Выручка по контракту"), viewModel.formatCurrency(pnl.grossRevenue), isPositive = true)
+                    PnlRowItem(tr("Direct Delivery / COGS", "Прямая себестоимость / COGS"), "- ${viewModel.formatCurrency(pnl.cogs)}", isDeduction = true)
 
                     HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                    PnlRowItem("Gross Profit (${pnl.grossMarginPct}%)", currencyFmt.format(pnl.grossProfit), isBold = true, valueColor = EmeraldPrimary)
+                    PnlRowItem("${tr("Gross Profit", "Валовая прибыль")} (${pnl.grossMarginPct}%)", viewModel.formatCurrency(pnl.grossProfit), isBold = true, valueColor = EmeraldPrimary)
 
-                    PnlRowItem("Sales & Delivery OPEX", "- ${currencyFmt.format(pnl.operatingExpenses)}", isDeduction = true)
+                    PnlRowItem(tr("Sales & Delivery OPEX", "Операционные расходы (OPEX)"), "- ${viewModel.formatCurrency(pnl.operatingExpenses)}", isDeduction = true)
 
                     HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                    PnlRowItem("Operating EBITDA (${pnl.ebitdaMarginPct}%)", currencyFmt.format(pnl.ebitda), isBold = true, valueColor = ElectricCyan)
-                    PnlRowItem("Estimated Tax (20% est.)", "- ${currencyFmt.format(if (pnl.ebitda > 0) pnl.ebitda * 0.20 else 0.0)}", isDeduction = true)
+                    PnlRowItem("${tr("Operating EBITDA", "Операционная EBITDA")} (${pnl.ebitdaMarginPct}%)", viewModel.formatCurrency(pnl.ebitda), isBold = true, valueColor = ElectricCyan)
+                    PnlRowItem(tr("Estimated Tax (20% est.)", "Налог на прибыль (расчет 20%)"), "- ${viewModel.formatCurrency(if (pnl.ebitda > 0) pnl.ebitda * 0.20 else 0.0)}", isDeduction = true)
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), thickness = 1.5.dp)
-                    PnlRowItem("Net Contract Profit (${pnl.netMarginPct}%)", currencyFmt.format(pnl.netProfit), isBold = true, valueColor = EmeraldPrimary)
+                    PnlRowItem("${tr("Net Contract Profit", "Чистая прибыль контракта")} (${pnl.netMarginPct}%)", viewModel.formatCurrency(pnl.netProfit), isBold = true, valueColor = EmeraldPrimary)
                 }
             }
         }
 
-        // 3. PnL & Investment Input Modeler
+        // 4. PnL & Investment Input Modeler
         item {
             Box(
                 modifier = Modifier
@@ -214,7 +216,7 @@ fun AnalyticsPnlScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "FINANCIAL MODEL DRIVERS",
+                        text = tr("FINANCIAL MODEL DRIVERS", "ПАРАМЕТРЫ ФИНАНСОВОЙ МОДЕЛИ"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -225,7 +227,7 @@ fun AnalyticsPnlScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FinancialInputField(
-                            label = "Gross Revenue",
+                            label = tr("Gross Revenue", "Выручка сделки"),
                             value = revenue,
                             onValueChange = {
                                 viewModel.pnlRevenue.value = it
@@ -236,7 +238,7 @@ fun AnalyticsPnlScreen(
                             testTag = "input_pnl_revenue"
                         )
                         FinancialInputField(
-                            label = "COGS / Delivery",
+                            label = tr("COGS / Delivery", "Себестоимость COGS"),
                             value = cogs,
                             onValueChange = {
                                 viewModel.pnlCogs.value = it
@@ -253,7 +255,7 @@ fun AnalyticsPnlScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FinancialInputField(
-                            label = "Operating Expenses",
+                            label = tr("Operating Expenses", "Расходы OPEX"),
                             value = opex,
                             onValueChange = {
                                 viewModel.pnlOpex.value = it
@@ -264,7 +266,7 @@ fun AnalyticsPnlScreen(
                             testTag = "input_pnl_opex"
                         )
                         FinancialInputField(
-                            label = "Initial Investment",
+                            label = tr("Initial Investment", "Инвестиции / CAC"),
                             value = investment,
                             onValueChange = {
                                 viewModel.pnlInvestment.value = it
@@ -279,7 +281,7 @@ fun AnalyticsPnlScreen(
             }
         }
 
-        // 4. Break-Even Analysis Card
+        // 5. Break-Even Analysis Card
         item {
             Box(
                 modifier = Modifier
@@ -304,7 +306,7 @@ fun AnalyticsPnlScreen(
                             )
                             Spacer(modifier = Modifier.size(6.dp))
                             Text(
-                                text = "BREAK-EVEN ANALYSIS",
+                                text = tr("BREAK-EVEN ANALYSIS", "АНАЛИЗ БЕЗУБЫТОЧНОСТИ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = GoldAccent,
                                 fontWeight = FontWeight.Bold
@@ -312,7 +314,7 @@ fun AnalyticsPnlScreen(
                         }
 
                         Text(
-                            text = "Volume Threshold",
+                            text = tr("Volume Threshold", "Порог объема"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -323,7 +325,7 @@ fun AnalyticsPnlScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Fixed Costs",
+                            label = tr("Fixed Costs", "Постоянные затраты"),
                             value = fixedCosts,
                             onValueChange = {
                                 viewModel.fixedCosts.value = it
@@ -334,7 +336,7 @@ fun AnalyticsPnlScreen(
                             testTag = "input_fixed_costs"
                         )
                         FinancialInputField(
-                            label = "Price / Unit",
+                            label = tr("Price / Unit", "Цена за ед."),
                             value = unitPrice,
                             onValueChange = {
                                 viewModel.unitPrice.value = it
@@ -345,7 +347,7 @@ fun AnalyticsPnlScreen(
                             testTag = "input_unit_price"
                         )
                         FinancialInputField(
-                            label = "Cost / Unit",
+                            label = tr("Cost / Unit", "Переменные на ед."),
                             value = unitCost,
                             onValueChange = {
                                 viewModel.unitCost.value = it
@@ -371,12 +373,12 @@ fun AnalyticsPnlScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "BREAK-EVEN VOLUME",
+                                    text = tr("BREAK-EVEN VOLUME", "ТОЧКА БЕЗУБЫТОЧНОСТИ"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${pnl.breakEvenUnits.toInt()} units / licenses",
+                                    text = "${pnl.breakEvenUnits.toInt()} ${tr("units / licenses", "шт. / лицензий")}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -384,12 +386,12 @@ fun AnalyticsPnlScreen(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "MINIMUM REVENUE",
+                                    text = tr("MINIMUM REVENUE", "МИНИМАЛЬНАЯ ВЫРУЧКА"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = currencyFmt.format(pnl.breakEvenRevenue),
+                                    text = viewModel.formatCurrency(pnl.breakEvenRevenue),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = GoldAccent

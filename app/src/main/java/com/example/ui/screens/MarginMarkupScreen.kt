@@ -100,7 +100,7 @@ fun MarginMarkupScreen(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "COMMERCIAL PRICING & REVENUE SUITE",
+                text = tr("COMMERCIAL PRICING & REVENUE SUITE", "КОММЕРЧЕСКИЙ РАСЧЕТ И ЦЕНООБРАЗОВАНИЕ"),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
@@ -161,10 +161,10 @@ fun MarginMarkupScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         MetricCard(
-                            title = "Gross Margin",
+                            title = tr("Gross Margin", "Валовая маржа"),
                             value = "${marginState.marginPct}%",
-                            subtitle = "Profit / Revenue",
-                            badgeText = if (marginState.marginPct >= 40.0) "High Margin" else "Standard",
+                            subtitle = tr("Profit / Revenue", "Прибыль / Выручка"),
+                            badgeText = if (marginState.marginPct >= 40.0) tr("High Margin", "Высокая маржа") else tr("Standard", "Стандартная"),
                             badgeColor = if (marginState.marginPct >= 40.0) EmeraldPrimary else GoldAccent,
                             icon = Icons.Default.Percent,
                             modifier = Modifier
@@ -173,10 +173,10 @@ fun MarginMarkupScreen(
                             testTag = "card_margin_pct"
                         )
                         MetricCard(
-                            title = "Markup Rate",
+                            title = tr("Markup Rate", "Ставка наценки"),
                             value = "${marginState.markupPct}%",
-                            subtitle = "Profit / Cost",
-                            badgeText = "Factor: ${String.format(Locale.US, "%.2f", 1.0 + marginState.markupPct / 100.0)}x",
+                            subtitle = tr("Profit / Cost", "Прибыль / Себестоимость"),
+                            badgeText = "${tr("Factor", "Коэфф")}: ${String.format(Locale.US, "%.2f", 1.0 + marginState.markupPct / 100.0)}x",
                             badgeColor = ElectricCyan,
                             icon = Icons.Default.Percent,
                             modifier = Modifier
@@ -198,7 +198,7 @@ fun MarginMarkupScreen(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
-                                text = "DEAL PRICING & COST INPUTS",
+                                text = tr("DEAL PRICING & COST INPUTS", "ПАРАМЕТРЫ СДЕЛКИ И СЕБЕСТОИМОСТЬ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
@@ -209,7 +209,7 @@ fun MarginMarkupScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 FinancialInputField(
-                                    label = "Cost of Delivery",
+                                    label = tr("Cost of Delivery", "Себестоимость"),
                                     value = marginCost,
                                     onValueChange = {
                                         viewModel.onMarginCostOrPriceChanged(newCost = it)
@@ -219,7 +219,7 @@ fun MarginMarkupScreen(
                                     testTag = "input_margin_cost"
                                 )
                                 FinancialInputField(
-                                    label = "Selling Price",
+                                    label = tr("Selling Price", "Цена продажи"),
                                     value = marginPrice,
                                     onValueChange = {
                                         viewModel.onMarginCostOrPriceChanged(newPrice = it)
@@ -257,6 +257,7 @@ fun MarginMarkupScreen(
                             if (showLandedCostModeler) {
                                 LandedCostModeler(
                                     initialFobPrice = marginCost.toDoubleOrNull() ?: 1000.0,
+                                    currencySymbol = currencySym,
                                     onApplyToMargin = { computedCost ->
                                         viewModel.onMarginCostOrPriceChanged(newCost = computedCost.toInt().toString())
                                         showLandedCostModeler = false
@@ -280,7 +281,7 @@ fun MarginMarkupScreen(
                                 ) {
                                     Column {
                                         Text(
-                                            text = "GROSS PROFIT PER DEAL",
+                                            text = tr("GROSS PROFIT PER DEAL", "ВАЛОВАЯ ПРИБЫЛЬ СО СДЕЛКИ"),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -294,13 +295,13 @@ fun MarginMarkupScreen(
 
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
-                                            text = "COST RATIO",
+                                            text = tr("COST RATIO", "ДОЛЯ СЕБЕСТОИМОСТИ"),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         val costRatio = if (marginState.sellingPrice > 0) (marginState.cost / marginState.sellingPrice) * 100.0 else 0.0
                                         Text(
-                                            text = "${String.format(Locale.US, "%.1f", costRatio)}% of Price",
+                                            text = "${String.format(Locale.US, "%.1f", costRatio)}% ${tr("of Price", "от цены")}",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -319,8 +320,8 @@ fun MarginMarkupScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Cost Share (${String.format(Locale.US, "%.0f", costWeight * 100)}%)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("Profit Share (${String.format(Locale.US, "%.0f", profitWeight * 100)}%)", style = MaterialTheme.typography.labelSmall, color = EmeraldPrimary)
+                                    Text("${tr("Cost Share", "Себестоимость")} (${String.format(Locale.US, "%.0f", costWeight * 100)}%)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${tr("Profit Share", "Прибыль")} (${String.format(Locale.US, "%.0f", profitWeight * 100)}%)", style = MaterialTheme.typography.labelSmall, color = EmeraldPrimary)
                                 }
                                 Row(
                                     modifier = Modifier
@@ -350,7 +351,7 @@ fun MarginMarkupScreen(
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            text = "TARGET MARGIN PRESETS",
+                            text = tr("TARGET MARGIN PRESETS", "БЫСТРЫЕ ШАБЛОНЫ МАРЖИ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.SemiBold
@@ -360,7 +361,7 @@ fun MarginMarkupScreen(
                             items(presets) { preset ->
                                 AssistChip(
                                     onClick = { viewModel.applyMarginPercentPreset(preset) },
-                                    label = { Text("${preset.toInt()}% Margin") },
+                                    label = { Text("${preset.toInt()}% ${tr("Margin", "Маржа")}") },
                                     colors = AssistChipDefaults.assistChipColors(
                                         containerColor = ExecutiveSurfaceVariant,
                                         labelColor = MaterialTheme.colorScheme.onSurface
@@ -377,6 +378,7 @@ fun MarginMarkupScreen(
                     MarginVsMarkupCalculator(
                         initialMarginPct = marginState.marginPct,
                         sampleBaseCost = marginState.cost,
+                        currencySymbol = currencySym,
                         onStrategySelected = { selectedMargin, selectedMarkup, multiplier ->
                             viewModel.applyMarginPercentPreset(selectedMargin)
                         },

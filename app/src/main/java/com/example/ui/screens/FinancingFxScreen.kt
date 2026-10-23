@@ -51,10 +51,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.PaymentFrequency
+import com.example.ui.components.CashGapTimelineCard
 import com.example.ui.components.FinancialInputField
+import com.example.ui.components.FxStressTestCard
+import com.example.ui.components.HurdleRoicGuardrailCard
 import com.example.ui.components.MetricCard
 import com.example.ui.components.MultiCurrencyCreditCard
 import com.example.ui.components.PaymentTermsCard
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -91,8 +95,15 @@ fun FinancingFxScreen(
     var showScheduleTable by remember { mutableStateOf(false) }
     var targetCurrencyDropdownExpanded by remember { mutableStateOf(false) }
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US) }
+
+    val freqLocalizedName = when (frequency) {
+        PaymentFrequency.WEEKLY -> tr("Weekly", "Еженедельный")
+        PaymentFrequency.BIWEEKLY -> tr("Bi-Weekly", "Раз в 2 недели")
+        PaymentFrequency.MONTHLY -> tr("Monthly", "Ежемесячный")
+        PaymentFrequency.QUARTERLY -> tr("Quarterly", "Ежеквартальный")
+        PaymentFrequency.ANNUALLY -> tr("Yearly", "Ежегодный")
+    }
 
     LazyColumn(
         modifier = modifier
@@ -104,14 +115,17 @@ fun FinancingFxScreen(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "FINANCING & PURCHASE MODELER",
+                text = tr("FINANCING & PURCHASE MODELER", "МОДЕЛИРОВАНИЕ ФИНАНСИРОВАНИЯ И СДЕЛОК"),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Structure enterprise client financing, credits, installments, and cross-currency parity.",
+                text = tr(
+                    "Structure enterprise client financing, credits, installments, and cross-currency parity.",
+                    "Структурирование клиентского финансирования, кредитов, рассрочек и валютного паритета."
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -134,7 +148,7 @@ fun FinancingFxScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${frequency.displayName.uppercase()} INSTALLMENT",
+                            text = "${freqLocalizedName.uppercase()} ${tr("INSTALLMENT", "ПЛАТЕЖ")}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 1.sp,
@@ -156,7 +170,7 @@ fun FinancingFxScreen(
                     }
 
                     Text(
-                        text = currencyFmt.format(amortization.periodicPayment),
+                        text = viewModel.formatCurrency(amortization.periodicPayment),
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Black
@@ -174,12 +188,12 @@ fun FinancingFxScreen(
                     ) {
                         Column {
                             Text(
-                                text = "TOTAL PAYMENTS",
+                                text = tr("TOTAL PAYMENTS", "ИТОГО ВЫПЛАТ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = currencyFmt.format(amortization.totalPayments),
+                                text = viewModel.formatCurrency(amortization.totalPayments),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -187,12 +201,12 @@ fun FinancingFxScreen(
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "FINANCING INTEREST",
+                                text = tr("FINANCING INTEREST", "ПРОЦЕНТЫ БАНКУ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "+${currencyFmt.format(amortization.totalInterest)}",
+                                text = "+${viewModel.formatCurrency(amortization.totalInterest)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = GoldAccent
@@ -207,7 +221,7 @@ fun FinancingFxScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "PAYMENT FREQUENCY",
+                    text = tr("PAYMENT FREQUENCY", "ПЕРИОДИЧНОСТЬ ПЛАТЕЖЕЙ"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -223,12 +237,19 @@ fun FinancingFxScreen(
                 ) {
                     PaymentFrequency.values().forEach { freq ->
                         val selected = freq == frequency
+                        val freqText = when (freq) {
+                            PaymentFrequency.WEEKLY -> tr("Weekly", "Еженедельно")
+                            PaymentFrequency.BIWEEKLY -> tr("Bi-Weekly", "Раз в 2 нед.")
+                            PaymentFrequency.MONTHLY -> tr("Monthly", "Ежемесячно")
+                            PaymentFrequency.QUARTERLY -> tr("Quarterly", "Ежеквартально")
+                            PaymentFrequency.ANNUALLY -> tr("Yearly", "Ежегодно")
+                        }
                         Tab(
                             selected = selected,
                             onClick = { viewModel.setPaymentFrequency(freq) },
                             text = {
                                 Text(
-                                    text = freq.displayName,
+                                    text = freqText,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 12.sp
                                 )
@@ -251,7 +272,7 @@ fun FinancingFxScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "DEAL PRINCIPAL & TERMS",
+                        text = tr("DEAL PRINCIPAL & TERMS", "СУММА СДЕЛКИ И УСЛОВИЯ"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -262,7 +283,7 @@ fun FinancingFxScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FinancialInputField(
-                            label = "Deal Principal",
+                            label = tr("Deal Principal", "Сумма сделки / Кредит"),
                             value = principal,
                             onValueChange = {
                                 viewModel.principalAmount.value = it
@@ -273,7 +294,7 @@ fun FinancingFxScreen(
                             testTag = "input_principal"
                         )
                         FinancialInputField(
-                            label = "Down Payment",
+                            label = tr("Down Payment", "Первоначальный взнос"),
                             value = downPayment,
                             onValueChange = {
                                 viewModel.downPayment.value = it
@@ -290,7 +311,7 @@ fun FinancingFxScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FinancialInputField(
-                            label = "Annual APR (%)",
+                            label = tr("Annual APR (%)", "Годовая ставка (%)"),
                             value = interestRate,
                             onValueChange = {
                                 viewModel.annualInterestRate.value = it
@@ -301,13 +322,13 @@ fun FinancingFxScreen(
                             testTag = "input_apr"
                         )
                         FinancialInputField(
-                            label = "Tenure",
+                            label = tr("Tenure", "Срок"),
                             value = tenureMonths,
                             onValueChange = {
                                 viewModel.tenureMonths.value = it
                                 viewModel.updateFinancing()
                             },
-                            suffix = "mo",
+                            suffix = tr("mo", "мес"),
                             modifier = Modifier.weight(1f),
                             testTag = "input_tenure"
                         )
@@ -341,7 +362,7 @@ fun FinancingFxScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "CROSS-CURRENCY MODELER",
+                                text = tr("CROSS-CURRENCY MODELER", "КРОСС-ВАЛЮТНЫЙ КАЛЬКУЛЯТОР"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = ElectricCyan,
                                 fontWeight = FontWeight.Bold
@@ -388,7 +409,7 @@ fun FinancingFxScreen(
                     ) {
                         Column {
                             Text(
-                                text = "CONVERTED CONTRACT VALUE",
+                                text = tr("CONVERTED CONTRACT VALUE", "СУММА В ЦЕЛЕВОЙ ВАЛЮТЕ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -402,7 +423,7 @@ fun FinancingFxScreen(
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "PARITY CROSS-RATE",
+                                text = tr("PARITY CROSS-RATE", "ПАРИТЕТНЫЙ КРОСС-КУРС"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -434,7 +455,31 @@ fun FinancingFxScreen(
             )
         }
 
-        // 6. Expandable Amortization Schedule Preview
+        // 7. Cash Gap & Working Capital Peak (CCC & Overdraft Bridge)
+        item {
+            CashGapTimelineCard(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 8. FX Stress-Test & Margin Wipeout Threshold
+        item {
+            FxStressTestCard(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 9. Hurdle Rate & ROIC Guardrail (Shareholder Value Creation)
+        item {
+            HurdleRoicGuardrailCard(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 10. Expandable Amortization Schedule Preview
         item {
             Box(
                 modifier = Modifier
@@ -459,7 +504,7 @@ fun FinancingFxScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Amortization Breakdown (${amortization.schedule.size} installments)",
+                            text = "${tr("Amortization Breakdown", "График платежей")} (${amortization.schedule.size} ${tr("installments", "платежей")})",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -491,10 +536,10 @@ fun FinancingFxScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("#", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
-                            Text("Payment", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                            Text("Principal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                            Text("Interest", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                            Text("Balance", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
+                            Text(tr("Payment", "Платеж"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            Text(tr("Principal", "Осн. долг"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            Text(tr("Interest", "Проценты"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            Text(tr("Balance", "Остаток"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
                         }
 
                         HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
@@ -505,16 +550,16 @@ fun FinancingFxScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("${row.period}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
-                                Text(currencyFmt.format(row.payment), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                                Text(currencyFmt.format(row.principal), style = MaterialTheme.typography.bodySmall, color = EmeraldPrimary, modifier = Modifier.weight(1f))
-                                Text(currencyFmt.format(row.interest), style = MaterialTheme.typography.bodySmall, color = GoldAccent, modifier = Modifier.weight(1f))
-                                Text(currencyFmt.format(row.remainingBalance), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
+                                Text(viewModel.formatCurrency(row.payment), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                                Text(viewModel.formatCurrency(row.principal), style = MaterialTheme.typography.bodySmall, color = EmeraldPrimary, modifier = Modifier.weight(1f))
+                                Text(viewModel.formatCurrency(row.interest), style = MaterialTheme.typography.bodySmall, color = GoldAccent, modifier = Modifier.weight(1f))
+                                Text(viewModel.formatCurrency(row.remainingBalance), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
                             }
                         }
 
                         if (amortization.schedule.size > 12) {
                             Text(
-                                text = "+ ${amortization.schedule.size - 12} additional installments included in exportable PDF",
+                                text = "+ ${amortization.schedule.size - 12} ${tr("additional installments included in exportable PDF", "следующих платежей включены в PDF-отчет")}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp)

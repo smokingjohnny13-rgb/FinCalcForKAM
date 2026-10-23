@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.LtvCalculator
 import com.example.domain.calculator.RoiForecastEngine
 import com.example.domain.calculator.RoiPnlForecast
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -80,6 +81,7 @@ fun RoiPnlModeler(
     initialCohortSize: Int = 25,
     initialGrossMarginPct: Double = 75.0,
     initialMonthlyOpex: Double = 2500.0,
+    currencySymbol: String = "$",
     onApplyForecastToPnl: ((RoiPnlForecast) -> Unit)? = null,
     testTag: String = "roi_pnl_modeler"
 ) {
@@ -90,10 +92,14 @@ fun RoiPnlModeler(
     var grossMarginInput by remember { mutableStateOf(initialGrossMarginPct.toString()) }
     var opexInput by remember { mutableStateOf(initialMonthlyOpex.toInt().toString()) }
 
-    var showMonthlyBreakdown by remember { mutableStateOf(false) }
-
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 1 } }
+    val formatMoney: (Double) -> String = { amount ->
+        val formattedNum = NumberFormat.getNumberInstance(Locale.US).apply {
+            maximumFractionDigits = 0
+        }.format(amount)
+        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$currencySymbol$formattedNum"
+        else "$currencySymbol $formattedNum"
+    }
 
     val currentCac = cacInput.toDoubleOrNull() ?: initialCac
     val currentLtv = ltvInput.toDoubleOrNull() ?: initialLtv
@@ -147,13 +153,16 @@ fun RoiPnlModeler(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "12-MONTH ROI & P&L FORECASTER",
+                            text = tr("12-MONTH ROI & P&L FORECASTER", "ПРОГНОЗ ROI И P&L НА 12 МЕСЯЦЕВ"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "CAC, LTV & Churn cohort cashflow trajectory",
+                            text = tr(
+                                "CAC, LTV & Churn cohort cashflow trajectory",
+                                "Траектория денежного потока когорты по CAC, LTV и оттоку"
+                            ),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -184,10 +193,10 @@ fun RoiPnlModeler(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
-                    title = "12-Mo Net Profit",
-                    value = currencyFmt.format(forecast.total12MonthNetProfit),
-                    subtitle = "After Initial CAC",
-                    badgeText = if (forecast.total12MonthNetProfit >= 0) "Profitable" else "Deficit",
+                    title = tr("12-Mo Net Profit", "Чистая прибыль 12м"),
+                    value = formatMoney(forecast.total12MonthNetProfit),
+                    subtitle = tr("After Initial CAC", "После вычета CAC"),
+                    badgeText = if (forecast.total12MonthNetProfit >= 0) tr("Profitable", "В плюсе") else tr("Deficit", "Дефицит"),
                     badgeColor = if (forecast.total12MonthNetProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .weight(1f)
@@ -195,10 +204,10 @@ fun RoiPnlModeler(
                     testTag = "card_12mo_profit"
                 )
                 MetricCard(
-                    title = "12-Month Net ROI",
+                    title = tr("12-Month Net ROI", "Чистый ROI 12м"),
                     value = "${numberFmt.format(forecast.roi12MonthPct)}%",
-                    subtitle = "On CAC Capital",
-                    badgeText = if (forecast.roi12MonthPct >= 100) "2x+ Return" else "Growth",
+                    subtitle = tr("On CAC Capital", "На вложенный CAC"),
+                    badgeText = if (forecast.roi12MonthPct >= 100) tr("2x+ Return", "Доходность 2x+") else tr("Growth", "Рост"),
                     badgeColor = EmeraldPrimary,
                     modifier = Modifier
                         .weight(1f)
@@ -214,10 +223,10 @@ fun RoiPnlModeler(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MetricCard(
-                    title = "CAC Payback Horizon",
-                    value = if (forecast.paybackMonth > 0.0) "${forecast.paybackMonth} mo" else "> 12 mo",
-                    subtitle = "Break-Even Point",
-                    badgeText = if (forecast.paybackMonth <= 8.0) "Fast Recovery" else "Standard",
+                    title = tr("CAC Payback Horizon", "Срок окупаемости CAC"),
+                    value = if (forecast.paybackMonth > 0.0) "${forecast.paybackMonth} ${tr("mo", "мес")}" else "> 12 ${tr("mo", "мес")}",
+                    subtitle = tr("Break-Even Point", "Точка безубыточности"),
+                    badgeText = if (forecast.paybackMonth <= 8.0) tr("Fast Recovery", "Быстрый возврат") else tr("Standard", "Стандарт"),
                     badgeColor = if (forecast.paybackMonth <= 8.0) EmeraldPrimary else GoldAccent,
                     icon = Icons.Default.Timelapse,
                     modifier = Modifier
@@ -226,10 +235,10 @@ fun RoiPnlModeler(
                     testTag = "card_payback_horizon"
                 )
                 MetricCard(
-                    title = "12-Mo Retention",
+                    title = tr("12-Mo Retention", "Удержание 12м"),
                     value = "${numberFmt.format(forecast.customerRetention12MoPct)}%",
-                    subtitle = "Active Accounts",
-                    badgeText = "${forecast.monthlyPoints.lastOrNull()?.activeCustomers ?: 0.0} left",
+                    subtitle = tr("Active Accounts", "Активные клиенты"),
+                    badgeText = "${forecast.monthlyPoints.lastOrNull()?.activeCustomers ?: 0.0} ${tr("left", "осталось")}",
                     badgeColor = ElectricCyan,
                     icon = Icons.Default.Speed,
                     modifier = Modifier
@@ -250,7 +259,7 @@ fun RoiPnlModeler(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "CORE SAAS & COHORT DRIVERS",
+                        text = tr("CORE SAAS & COHORT DRIVERS", "ПАРАМЕТРЫ КОГОРТЫ И SAAS"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -261,18 +270,18 @@ fun RoiPnlModeler(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Customer Acquisition Cost (CAC)",
+                            label = tr("Customer Acquisition Cost (CAC)", "Стоимость привлечения (CAC)"),
                             value = cacInput,
                             onValueChange = { cacInput = it },
-                            prefix = "$",
+                            prefix = currencySymbol,
                             modifier = Modifier.weight(1f),
                             testTag = "input_modeler_cac"
                         )
                         FinancialInputField(
-                            label = "Customer Lifetime Value (LTV)",
+                            label = tr("Customer Lifetime Value (LTV)", "Жизненный цикл (LTV)"),
                             value = ltvInput,
                             onValueChange = { ltvInput = it },
-                            prefix = "$",
+                            prefix = currencySymbol,
                             modifier = Modifier.weight(1f),
                             testTag = "input_modeler_ltv"
                         )
@@ -283,7 +292,7 @@ fun RoiPnlModeler(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Monthly Churn Rate (%)",
+                            label = tr("Monthly Churn Rate (%)", "Месячный отток (%)"),
                             value = churnInput,
                             onValueChange = { churnInput = it },
                             suffix = "%",
@@ -291,10 +300,10 @@ fun RoiPnlModeler(
                             testTag = "input_modeler_churn"
                         )
                         FinancialInputField(
-                            label = "Cohort Size (Accounts)",
+                            label = tr("Cohort Size (Accounts)", "Размер когорты (Клиентов)"),
                             value = cohortInput,
                             onValueChange = { cohortInput = it },
-                            suffix = "accts",
+                            suffix = tr("accts", "кл."),
                             modifier = Modifier.weight(1f),
                             testTag = "input_modeler_cohort"
                         )
@@ -305,7 +314,7 @@ fun RoiPnlModeler(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Gross Margin (%)",
+                            label = tr("Gross Margin (%)", "Валовая маржа (%)"),
                             value = grossMarginInput,
                             onValueChange = { grossMarginInput = it },
                             suffix = "%",
@@ -313,10 +322,10 @@ fun RoiPnlModeler(
                             testTag = "input_modeler_margin"
                         )
                         FinancialInputField(
-                            label = "Monthly OPEX",
+                            label = tr("Monthly OPEX", "Месячный OPEX"),
                             value = opexInput,
                             onValueChange = { opexInput = it },
-                            prefix = "$",
+                            prefix = currencySymbol,
                             modifier = Modifier.weight(1f),
                             testTag = "input_modeler_opex"
                         )
@@ -336,16 +345,16 @@ fun RoiPnlModeler(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text("INITIAL CAC CAPITAL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(currencyFmt.format(forecast.totalCacInvestment), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(tr("INITIAL CAC CAPITAL", "ИНВЕСТИЦИИ В CAC"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(formatMoney(forecast.totalCacInvestment), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             }
                             Column {
-                                Text("DERIVED ARPU", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("${currencyFmt.format(forecast.arpu)} / mo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                                Text(tr("DERIVED ARPU", "РАСЧЕТНЫЙ ARPU"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${formatMoney(forecast.arpu)} / ${tr("mo", "мес")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("12-MO GROSS REVENUE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(currencyFmt.format(forecast.total12MonthRevenue), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = ElectricCyan)
+                                Text(tr("12-MO GROSS REVENUE", "ВЫРУЧКА ЗА 12 МЕС"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(formatMoney(forecast.total12MonthRevenue), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = ElectricCyan)
                             }
                         }
                     }
@@ -368,14 +377,14 @@ fun RoiPnlModeler(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "12-MONTH CUMULATIVE CASHFLOW TIMELINE",
+                            text = tr("12-MONTH CUMULATIVE CASHFLOW TIMELINE", "ГРАФИК НАКОПЛЕННОГО ДЕНЕЖНОГО ПОТОКА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         if (forecast.paybackMonth > 0.0) {
                             Text(
-                                text = "Payback @ Month ${forecast.paybackMonth} 🎯",
+                                text = "${tr("Payback @ Month", "Окупаемость на месяце")} ${forecast.paybackMonth} 🎯",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = EmeraldPrimary,
                                 fontWeight = FontWeight.Bold
@@ -383,8 +392,7 @@ fun RoiPnlModeler(
                         }
                     }
 
-                    // Simple Bar visualization across months
-                    val maxAbsCashflow = forecast.monthlyPoints.maxOfOrNull { Math.abs(it.cumulativeProfit) } ?: 1000.0
+                    // Bar visualization across months
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         forecast.monthlyPoints.chunked(3).forEachIndexed { quarterIndex, quarterPoints ->
                             Row(
@@ -408,13 +416,13 @@ fun RoiPnlModeler(
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
-                                                text = "M${pt.month}",
+                                                text = "${tr("M", "М")}${pt.month}",
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             Text(
-                                                text = if (isProfit) "+$${pt.cumulativeProfit.toInt()}" else "-$${Math.abs(pt.cumulativeProfit.toInt())}",
+                                                text = if (isProfit) "+${formatMoney(pt.cumulativeProfit)}" else "-${formatMoney(Math.abs(pt.cumulativeProfit))}",
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = if (isProfit) EmeraldPrimary else MaterialTheme.colorScheme.error
@@ -439,83 +447,11 @@ fun RoiPnlModeler(
                             Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Apply 12-Month Forecast to Contract P&L",
+                                text = tr("Apply 12-Month Forecast to Contract P&L", "Применить прогноз 12м к P&L контракта"),
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                        }
-                    }
-                }
-            }
-
-            // 4. Expandable Detailed Month-by-Month Table
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(ExecutiveSurfaceVariant)
-                    .clickable { showMonthlyBreakdown = !showMonthlyBreakdown }
-                    .padding(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "View 12-Month Statement Breakdown",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Icon(
-                        imageVector = if (showMonthlyBreakdown) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Toggle breakdown",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            if (showMonthlyBreakdown) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(ExecutiveCard)
-                        .padding(12.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Mo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(24.dp))
-                            Text("Accounts", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                            Text("Revenue", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
-                            Text("Gross Profit", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
-                            Text("Net Cashflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
-                        }
-
-                        HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-
-                        forecast.monthlyPoints.forEach { pt ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("${pt.month}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(24.dp))
-                                Text("${pt.activeCustomers}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                                Text(currencyFmt.format(pt.revenue), fontSize = 10.sp, color = ElectricCyan, modifier = Modifier.weight(1.2f))
-                                Text(currencyFmt.format(pt.grossProfit), fontSize = 10.sp, color = EmeraldPrimary, modifier = Modifier.weight(1.2f))
-                                Text(
-                                    text = currencyFmt.format(pt.cumulativeProfit),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (pt.isPaybackAchieved) EmeraldPrimary else MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.weight(1.2f)
-                                )
-                            }
                         }
                     }
                 }

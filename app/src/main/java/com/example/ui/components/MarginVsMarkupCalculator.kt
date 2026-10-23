@@ -3,7 +3,6 @@ package com.example.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +17,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CompareArrows
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Percent
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
@@ -52,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.MarginMarkupSolver
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -64,9 +60,11 @@ import java.util.Locale
 import kotlin.math.round
 
 data class PricingStrategyPreset(
-    val label: String,
+    val labelEn: String,
+    val labelRu: String,
     val marginPct: Double,
-    val description: String
+    val descriptionEn: String,
+    val descriptionRu: String
 )
 
 /**
@@ -79,6 +77,7 @@ fun MarginVsMarkupCalculator(
     modifier: Modifier = Modifier,
     initialMarginPct: Double = 35.0,
     sampleBaseCost: Double = 1000.0,
+    currencySymbol: String = "$",
     onStrategySelected: ((marginPct: Double, markupPct: Double, multiplier: Double) -> Unit)? = null,
     testTag: String = "margin_vs_markup_calculator"
 ) {
@@ -95,8 +94,16 @@ fun MarginVsMarkupCalculator(
     var marginValue by remember { mutableDoubleStateOf(initialMarginPct) }
     var markupValue by remember { mutableDoubleStateOf(MarginMarkupSolver.marginToMarkup(initialMarginPct)) }
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
+
+    val formatMoney: (Double) -> String = { amount ->
+        val formattedNum = NumberFormat.getNumberInstance(Locale.US).apply {
+            maximumFractionDigits = 2
+            minimumFractionDigits = 2
+        }.format(amount)
+        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$currencySymbol$formattedNum"
+        else "$currencySymbol $formattedNum"
+    }
 
     val currentMultiplier = 1.0 + (markupValue / 100.0)
     val baseCost = baseCostInput.toDoubleOrNull() ?: sampleBaseCost
@@ -104,12 +111,12 @@ fun MarginVsMarkupCalculator(
     val calculatedProfit = calculatedPrice - baseCost
 
     val presets = listOf(
-        PricingStrategyPreset("15% Margin", 15.0, "Competitive / High Volume"),
-        PricingStrategyPreset("25% Margin", 25.0, "Standard Wholesale"),
-        PricingStrategyPreset("35% Margin", 35.0, "Commercial B2B Target"),
-        PricingStrategyPreset("50% Margin", 50.0, "Premium Software & Value-Add"),
-        PricingStrategyPreset("60% Margin", 60.0, "Enterprise SaaS / High Touch"),
-        PricingStrategyPreset("75% Margin", 75.0, "Proprietary IP / Low Volume")
+        PricingStrategyPreset("15% Margin", "15% Маржа", 15.0, "Competitive / High Volume", "Высокий оборот / Дистрибуция"),
+        PricingStrategyPreset("25% Margin", "25% Маржа", 25.0, "Standard Wholesale", "Стандартный опт"),
+        PricingStrategyPreset("35% Margin", "35% Маржа", 35.0, "Commercial B2B Target", "Целевой B2B контракт"),
+        PricingStrategyPreset("50% Margin", "50% Маржа", 50.0, "Premium Software & Value-Add", "Премиум / Добавочная ценность"),
+        PricingStrategyPreset("60% Margin", "60% Маржа", 60.0, "Enterprise SaaS / High Touch", "Enterprise SaaS / Решения"),
+        PricingStrategyPreset("75% Margin", "75% Маржа", 75.0, "Proprietary IP / Low Volume", "Уникальный IP / Монополия")
     )
 
     Box(
@@ -136,7 +143,7 @@ fun MarginVsMarkupCalculator(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "MARGIN VS. MARKUP CALCULATOR",
+                        text = tr("MARGIN VS. MARKUP CALCULATOR", "КАЛЬКУЛЯТОР МАРЖИ И НАЦЕНКИ"),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -150,7 +157,7 @@ fun MarginVsMarkupCalculator(
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = "${numberFmt.format(currentMultiplier)}x MULTIPLIER",
+                        text = "${numberFmt.format(currentMultiplier)}x ${tr("MULTIPLIER", "КОЭФФИЦИЕНТ")}",
                         style = MaterialTheme.typography.labelSmall,
                         color = ElectricCyan,
                         fontWeight = FontWeight.Bold
@@ -172,7 +179,7 @@ fun MarginVsMarkupCalculator(
                     onClick = { activeInputMode = 0 },
                     text = {
                         Text(
-                            text = "Set Margin % → Get Markup",
+                            text = tr("Set Margin % → Get Markup", "Задать Маржу % → Наценка"),
                             fontSize = 11.sp,
                             fontWeight = if (activeInputMode == 0) FontWeight.Bold else FontWeight.Normal
                         )
@@ -183,7 +190,7 @@ fun MarginVsMarkupCalculator(
                     onClick = { activeInputMode = 1 },
                     text = {
                         Text(
-                            text = "Set Markup % → Get Margin",
+                            text = tr("Set Markup % → Get Margin", "Задать Наценку % → Маржа"),
                             fontSize = 11.sp,
                             fontWeight = if (activeInputMode == 1) FontWeight.Bold else FontWeight.Normal
                         )
@@ -207,7 +214,7 @@ fun MarginVsMarkupCalculator(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "DESIRED GROSS MARGIN",
+                            text = tr("DESIRED GROSS MARGIN", "ЖЕЛАЕМАЯ МАРЖА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.SemiBold
@@ -219,7 +226,7 @@ fun MarginVsMarkupCalculator(
                             color = EmeraldPrimary
                         )
                         Text(
-                            text = "Profit / Selling Price",
+                            text = tr("Profit / Selling Price", "Прибыль / Цена продажи"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -239,7 +246,7 @@ fun MarginVsMarkupCalculator(
                             .padding(start = 12.dp)
                     ) {
                         Text(
-                            text = "REQUIRED MARKUP",
+                            text = tr("REQUIRED MARKUP", "НЕОБХОДИМАЯ НАЦЕНКА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.SemiBold
@@ -251,7 +258,7 @@ fun MarginVsMarkupCalculator(
                             color = ElectricCyan
                         )
                         Text(
-                            text = "Profit / Base Cost",
+                            text = tr("Profit / Base Cost", "Прибыль / Себестоимость"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
@@ -270,13 +277,13 @@ fun MarginVsMarkupCalculator(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Desired Gross Margin: ${numberFmt.format(marginValue)}%",
+                            text = "${tr("Desired Gross Margin", "Желаемая маржа")}: ${numberFmt.format(marginValue)}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Multiplier: ${numberFmt.format(currentMultiplier)}x",
+                            text = "${tr("Multiplier", "Коэффициент")}: ${numberFmt.format(currentMultiplier)}x",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
                             fontWeight = FontWeight.Bold
@@ -301,7 +308,7 @@ fun MarginVsMarkupCalculator(
                     )
 
                     FinancialInputField(
-                        label = "Desired Gross Margin (%)",
+                        label = tr("Desired Gross Margin (%)", "Желаемая валовая маржа (%)"),
                         value = marginInput,
                         onValueChange = {
                             marginInput = it
@@ -325,13 +332,13 @@ fun MarginVsMarkupCalculator(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Applied Markup: ${numberFmt.format(markupValue)}%",
+                            text = "${tr("Applied Markup", "Применяемая наценка")}: ${numberFmt.format(markupValue)}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Multiplier: ${numberFmt.format(currentMultiplier)}x",
+                            text = "${tr("Multiplier", "Коэффициент")}: ${numberFmt.format(currentMultiplier)}x",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
                             fontWeight = FontWeight.Bold
@@ -356,7 +363,7 @@ fun MarginVsMarkupCalculator(
                     )
 
                     FinancialInputField(
-                        label = "Applied Markup (%)",
+                        label = tr("Applied Markup (%)", "Применяемая наценка (%)"),
                         value = markupInput,
                         onValueChange = {
                             markupInput = it
@@ -376,7 +383,7 @@ fun MarginVsMarkupCalculator(
             // Quick Pricing Strategy Presets
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "TARGET PRICING PRESETS",
+                    text = tr("TARGET PRICING PRESETS", "БЫСТРЫЕ ШАБЛОНЫ ЦЕНООБРАЗОВАНИЯ"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -398,7 +405,7 @@ fun MarginVsMarkupCalculator(
                             },
                             label = {
                                 Text(
-                                    text = preset.label,
+                                    text = tr(preset.labelEn, preset.labelRu),
                                     fontSize = 11.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -431,13 +438,13 @@ fun MarginVsMarkupCalculator(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "PRICING IMPACT SIMULATION",
+                            text = tr("PRICING IMPACT SIMULATION", "СИМУЛЯЦИЯ ЦЕНЫ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Selling Price = Cost × ${numberFmt.format(currentMultiplier)}",
+                            text = "${tr("Selling Price", "Цена")} = ${tr("Cost", "Себест.")} × ${numberFmt.format(currentMultiplier)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = ElectricCyan,
                             fontWeight = FontWeight.Bold
@@ -449,10 +456,10 @@ fun MarginVsMarkupCalculator(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FinancialInputField(
-                            label = "Base Cost of Goods",
+                            label = tr("Base Cost of Goods", "Базовая себестоимость"),
                             value = baseCostInput,
                             onValueChange = { baseCostInput = it },
-                            prefix = "$",
+                            prefix = currencySymbol,
                             modifier = Modifier.weight(1f),
                             testTag = "input_simulator_cost"
                         )
@@ -465,12 +472,12 @@ fun MarginVsMarkupCalculator(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("REQUIRED SELLING PRICE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(currencyFmt.format(calculatedPrice), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                            Text(tr("REQUIRED SELLING PRICE", "РАСЧЕТНАЯ ЦЕНА ПРОДАЖИ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatMoney(calculatedPrice), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("NET PROFIT YIELD", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("+${currencyFmt.format(calculatedProfit)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                            Text(tr("NET PROFIT YIELD", "ДОХОД С ЕДИНИЦЫ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("+${formatMoney(calculatedProfit)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
                         }
                     }
 
@@ -489,7 +496,7 @@ fun MarginVsMarkupCalculator(
                             Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Apply to Pricing Strategy (${numberFmt.format(marginValue)}% Margin / ${numberFmt.format(currentMultiplier)}x)",
+                                text = "${tr("Apply to Pricing Strategy", "Применить к стратегии")} (${numberFmt.format(marginValue)}% ${tr("Margin", "Маржа")} / ${numberFmt.format(currentMultiplier)}x)",
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -509,13 +516,16 @@ fun MarginVsMarkupCalculator(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Mathematical Equivalence Rule:",
+                        text = tr("Mathematical Equivalence Rule:", "Правило математической эквивалентности:"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "• Markup Multiplier = 1 / (1 - Margin%) = 1 + Markup%\n• Margin% = Markup% / (100 + Markup%)\n• Example: 33.3% Margin requires 50.0% Markup (1.50x multiplier).",
+                        text = tr(
+                            "• Markup Multiplier = 1 / (1 - Margin%) = 1 + Markup%\n• Margin% = Markup% / (100 + Markup%)\n• Example: 33.3% Margin requires 50.0% Markup (1.50x multiplier).",
+                            "• Коэффициент наценки = 1 / (1 - Маржа%) = 1 + Наценка%\n• Маржа% = Наценка% / (100 + Наценка%)\n• Пример: 33.3% Маржи требует 50.0% Наценки (множитель 1.50x)."
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp,

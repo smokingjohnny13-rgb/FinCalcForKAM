@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SavedDeal
+import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.ExecutiveBorder
@@ -66,7 +67,6 @@ import com.example.ui.theme.ExecutiveSurface
 import com.example.ui.theme.ExecutiveSurfaceVariant
 import com.example.ui.theme.GoldAccent
 import com.example.ui.viewmodel.BigDealViewModel
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -84,15 +84,13 @@ fun DealVaultScreen(
     val currentTitle by viewModel.dealTitle.collectAsState()
     val currentClient by viewModel.clientName.collectAsState()
     val currentDealValue by viewModel.principalAmount.collectAsState()
-    val amortization by viewModel.amortization.collectAsState()
-    val marginState by viewModel.marginState.collectAsState()
-    val pnlModel by viewModel.pnlModel.collectAsState()
+    val activeCurrency by viewModel.activeCurrency.collectAsState()
+    val currencySym = activeCurrency.symbol
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var saveTitleInput by remember { mutableStateOf(currentTitle) }
     var saveClientInput by remember { mutableStateOf(currentClient) }
 
-    val currencyFmt = remember { NumberFormat.getCurrencyInstance(Locale.US) }
     val dateFmt = remember { SimpleDateFormat("MMM dd, yyyy", Locale.US) }
 
     LazyColumn(
@@ -105,14 +103,17 @@ fun DealVaultScreen(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "DEAL VAULT & CLOUD SYNC",
+                text = tr("DEAL VAULT & CLOUD SYNC", "ХРАНИЛИЩЕ СДЕЛОК И ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ"),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Sync contract models across devices and export professional boardroom-ready PDF proposals.",
+                text = tr(
+                    "Sync contract models across devices and export professional boardroom-ready PDF proposals.",
+                    "Синхронизация моделей контрактов между устройствами и экспорт презентабельных PDF-предложений."
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -143,7 +144,7 @@ fun DealVaultScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "MULTI-DEVICE CLOUD SYNC",
+                                text = tr("MULTI-DEVICE CLOUD SYNC", "ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ FIRESTORE"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
@@ -167,7 +168,7 @@ fun DealVaultScreen(
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = if (currentUser != null) "FIRESTORE SYNC ACTIVE" else "OFFLINE LOCAL MODE",
+                                    text = if (currentUser != null) tr("FIRESTORE SYNC ACTIVE", "СИНХРОНИЗАЦИЯ АКТИВНА") else tr("OFFLINE LOCAL MODE", "ЛОКАЛЬНЫЙ РЕЖИМ"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (currentUser != null) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold,
@@ -179,7 +180,10 @@ fun DealVaultScreen(
 
                     if (currentUser == null) {
                         Text(
-                            text = "Connect Google Account to backup deals and access real-time synchronized scenarios across your phone and tablet.",
+                            text = tr(
+                                "Connect Google Account to backup deals and access real-time synchronized scenarios across your phone and tablet.",
+                                "Подключите Google-аккаунт для резервного копирования и доступа к единым сценариям на телефоне и планшете."
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -203,7 +207,7 @@ fun DealVaultScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Sign in with Google to Sync",
+                                text = tr("Sign in with Google to Sync", "Войти через Google для синхронизации"),
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Black
                             )
@@ -216,7 +220,7 @@ fun DealVaultScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = currentUser?.displayName ?: "Executive Account",
+                                    text = currentUser?.displayName ?: tr("Executive Account", "Аккаунт руководителя"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -233,7 +237,7 @@ fun DealVaultScreen(
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                             ) {
-                                Text("Sign Out", fontSize = 11.sp)
+                                Text(tr("Sign Out", "Выйти"), fontSize = 11.sp)
                             }
                         }
                     }
@@ -241,7 +245,7 @@ fun DealVaultScreen(
             }
         }
 
-        // 2. Export as PDF Proposal Card (The Key Feature)
+        // 2. Export as PDF Proposal Card
         item {
             Box(
                 modifier = Modifier
@@ -266,7 +270,7 @@ fun DealVaultScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "EXECUTIVE PROPOSAL EXPORT",
+                                text = tr("EXECUTIVE PROPOSAL EXPORT", "ЭКСПОРТ КОММЕРЧЕСКОГО ПРЕДЛОЖЕНИЯ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = EmeraldPrimary,
                                 fontWeight = FontWeight.Bold
@@ -287,7 +291,7 @@ fun DealVaultScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Account: $currentClient  |  Contract: ${currencyFmt.format(currentDealValue.toDoubleOrNull() ?: 0.0)}",
+                            text = "${tr("Account", "Клиент")}: $currentClient  |  ${tr("Contract", "Контракт")}: ${viewModel.formatCurrency(currentDealValue.toDoubleOrNull() ?: 0.0)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -313,7 +317,7 @@ fun DealVaultScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Export & Share PDF",
+                                text = tr("Export & Share PDF", "Экспорт и отправка PDF"),
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
@@ -337,7 +341,7 @@ fun DealVaultScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Save Model", fontSize = 12.sp)
+                            Text(tr("Save Model", "Сохранить"), fontSize = 12.sp)
                         }
                     }
                 }
@@ -352,7 +356,7 @@ fun DealVaultScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "SAVED DEAL SCENARIOS (${savedDeals.size})",
+                    text = "${tr("SAVED DEAL SCENARIOS", "СОХРАНЕННЫЕ СДЕЛКИ")} (${savedDeals.size})",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
@@ -411,19 +415,19 @@ fun DealVaultScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("VALUE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(currencyFmt.format(deal.dealValue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                            Text(tr("VALUE", "СУММА"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(viewModel.formatCurrency(deal.dealValue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
                         }
                         Column {
-                            Text("PAYMENT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${currencyFmt.format(deal.periodicPayment)} / ${deal.frequency.displayName.take(2)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(tr("PAYMENT", "ПЛАТЕЖ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${viewModel.formatCurrency(deal.periodicPayment)} / ${deal.frequency.displayName.take(2)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Column {
-                            Text("MARGIN", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(tr("MARGIN", "МАРЖА"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("${deal.marginPct}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = GoldAccent)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("TAP TO LOAD", style = MaterialTheme.typography.labelSmall, color = ElectricCyan, fontWeight = FontWeight.Bold)
+                            Text(tr("TAP TO LOAD", "ОТКРЫТЬ"), style = MaterialTheme.typography.labelSmall, color = ElectricCyan, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -439,20 +443,20 @@ fun DealVaultScreen(
     if (showSaveDialog) {
         AlertDialog(
             onDismissRequest = { showSaveDialog = false },
-            title = { Text("Save Deal Scenario", fontWeight = FontWeight.Bold) },
+            title = { Text(tr("Save Deal Scenario", "Сохранить сценарий сделки"), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = saveTitleInput,
                         onValueChange = { saveTitleInput = it },
-                        label = { Text("Deal Title") },
+                        label = { Text(tr("Deal Title", "Название сделки")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = saveClientInput,
                         onValueChange = { saveClientInput = it },
-                        label = { Text("Client / Account Name") },
+                        label = { Text(tr("Client / Account Name", "Клиент / Контрагент")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -468,12 +472,12 @@ fun DealVaultScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Save & Sync", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(tr("Save & Sync", "Сохранить и синхр."), color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSaveDialog = false }) {
-                    Text("Cancel")
+                    Text(tr("Cancel", "Отмена"))
                 }
             }
         )

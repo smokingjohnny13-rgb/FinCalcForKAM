@@ -34,6 +34,12 @@ import com.example.domain.calculator.MultiCurrencyCreditResult
 import com.example.domain.calculator.PriceWaterfallResult
 import com.example.domain.calculator.PromoBreakEvenEngine
 import com.example.domain.calculator.PromoBreakEvenResult
+import com.example.domain.calculator.CashGapEngine
+import com.example.domain.calculator.CashGapResult
+import com.example.domain.calculator.FxStressTestEngine
+import com.example.domain.calculator.FxStressTestResult
+import com.example.domain.calculator.HurdleRoicEngine
+import com.example.domain.calculator.HurdleRoicResult
 import com.example.service.PdfExportService
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -289,6 +295,68 @@ class BigDealViewModel(
         )
     )
     val multiCreditResult: StateFlow<MultiCurrencyCreditResult> = _multiCreditResult.asStateFlow()
+
+    // 10. Cash Gap & Working Capital Peak
+    val cashGapRevenue = MutableStateFlow("100000")
+    val cashGapCogs = MutableStateFlow("70000")
+    val cashGapPrepaidPct = MutableStateFlow("20")
+    val cashGapSupplierDays = MutableStateFlow("30")
+    val cashGapCustomerDays = MutableStateFlow("60")
+    val cashGapInventoryDays = MutableStateFlow("15")
+    val cashGapOverdraftRate = MutableStateFlow("22")
+
+    private val _cashGapResult = MutableStateFlow(
+        CashGapEngine.calculate(
+            dealRevenue = 100000.0,
+            cogsTotal = 70000.0,
+            prepaidPct = 20.0,
+            supplierPayDays = 30,
+            customerPayDays = 60,
+            inventoryDays = 15,
+            overdraftRatePct = 22.0
+        )
+    )
+    val cashGapResult: StateFlow<CashGapResult> = _cashGapResult.asStateFlow()
+
+    // 11. FX Stress-Test & Margin Wipeout Threshold
+    val fxContractPrice = MutableStateFlow("1000000")
+    val fxCogsForeign = MutableStateFlow("8000")
+    val fxForeignCurrency = MutableStateFlow("USD")
+    val fxSpotRate = MutableStateFlow("95.0")
+    val fxHedgedPct = MutableStateFlow("30")
+    val fxHedgeRate = MutableStateFlow("96.0")
+    val fxDomesticCost = MutableStateFlow("50000")
+
+    private val _fxStressResult = MutableStateFlow(
+        FxStressTestEngine.calculate(
+            contractPrice = 1000000.0,
+            cogsForeignAmount = 8000.0,
+            foreignCurrencyCode = "USD",
+            spotRate = 95.0,
+            hedgedPct = 30.0,
+            hedgeRate = 96.0,
+            domesticCost = 50000.0
+        )
+    )
+    val fxStressResult: StateFlow<FxStressTestResult> = _fxStressResult.asStateFlow()
+
+    // 12. Hurdle Rate & ROIC Guardrail
+    val hurdleDealRevenue = MutableStateFlow("100000")
+    val hurdleNetProfit = MutableStateFlow("7000")
+    val hurdleTiedUpCapital = MutableStateFlow("65000")
+    val hurdleCycleDays = MutableStateFlow("90")
+    val hurdleCorporateRate = MutableStateFlow("20")
+
+    private val _hurdleRoicResult = MutableStateFlow(
+        HurdleRoicEngine.calculate(
+            dealRevenue = 100000.0,
+            dealNetProfit = 7000.0,
+            tiedUpCapital = 65000.0,
+            cycleDays = 90,
+            corporateHurdleRatePct = 20.0
+        )
+    )
+    val hurdleRoicResult: StateFlow<HurdleRoicResult> = _hurdleRoicResult.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -686,7 +754,7 @@ class BigDealViewModel(
             maximumFractionDigits = 2
             minimumFractionDigits = 2
         }.format(amount)
-        return if (sym.length > 2) "$formattedNum $sym" else "$sym$formattedNum"
+        return if (sym == "$" || sym == "€" || sym == "£" || sym == "¥" || sym == "₽") "$sym$formattedNum" else "$sym $formattedNum"
     }
 
     // --- Price Waterfall Triggers ---
@@ -899,6 +967,105 @@ class BigDealViewModel(
         updateFinancing()
         viewModelScope.launch {
             _userMessage.emit(str("Deal financing rate updated: ${annualInterestRate.value}% (basket & hedge adjusted)", "Ставка финансирования сделки обновлена: ${annualInterestRate.value}% (с учетом корзины и хеджа)", appLanguage.value))
+        }
+    }
+
+    // --- Cash Gap & Working Capital Modeler ---
+    fun updateCashGapCalculations() {
+        val rev = cashGapRevenue.value.toDoubleOrNull() ?: 100000.0
+        val cogs = cashGapCogs.value.toDoubleOrNull() ?: 70000.0
+        val prepay = cashGapPrepaidPct.value.toDoubleOrNull() ?: 20.0
+        val dpo = cashGapSupplierDays.value.toIntOrNull() ?: 30
+        val dso = cashGapCustomerDays.value.toIntOrNull() ?: 60
+        val dio = cashGapInventoryDays.value.toIntOrNull() ?: 15
+        val rate = cashGapOverdraftRate.value.toDoubleOrNull() ?: 22.0
+
+        _cashGapResult.value = CashGapEngine.calculate(
+            dealRevenue = rev,
+            cogsTotal = cogs,
+            prepaidPct = prepay,
+            supplierPayDays = dpo,
+            customerPayDays = dso,
+            inventoryDays = dio,
+            overdraftRatePct = rate
+        )
+    }
+
+    fun importDealToCashGap() {
+        val p = principalAmount.value.toDoubleOrNull() ?: 100000.0
+        cashGapRevenue.value = p.toInt().toString()
+        val cogs = p * 0.70
+        cashGapCogs.value = cogs.toInt().toString()
+        updateCashGapCalculations()
+        viewModelScope.launch {
+            _userMessage.emit(str("Deal imported to Cash Gap & CCC Modeler: ${formatCurrency(p)}", "Данные сделки импортированы в модель кассового разрыва: ${formatCurrency(p)}", appLanguage.value))
+        }
+    }
+
+    // --- FX Stress-Test & Margin Wipeout Threshold ---
+    fun updateFxStressCalculations() {
+        val price = fxContractPrice.value.toDoubleOrNull() ?: 1000000.0
+        val foreignCost = fxCogsForeign.value.toDoubleOrNull() ?: 8000.0
+        val curr = fxForeignCurrency.value
+        val spot = fxSpotRate.value.toDoubleOrNull() ?: 95.0
+        val hedgePct = fxHedgedPct.value.toDoubleOrNull() ?: 30.0
+        val hedgeR = fxHedgeRate.value.toDoubleOrNull() ?: 96.0
+        val domestic = fxDomesticCost.value.toDoubleOrNull() ?: 50000.0
+
+        _fxStressResult.value = FxStressTestEngine.calculate(
+            contractPrice = price,
+            cogsForeignAmount = foreignCost,
+            foreignCurrencyCode = curr,
+            spotRate = spot,
+            hedgedPct = hedgePct,
+            hedgeRate = hedgeR,
+            domesticCost = domestic
+        )
+    }
+
+    fun setFxStressForeignCurrency(curr: String) {
+        fxForeignCurrency.value = curr
+        val defaultRate = when (curr) {
+            "USD" -> 95.0
+            "EUR" -> 104.0
+            "CNY" -> 13.2
+            "BYN" -> 29.5
+            "KZT" -> 0.20
+            else -> 1.0
+        }
+        fxSpotRate.value = defaultRate.toString()
+        fxHedgeRate.value = String.format(java.util.Locale.US, "%.1f", defaultRate * 1.02)
+        updateFxStressCalculations()
+    }
+
+    // --- Hurdle Rate / ROIC Guardrail ---
+    fun updateHurdleRoicCalculations() {
+        val rev = hurdleDealRevenue.value.toDoubleOrNull() ?: 100000.0
+        val profit = hurdleNetProfit.value.toDoubleOrNull() ?: 7000.0
+        val capital = hurdleTiedUpCapital.value.toDoubleOrNull() ?: 65000.0
+        val days = hurdleCycleDays.value.toIntOrNull() ?: 90
+        val hurdle = hurdleCorporateRate.value.toDoubleOrNull() ?: 20.0
+
+        _hurdleRoicResult.value = HurdleRoicEngine.calculate(
+            dealRevenue = rev,
+            dealNetProfit = profit,
+            tiedUpCapital = capital,
+            cycleDays = days,
+            corporateHurdleRatePct = hurdle
+        )
+    }
+
+    fun importDealToHurdleRoic() {
+        val p = principalAmount.value.toDoubleOrNull() ?: 100000.0
+        hurdleDealRevenue.value = p.toInt().toString()
+        val marginPct = _marginState.value.marginPct.takeIf { it > 0 } ?: 8.0
+        val profit = p * (marginPct / 100.0)
+        hurdleNetProfit.value = profit.toInt().toString()
+        val capital = p * 0.65
+        hurdleTiedUpCapital.value = capital.toInt().toString()
+        updateHurdleRoicCalculations()
+        viewModelScope.launch {
+            _userMessage.emit(str("Deal synced to ROIC Hurdle Guardrail", "Сделка синхронизирована с ROIC барьерной ставкой", appLanguage.value))
         }
     }
 }
