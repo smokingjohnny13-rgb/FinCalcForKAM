@@ -22,7 +22,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Balance
 import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Storefront
@@ -50,7 +52,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.MarginMarkupSolver
+import com.example.ui.components.CommercialAnalystCard
 import com.example.ui.components.FinancialInputField
+import com.example.ui.components.KamNegotiationCard
 import com.example.ui.components.LandedCostModeler
 import com.example.ui.components.MarginVsMarkupCalculator
 import com.example.ui.components.MetricCard
@@ -87,7 +91,9 @@ fun MarginMarkupScreen(
         tr("Margin & Markup", "Маржа и Наценка") to Icons.Default.Percent,
         tr("Price Waterfall", "Водопад цен (Net-Net)") to Icons.Default.Storefront,
         tr("Promo Campaigns", "Промо-акции") to Icons.Default.Campaign,
-        tr("Payment Terms", "Стоимость отсрочки") to Icons.Default.Schedule
+        tr("Payment Terms", "Стоимость отсрочки") to Icons.Default.Schedule,
+        tr("KAM Corridor & SLA", "КАМ: Коридор и SLA") to Icons.Default.Handshake,
+        tr("Pricing & Mix", "Коммерческий анализ") to Icons.Default.Balance
     )
 
     LazyColumn(
@@ -409,6 +415,24 @@ fun MarginMarkupScreen(
                 // Tab 3: PAYMENT TERMS & WORKING CAPITAL
                 item {
                     PaymentTermsCard(
+                        viewModel = viewModel,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            4 -> {
+                // Tab 4: KAM CORRIDOR & SLA PENALTY
+                item {
+                    KamNegotiationCard(
+                        viewModel = viewModel,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+            5 -> {
+                // Tab 5: COMMERCIAL ANALYST (TRADE-OFF, BASKET, REBATES)
+                item {
+                    CommercialAnalystCard(
                         viewModel = viewModel,
                         modifier = Modifier.fillMaxWidth()
                     )

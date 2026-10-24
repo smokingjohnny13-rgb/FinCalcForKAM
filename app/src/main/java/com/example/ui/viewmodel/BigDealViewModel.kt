@@ -40,6 +40,17 @@ import com.example.domain.calculator.FxStressTestEngine
 import com.example.domain.calculator.FxStressTestResult
 import com.example.domain.calculator.HurdleRoicEngine
 import com.example.domain.calculator.HurdleRoicResult
+import com.example.domain.calculator.KamNegotiationEngine
+import com.example.domain.calculator.KamScenarioType
+import com.example.domain.calculator.KamScenario
+import com.example.domain.calculator.KamCorridorResult
+import com.example.domain.calculator.RetailSlaPenaltyResult
+import com.example.domain.calculator.KamOnePagerSummary
+import com.example.domain.calculator.CommercialAnalystEngine
+import com.example.domain.calculator.TradeOffArbitrageResult
+import com.example.domain.calculator.BasketSkuItem
+import com.example.domain.calculator.BlendedBasketResult
+import com.example.domain.calculator.RebateTierSimulationResult
 import com.example.service.PdfExportService
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -357,6 +368,54 @@ class BigDealViewModel(
         )
     )
     val hurdleRoicResult: StateFlow<HurdleRoicResult> = _hurdleRoicResult.asStateFlow()
+
+    // 13. КАМ: Negotiation Corridor, SLA Penalty, and One-Pager
+    val kamBaseShelfPrice = MutableStateFlow("100")
+    val kamBaseCogs = MutableStateFlow("60")
+    val kamActiveScenarioType = MutableStateFlow(KamScenarioType.TARGET)
+    private val _kamCorridorResult = MutableStateFlow(
+        KamNegotiationEngine.calculateCorridor(100.0, 60.0, KamScenarioType.TARGET)
+    )
+    val kamCorridorResult: StateFlow<KamCorridorResult> = _kamCorridorResult.asStateFlow()
+
+    val kamDealAmount = MutableStateFlow("100000")
+    val kamFillRatePct = MutableStateFlow("95")
+    val kamPenaltyRatePct = MutableStateFlow("12")
+    val kamTimeSlotPenalty = MutableStateFlow("1500")
+    private val _kamSlaResult = MutableStateFlow(
+        KamNegotiationEngine.calculateRetailSlaPenalty(100000.0, 95.0, 12.0, 1500.0, 30.0)
+    )
+    val kamSlaResult: StateFlow<RetailSlaPenaltyResult> = _kamSlaResult.asStateFlow()
+
+    private val _kamOnePagerSummary = MutableStateFlow(
+        KamNegotiationEngine.buildOnePagerSummary(_kamCorridorResult.value, _kamSlaResult.value)
+    )
+    val kamOnePagerSummary: StateFlow<KamOnePagerSummary> = _kamOnePagerSummary.asStateFlow()
+    val showKamOnePagerDialog = MutableStateFlow(false)
+
+    // 14. Commercial Analyst: Trade-Off, Basket, Rebate Tiers
+    val tradeOffDealAmount = MutableStateFlow("100000")
+    val tradeOffDiscountPct = MutableStateFlow("3")
+    val tradeOffDeferralDays = MutableStateFlow("30")
+    val tradeOffAnnualRate = MutableStateFlow("20")
+    private val _tradeOffResult = MutableStateFlow(
+        CommercialAnalystEngine.calculateTradeOff(100000.0, 3.0, 30, 20.0)
+    )
+    val tradeOffResult: StateFlow<TradeOffArbitrageResult> = _tradeOffResult.asStateFlow()
+
+    private val _basketItems = MutableStateFlow(CommercialAnalystEngine.DEFAULT_BASKET_ITEMS)
+    val basketItems: StateFlow<List<BasketSkuItem>> = _basketItems.asStateFlow()
+    private val _blendedBasketResult = MutableStateFlow(
+        CommercialAnalystEngine.calculateBlendedBasket(CommercialAnalystEngine.DEFAULT_BASKET_ITEMS)
+    )
+    val blendedBasketResult: StateFlow<BlendedBasketResult> = _blendedBasketResult.asStateFlow()
+
+    val rebateActualVolume = MutableStateFlow("120000")
+    val rebateBaseMarginPct = MutableStateFlow("30")
+    private val _rebateSimulationResult = MutableStateFlow(
+        CommercialAnalystEngine.simulateRebateTiers(120000.0, 30.0)
+    )
+    val rebateSimulationResult: StateFlow<RebateTierSimulationResult> = _rebateSimulationResult.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -1067,5 +1126,112 @@ class BigDealViewModel(
         viewModelScope.launch {
             _userMessage.emit(str("Deal synced to ROIC Hurdle Guardrail", "Сделка синхронизирована с ROIC барьерной ставкой", appLanguage.value))
         }
+    }
+
+    // --- KAM Negotiation Corridor & SLA ---
+    fun updateKamCorridor() {
+        val price = kamBaseShelfPrice.value.toDoubleOrNull() ?: 100.0
+        val cogs = kamBaseCogs.value.toDoubleOrNull() ?: 60.0
+        _kamCorridorResult.value = KamNegotiationEngine.calculateCorridor(
+            baseShelfPrice = price,
+            baseCogs = cogs,
+            activeType = kamActiveScenarioType.value
+        )
+        updateKamOnePager()
+    }
+
+    fun selectKamScenario(type: KamScenarioType) {
+        kamActiveScenarioType.value = type
+        updateKamCorridor()
+    }
+
+    fun applyKamScenarioToDeal() {
+        val scenario = _kamCorridorResult.value.activeScenario
+        marginCostInput.value = scenario.cogs.toInt().toString()
+        marginPriceInput.value = scenario.netNetPrice.toInt().toString()
+        onMarginCostOrPriceChanged(newCost = scenario.cogs.toInt().toString(), newPrice = scenario.netNetPrice.toInt().toString())
+        viewModelScope.launch {
+            _userMessage.emit(str("Applied '${scenario.nameEn}' scenario to deal pricing", "Применен сценарий '${scenario.nameRu}' к сделке", appLanguage.value))
+        }
+    }
+
+    fun updateKamSla() {
+        val deal = kamDealAmount.value.toDoubleOrNull() ?: 100000.0
+        val fillRate = kamFillRatePct.value.toDoubleOrNull() ?: 95.0
+        val penalty = kamPenaltyRatePct.value.toDoubleOrNull() ?: 12.0
+        val slot = kamTimeSlotPenalty.value.toDoubleOrNull() ?: 1500.0
+        val baseMargin = _kamCorridorResult.value.activeScenario.marginPct.takeIf { it > 0 } ?: 30.0
+
+        _kamSlaResult.value = KamNegotiationEngine.calculateRetailSlaPenalty(
+            dealAmount = deal,
+            plannedFillRatePct = fillRate,
+            penaltyRatePct = penalty,
+            timeSlotPenaltyAmount = slot,
+            baseGrossMarginPct = baseMargin
+        )
+        updateKamOnePager()
+    }
+
+    fun updateKamOnePager() {
+        val fxRate = _fxStressResult.value.marginWipeoutRate
+        val fxCurr = fxForeignCurrency.value
+        val fxBuffer = _fxStressResult.value.safetyBufferPoints
+        val peakGap = _cashGapResult.value.peakCashDeficit
+
+        _kamOnePagerSummary.value = KamNegotiationEngine.buildOnePagerSummary(
+            corridorResult = _kamCorridorResult.value,
+            slaResult = _kamSlaResult.value,
+            criticalFxRate = fxRate,
+            fxCurrencyCode = fxCurr,
+            fxSafetyBufferPoints = fxBuffer,
+            peakCashGapAmount = peakGap,
+            corporateWaccRatePct = hurdleCorporateRate.value.toDoubleOrNull() ?: 20.0
+        )
+    }
+
+    fun toggleKamOnePager(show: Boolean) {
+        showKamOnePagerDialog.value = show
+        if (show) {
+            updateKamOnePager()
+        }
+    }
+
+    // --- Commercial Analyst: Trade-Off, Basket, Rebates ---
+    fun updateTradeOff() {
+        val deal = tradeOffDealAmount.value.toDoubleOrNull() ?: 100000.0
+        val disc = tradeOffDiscountPct.value.toDoubleOrNull() ?: 3.0
+        val days = tradeOffDeferralDays.value.toIntOrNull() ?: 30
+        val rate = tradeOffAnnualRate.value.toDoubleOrNull() ?: 20.0
+
+        _tradeOffResult.value = CommercialAnalystEngine.calculateTradeOff(
+            dealAmount = deal,
+            discountPct = disc,
+            deferralDays = days,
+            annualCapitalRatePct = rate
+        )
+    }
+
+    fun updateBasketItem(id: String, newVolume: Double, newPrice: Double, newCogs: Double) {
+        val updated = _basketItems.value.map { item ->
+            if (item.id == id) {
+                item.copy(volume = newVolume, unitPrice = newPrice, unitCogs = newCogs)
+            } else item
+        }
+        _basketItems.value = updated
+        _blendedBasketResult.value = CommercialAnalystEngine.calculateBlendedBasket(updated)
+    }
+
+    fun resetBasketToDefaults() {
+        _basketItems.value = CommercialAnalystEngine.DEFAULT_BASKET_ITEMS
+        _blendedBasketResult.value = CommercialAnalystEngine.calculateBlendedBasket(CommercialAnalystEngine.DEFAULT_BASKET_ITEMS)
+    }
+
+    fun updateRebateSimulation() {
+        val vol = rebateActualVolume.value.toDoubleOrNull() ?: 120000.0
+        val margin = rebateBaseMarginPct.value.toDoubleOrNull() ?: 30.0
+        _rebateSimulationResult.value = CommercialAnalystEngine.simulateRebateTiers(
+            actualVolume = vol,
+            baseGrossMarginPct = margin
+        )
     }
 }

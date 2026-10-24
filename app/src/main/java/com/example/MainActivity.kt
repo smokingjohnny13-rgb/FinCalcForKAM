@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -73,6 +74,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.repository.AuthRepository
 import com.example.data.repository.DealRepository
 import com.example.ui.components.CurrencySelectionDialog
+import com.example.ui.components.KamOnePagerDialog
 import com.example.ui.screens.AnalyticsPnlScreen
 import com.example.ui.screens.DealVaultScreen
 import com.example.ui.screens.FinancingFxScreen
@@ -146,10 +148,19 @@ fun BigDealAppRoot(
 
     val currentLanguage by viewModel.appLanguage.collectAsState()
 
+    val showKamOnePager by viewModel.showKamOnePagerDialog.collectAsState()
+
     if (showCurrencyDialog) {
         CurrencySelectionDialog(
             viewModel = viewModel,
             onDismissRequest = { showCurrencyDialog = false }
+        )
+    }
+
+    if (showKamOnePager) {
+        KamOnePagerDialog(
+            viewModel = viewModel,
+            onDismissRequest = { viewModel.toggleKamOnePager(false) }
         )
     }
 
@@ -206,6 +217,31 @@ fun BigDealAppRoot(
                         }
                     },
                     actions = {
+                        // Quick KAM One-Pager Button
+                        Button(
+                            onClick = { viewModel.toggleKamOnePager(true) },
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary.copy(alpha = 0.2f)),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.testTag("action_kam_one_pager")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = tr("KAM", "КАМ"),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = EmeraldPrimary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
                         // Language Selector Button (EN / RU)
                         Button(
                             onClick = { viewModel.toggleLanguage() },
