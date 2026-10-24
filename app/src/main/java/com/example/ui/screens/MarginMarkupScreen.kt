@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Balance
@@ -37,6 +38,7 @@ import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -96,67 +98,75 @@ fun MarginMarkupScreen(
         tr("Pricing & Mix", "Коммерческий анализ") to Icons.Default.Balance
     )
 
-    LazyColumn(
+    val listState = rememberLazyListState()
+    LaunchedEffect(activeSubTab) {
+        listState.scrollToItem(0)
+    }
+
+    Column(
         modifier = modifier
             .fillMaxSize()
             .testTag("margin_markup_screen")
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = tr("COMMERCIAL PRICING & REVENUE SUITE", "КОММЕРЧЕСКИЙ РАСЧЕТ И ЦЕНООБРАЗОВАНИЕ"),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = tr(
-                    "Price matrices, retail waterfall deductions, promo break-even analysis, and deferred terms cost.",
-                    "Ценовые матрицы, водопад цен сети, расчет промо-скидок и цена отсрочки платежей."
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = tr("COMMERCIAL PRICING & REVENUE SUITE", "КОММЕРЧЕСКИЙ РАСЧЕТ И ЦЕНООБРАЗОВАНИЕ"),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 1.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = tr(
+                "Price matrices, retail waterfall deductions, promo break-even analysis, and deferred terms cost.",
+                "Ценовые матрицы, водопад цен сети, расчет промо-скидок и цена отсрочки платежей."
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Sub-Navigation Tabs
-        item {
-            ScrollableTabRow(
-                selectedTabIndex = activeSubTab,
-                containerColor = ExecutiveSurfaceVariant,
-                contentColor = MaterialTheme.colorScheme.primary,
-                edgePadding = 0.dp,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
-                    .testTag("tab_commercial_selector")
-            ) {
-                tabs.forEachIndexed { index, (label, icon) ->
-                    val isSelected = activeSubTab == index
-                    Tab(
-                        selected = isSelected,
-                        onClick = { activeSubTab = index },
-                        text = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = label,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+        // Pinned Sub-Navigation Tabs
+        ScrollableTabRow(
+            selectedTabIndex = activeSubTab,
+            containerColor = ExecutiveSurfaceVariant,
+            contentColor = MaterialTheme.colorScheme.primary,
+            edgePadding = 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
+                .testTag("tab_commercial_selector")
+        ) {
+            tabs.forEachIndexed { index, (label, icon) ->
+                val isSelected = activeSubTab == index
+                Tab(
+                    selected = isSelected,
+                    onClick = { activeSubTab = index },
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = label,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    )
-                }
+                    }
+                )
             }
         }
+        Spacer(modifier = Modifier.height(12.dp))
 
-        when (activeSubTab) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            when (activeSubTab) {
             0 -> {
                 // Tab 0: MARGIN & MARKUP MATRIX
                 item {
@@ -385,6 +395,10 @@ fun MarginMarkupScreen(
                         initialMarginPct = marginState.marginPct,
                         sampleBaseCost = marginState.cost,
                         currencySymbol = currencySym,
+                        onCostChanged = { newCost ->
+                            val costStr = if (newCost % 1.0 == 0.0) newCost.toInt().toString() else String.format(Locale.US, "%.2f", newCost)
+                            viewModel.onMarginCostOrPriceChanged(newCost = costStr)
+                        },
                         onStrategySelected = { selectedMargin, selectedMarkup, multiplier ->
                             viewModel.applyMarginPercentPreset(selectedMargin)
                         },
@@ -398,7 +412,8 @@ fun MarginMarkupScreen(
                     PriceWaterfallCard(
                         viewModel = viewModel,
                         modifier = Modifier.fillMaxWidth(),
-                        onNavigateToPromo = { activeSubTab = 2 }
+                        onNavigateToPromo = { activeSubTab = 2 },
+                        onNavigateToMarginSolver = { activeSubTab = 0 }
                     )
                 }
             }
@@ -425,7 +440,8 @@ fun MarginMarkupScreen(
                 item {
                     KamNegotiationCard(
                         viewModel = viewModel,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        onNavigateToDeal = { activeSubTab = 0 }
                     )
                 }
             }
@@ -434,7 +450,9 @@ fun MarginMarkupScreen(
                 item {
                     CommercialAnalystCard(
                         viewModel = viewModel,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        onNavigateToTerms = { activeSubTab = 3 },
+                        onNavigateToMarginSolver = { activeSubTab = 0 }
                     )
                 }
             }
@@ -444,4 +462,5 @@ fun MarginMarkupScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }

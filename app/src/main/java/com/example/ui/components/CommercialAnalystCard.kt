@@ -71,7 +71,9 @@ import java.util.Locale
 @Composable
 fun CommercialAnalystCard(
     viewModel: BigDealViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToTerms: (() -> Unit)? = null,
+    onNavigateToMarginSolver: (() -> Unit)? = null
 ) {
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val currencySym = activeCurrency.symbol
@@ -302,6 +304,27 @@ fun CommercialAnalystCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+
+                        Button(
+                            onClick = {
+                                viewModel.applyTradeOffToTerms()
+                                onNavigateToTerms?.invoke()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_apply_tradeoff_to_terms")
+                        ) {
+                            Icon(Icons.Default.PriceCheck, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = tr("Apply Deferral to Payment Calculator", "Применить отсрочку в калькулятор платежей"),
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
@@ -347,11 +370,22 @@ fun CommercialAnalystCard(
                         }
                     }
 
-                    IconButton(
-                        onClick = { viewModel.resetBasketToDefaults() },
-                        modifier = Modifier.size(28.dp).testTag("btn_reset_basket")
-                    ) {
-                        Icon(Icons.Default.RestartAlt, contentDescription = tr("Reset", "Сброс"), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        AssistChip(
+                            onClick = { showBasketEditor = !showBasketEditor },
+                            label = { Text(if (showBasketEditor) tr("Done", "Готово") else tr("Edit Mix", "Настроить"), fontSize = 10.sp) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = if (showBasketEditor) ElectricCyan.copy(alpha = 0.2f) else ExecutiveSurfaceVariant,
+                                labelColor = if (showBasketEditor) ElectricCyan else MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.testTag("chip_toggle_basket_editor")
+                        )
+                        IconButton(
+                            onClick = { viewModel.resetBasketToDefaults() },
+                            modifier = Modifier.size(28.dp).testTag("btn_reset_basket")
+                        ) {
+                            Icon(Icons.Default.RestartAlt, contentDescription = tr("Reset", "Сброс"), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
                     }
                 }
 
@@ -415,7 +449,7 @@ fun CommercialAnalystCard(
                 // SKU Items List
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     basketItems.forEach { item ->
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(8.dp))
@@ -470,8 +504,71 @@ fun CommercialAnalystCard(
                                     )
                                 }
                             }
+
+                            AnimatedVisibility(visible = showBasketEditor) {
+                                Column(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    HorizontalDivider(color = ExecutiveBorder, thickness = 0.5.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        FinancialInputField(
+                                            value = if (item.volume == 0.0) "" else item.volume.toInt().toString(),
+                                            onValueChange = { input ->
+                                                val v = input.toDoubleOrNull() ?: 0.0
+                                                viewModel.updateBasketItem(item.id, v, item.unitPrice, item.unitCogs)
+                                            },
+                                            label = tr("Vol", "Объем"),
+                                            modifier = Modifier.weight(1f).testTag("input_basket_vol_${item.id}")
+                                        )
+                                        FinancialInputField(
+                                            value = if (item.unitPrice == 0.0) "" else item.unitPrice.toString(),
+                                            onValueChange = { input ->
+                                                val p = input.toDoubleOrNull() ?: 0.0
+                                                viewModel.updateBasketItem(item.id, item.volume, p, item.unitCogs)
+                                            },
+                                            label = tr("Price", "Цена"),
+                                            modifier = Modifier.weight(1f).testTag("input_basket_price_${item.id}")
+                                        )
+                                        FinancialInputField(
+                                            value = if (item.unitCogs == 0.0) "" else item.unitCogs.toString(),
+                                            onValueChange = { input ->
+                                                val c = input.toDoubleOrNull() ?: 0.0
+                                                viewModel.updateBasketItem(item.id, item.volume, item.unitPrice, c)
+                                            },
+                                            label = tr("COGS", "Себест."),
+                                            modifier = Modifier.weight(1f).testTag("input_basket_cogs_${item.id}")
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
+                }
+
+                // Apply Blended Margin to Deal / Margin Solver
+                Button(
+                    onClick = {
+                        viewModel.applyBasketMarginToDeal()
+                        onNavigateToMarginSolver?.invoke()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("btn_apply_basket_to_deal")
+                ) {
+                    Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = tr("Apply Blended Margin (${basketResult.blendedMarginPct}%) to Solver", "Применить среднюю маржу (${basketResult.blendedMarginPct}%) в расчет"),
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    )
                 }
             }
         }

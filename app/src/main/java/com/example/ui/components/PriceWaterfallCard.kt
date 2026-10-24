@@ -68,7 +68,8 @@ import java.util.Locale
 fun PriceWaterfallCard(
     viewModel: BigDealViewModel,
     modifier: Modifier = Modifier,
-    onNavigateToPromo: (() -> Unit)? = null
+    onNavigateToPromo: (() -> Unit)? = null,
+    onNavigateToMarginSolver: (() -> Unit)? = null
 ) {
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val currencySym = activeCurrency.symbol
@@ -184,7 +185,10 @@ fun PriceWaterfallCard(
                     Text(tr("From Landed Cost", "Из Landed Cost"), fontSize = 11.sp)
                 }
                 OutlinedButton(
-                    onClick = { viewModel.applyWaterfallToMarginSolver() },
+                    onClick = {
+                        viewModel.applyWaterfallToMarginSolver()
+                        onNavigateToMarginSolver?.invoke()
+                    },
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f).testTag("btn_apply_waterfall_to_margin")
                 ) {

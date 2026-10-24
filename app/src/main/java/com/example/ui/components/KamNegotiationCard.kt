@@ -78,7 +78,8 @@ import java.util.Locale
 @Composable
 fun KamNegotiationCard(
     viewModel: BigDealViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToDeal: (() -> Unit)? = null
 ) {
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val currencySym = activeCurrency.symbol
@@ -319,7 +320,10 @@ fun KamNegotiationCard(
 
                         // Apply to Deal button
                         Button(
-                            onClick = { viewModel.applyKamScenarioToDeal() },
+                            onClick = {
+                                viewModel.applyKamScenarioToDeal()
+                                onNavigateToDeal?.invoke()
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = activeThemeColor),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier

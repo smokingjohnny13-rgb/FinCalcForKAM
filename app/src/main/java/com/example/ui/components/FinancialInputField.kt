@@ -27,9 +27,10 @@ fun FinancialInputField(
     OutlinedTextField(
         value = value,
         onValueChange = { input ->
-            // Allow only numbers and a single decimal point
-            if (input.isEmpty() || input.matches("^\\d*\\.?\\d*$".toRegex())) {
-                onValueChange(input)
+            // Allow numbers and decimal points; automatically normalize comma to dot for RU locale keyboards
+            val normalized = input.replace(',', '.')
+            if (normalized.isEmpty() || normalized.matches("^\\d*\\.?\\d*$".toRegex())) {
+                onValueChange(normalized)
             }
         },
         label = { Text(label, style = MaterialTheme.typography.bodySmall) },

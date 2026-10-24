@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import java.util.Locale
 import com.example.data.model.AmortizationSummary
 import com.example.data.model.CargoCategory
 import com.example.data.model.CountryTradeProfile
@@ -623,13 +624,21 @@ class BigDealViewModel(
     fun applyMarginPercentPreset(marginPct: Double) {
         val cost = marginCostInput.value.toDoubleOrNull() ?: 0.0
         _marginState.value = MarginMarkupSolver.fromCostAndMargin(cost, marginPct)
-        marginPriceInput.value = _marginState.value.sellingPrice.toString()
+        val sp = _marginState.value.sellingPrice
+        marginPriceInput.value = if (sp % 1.0 == 0.0) sp.toInt().toString() else String.format(Locale.US, "%.2f", sp)
+        viewModelScope.launch {
+            _userMessage.emit(str("Target margin ${marginPct.toInt()}% applied (Selling Price: ${formatCurrency(sp)})", "Установлена целевая маржа ${marginPct.toInt()}% (Цена продажи: ${formatCurrency(sp)})", appLanguage.value))
+        }
     }
 
     fun applyMarkupPercentPreset(markupPct: Double) {
         val cost = marginCostInput.value.toDoubleOrNull() ?: 0.0
         _marginState.value = MarginMarkupSolver.fromCostAndMarkup(cost, markupPct)
-        marginPriceInput.value = _marginState.value.sellingPrice.toString()
+        val sp = _marginState.value.sellingPrice
+        marginPriceInput.value = if (sp % 1.0 == 0.0) sp.toInt().toString() else String.format(Locale.US, "%.2f", sp)
+        viewModelScope.launch {
+            _userMessage.emit(str("Target markup ${markupPct.toInt()}% applied (Selling Price: ${formatCurrency(sp)})", "Установлена целевая наценка ${markupPct.toInt()}% (Цена продажи: ${formatCurrency(sp)})", appLanguage.value))
+        }
     }
 
     // --- PnL and ROI Triggers ---
@@ -839,17 +848,24 @@ class BigDealViewModel(
 
     fun importCogsFromLandedCost() {
         val landed = _landedCostResult.value.landedCost
-        waterfallCogs.value = landed.toString()
+        val unitCogs = if (landed > 500.0 && (waterfallRsp.value.toDoubleOrNull() ?: 100.0) < 500.0) {
+            landed / 1000.0
+        } else {
+            landed
+        }
+        waterfallCogs.value = if (unitCogs % 1.0 == 0.0) unitCogs.toInt().toString() else String.format(Locale.US, "%.1f", unitCogs)
         updateWaterfallCalculations()
         viewModelScope.launch {
-            _userMessage.emit(str("COGS updated from Landed Cost: ${formatCurrency(landed)}", "Себестоимость COGS обновлена из Landed Cost: ${formatCurrency(landed)}", appLanguage.value))
+            _userMessage.emit(str("COGS updated from Landed Cost: ${formatCurrency(unitCogs)}", "Себестоимость COGS обновлена из Landed Cost: ${formatCurrency(unitCogs)}", appLanguage.value))
         }
     }
 
     fun applyWaterfallToMarginSolver() {
         val net = _waterfallResult.value.netNetPrice
         val cogs = _waterfallResult.value.supplierCogs
-        onMarginCostOrPriceChanged(newCost = cogs.toString(), newPrice = net.toString())
+        val costStr = if (cogs % 1.0 == 0.0) cogs.toInt().toString() else String.format(Locale.US, "%.2f", cogs)
+        val netStr = if (net % 1.0 == 0.0) net.toInt().toString() else String.format(Locale.US, "%.2f", net)
+        onMarginCostOrPriceChanged(newCost = costStr, newPrice = netStr)
         viewModelScope.launch {
             _userMessage.emit(str("Net-Net price (${formatCurrency(net)}) transferred to margin solver", "Чистая цена (${formatCurrency(net)}) передана в расчет маржи", appLanguage.value))
         }
@@ -1234,4 +1250,39 @@ class BigDealViewModel(
             baseGrossMarginPct = margin
         )
     }
+
+    fun applyTradeOffToTerms() {
+        val days = tradeOffDeferralDays.value.toIntOrNull() ?: 30
+        val deal = tradeOffDealAmount.value.toDoubleOrNull() ?: 100000.0
+        val rate = tradeOffAnnualRate.value.toDoubleOrNull() ?: 20.0
+        termsDays.value = days.toString()
+        termsDealAmount.value = deal.toInt().toString()
+        termsAnnualRate.value = rate.toString()
+        updatePaymentTermsCalculations()
+        viewModelScope.launch {
+            _userMessage.emit(
+                str(
+                    "Trade-off terms transferred to Payment Terms tab (Days: $days, Rate: $rate%)",
+                    "Условия отсрочки перенесены во вкладку Условия платежа (Дней: $days, Ставка: $rate%)",
+                    appLanguage.value
+                )
+            )
+        }
+    }
+
+    fun applyBasketMarginToDeal() {
+        val blended = _blendedBasketResult.value
+        val blendedMargin = blended.blendedMarginPct
+        applyMarginPercentPreset(blendedMargin)
+        viewModelScope.launch {
+            _userMessage.emit(
+                str(
+                    "Blended basket margin (${String.format(Locale.US, "%.1f", blendedMargin)}%) applied to Margin Solver",
+                    "Средневзвешенная маржа корзины (${String.format(Locale.US, "%.1f", blendedMargin)}%) применена к расчету маржи",
+                    appLanguage.value
+                )
+            )
+        }
+    }
 }
+

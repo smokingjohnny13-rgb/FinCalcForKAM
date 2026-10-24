@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Close
@@ -75,7 +77,8 @@ fun KamOnePagerDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .padding(vertical = 16.dp)
+                .heightIn(max = 640.dp)
+                .padding(vertical = 12.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .border(1.5.dp, EmeraldPrimary.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
                 .testTag("dialog_kam_one_pager"),
@@ -326,8 +329,11 @@ private fun OnePagerBoundaryCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 9.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = icon,
                     contentDescription = null,

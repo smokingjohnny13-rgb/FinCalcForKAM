@@ -32,6 +32,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -44,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.MarginMarkupSolver
@@ -78,6 +80,7 @@ fun MarginVsMarkupCalculator(
     initialMarginPct: Double = 35.0,
     sampleBaseCost: Double = 1000.0,
     currencySymbol: String = "$",
+    onCostChanged: ((cost: Double) -> Unit)? = null,
     onStrategySelected: ((marginPct: Double, markupPct: Double, multiplier: Double) -> Unit)? = null,
     testTag: String = "margin_vs_markup_calculator"
 ) {
@@ -93,6 +96,22 @@ fun MarginVsMarkupCalculator(
 
     var marginValue by remember { mutableDoubleStateOf(initialMarginPct) }
     var markupValue by remember { mutableDoubleStateOf(MarginMarkupSolver.marginToMarkup(initialMarginPct)) }
+
+    LaunchedEffect(initialMarginPct) {
+        if (Math.abs(marginValue - initialMarginPct) > 0.05) {
+            marginValue = initialMarginPct
+            marginInput = if (initialMarginPct % 1.0 == 0.0) initialMarginPct.toInt().toString() else String.format(Locale.US, "%.1f", initialMarginPct)
+            markupValue = MarginMarkupSolver.marginToMarkup(initialMarginPct)
+            markupInput = String.format(Locale.US, "%.1f", markupValue)
+        }
+    }
+
+    LaunchedEffect(sampleBaseCost) {
+        val currentCost = baseCostInput.toDoubleOrNull() ?: 0.0
+        if (Math.abs(currentCost - sampleBaseCost) > 0.5) {
+            baseCostInput = if (sampleBaseCost % 1.0 == 0.0) sampleBaseCost.toInt().toString() else String.format(Locale.US, "%.2f", sampleBaseCost)
+        }
+    }
 
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
 
@@ -134,7 +153,10 @@ fun MarginVsMarkupCalculator(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.CompareArrows,
                         contentDescription = null,
@@ -143,24 +165,30 @@ fun MarginVsMarkupCalculator(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = tr("MARGIN VS. MARKUP CALCULATOR", "КАЛЬКУЛЯТОР МАРЖИ И НАЦЕНКИ"),
-                        style = MaterialTheme.typography.titleSmall,
+                        text = tr("MARGIN VS. MARKUP", "МАРЖА И НАЦЕНКА"),
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .background(ElectricCyan.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "${numberFmt.format(currentMultiplier)}x ${tr("MULTIPLIER", "КОЭФФИЦИЕНТ")}",
+                        text = "${numberFmt.format(currentMultiplier)}x ${tr("FACTOR", "КОЭФФ")}",
                         style = MaterialTheme.typography.labelSmall,
                         color = ElectricCyan,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -294,9 +322,10 @@ fun MarginVsMarkupCalculator(
                         value = marginValue.toFloat().coerceIn(1f, 85f),
                         onValueChange = { newVal ->
                             marginValue = round(newVal.toDouble() * 10.0) / 10.0
-                            marginInput = marginValue.toString()
+                            marginInput = if (marginValue % 1.0 == 0.0) marginValue.toInt().toString() else marginValue.toString()
                             markupValue = MarginMarkupSolver.marginToMarkup(marginValue)
                             markupInput = String.format(Locale.US, "%.1f", markupValue)
+                            onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
                         valueRange = 1f..85f,
                         colors = SliderDefaults.colors(
@@ -317,6 +346,7 @@ fun MarginVsMarkupCalculator(
                             marginValue = clampedM
                             markupValue = MarginMarkupSolver.marginToMarkup(clampedM)
                             markupInput = String.format(Locale.US, "%.1f", markupValue)
+                            onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
                         suffix = "%",
                         modifier = Modifier.fillMaxWidth(),
@@ -349,9 +379,10 @@ fun MarginVsMarkupCalculator(
                         value = markupValue.toFloat().coerceIn(1f, 250f),
                         onValueChange = { newVal ->
                             markupValue = round(newVal.toDouble() * 10.0) / 10.0
-                            markupInput = markupValue.toString()
+                            markupInput = if (markupValue % 1.0 == 0.0) markupValue.toInt().toString() else markupValue.toString()
                             marginValue = MarginMarkupSolver.markupToMargin(markupValue)
                             marginInput = String.format(Locale.US, "%.1f", marginValue)
+                            onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
                         valueRange = 1f..250f,
                         colors = SliderDefaults.colors(
@@ -372,6 +403,7 @@ fun MarginVsMarkupCalculator(
                             markupValue = clampedMu
                             marginValue = MarginMarkupSolver.markupToMargin(clampedMu)
                             marginInput = String.format(Locale.US, "%.1f", marginValue)
+                            onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
                         suffix = "%",
                         modifier = Modifier.fillMaxWidth(),
@@ -399,9 +431,10 @@ fun MarginVsMarkupCalculator(
                             selected = isSelected,
                             onClick = {
                                 marginValue = preset.marginPct
-                                marginInput = preset.marginPct.toString()
+                                marginInput = if (preset.marginPct % 1.0 == 0.0) preset.marginPct.toInt().toString() else preset.marginPct.toString()
                                 markupValue = MarginMarkupSolver.marginToMarkup(preset.marginPct)
                                 markupInput = String.format(Locale.US, "%.1f", markupValue)
+                                onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                             },
                             label = {
                                 Text(
@@ -458,7 +491,12 @@ fun MarginVsMarkupCalculator(
                         FinancialInputField(
                             label = tr("Base Cost of Goods", "Базовая себестоимость"),
                             value = baseCostInput,
-                            onValueChange = { baseCostInput = it },
+                            onValueChange = {
+                                baseCostInput = it
+                                it.toDoubleOrNull()?.let { cost ->
+                                    onCostChanged?.invoke(cost)
+                                }
+                            },
                             prefix = currencySymbol,
                             modifier = Modifier.weight(1f),
                             testTag = "input_simulator_cost"
@@ -496,7 +534,7 @@ fun MarginVsMarkupCalculator(
                             Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "${tr("Apply to Pricing Strategy", "Применить к стратегии")} (${numberFmt.format(marginValue)}% ${tr("Margin", "Маржа")} / ${numberFmt.format(currentMultiplier)}x)",
+                                text = "${tr("Apply Strategy to Deal", "Применить к параметрам сделки")} (${numberFmt.format(marginValue)}% / ${numberFmt.format(currentMultiplier)}x)",
                                 color = Color.Black,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
