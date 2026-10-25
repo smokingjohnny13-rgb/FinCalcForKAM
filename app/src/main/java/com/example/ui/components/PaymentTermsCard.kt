@@ -319,17 +319,41 @@ fun PaymentTermsCard(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(tr("Cash at Prepayment (Day 0):", "Деньги при предоплате (Day 0):"), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(viewModel.formatCurrency(result.cashDiscountNetProceeds), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(
+                            text = tr("Cash at Prepayment (Day 0):", "Деньги при предоплате (Day 0):"),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = viewModel.formatCurrency(result.cashDiscountNetProceeds),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            softWrap = false
+                        )
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(tr("Net present value of deferred terms:", "Чистая стоимость денег при отсрочке:"), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(viewModel.formatCurrency(result.netPresentValue), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = GoldAccent)
+                        Text(
+                            text = tr("Net present value of deferred terms:", "Чистая стоимость денег при отсрочке:"),
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = viewModel.formatCurrency(result.netPresentValue),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GoldAccent,
+                            softWrap = false
+                        )
                     }
                 }
             }

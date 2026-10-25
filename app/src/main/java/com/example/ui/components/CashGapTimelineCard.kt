@@ -171,26 +171,31 @@ fun CashGapTimelineCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(ExecutiveCard)
                         .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
-                        .padding(12.dp)
+                        .padding(10.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.SpaceBetween) {
                         Text(
                             text = tr("PEAK CASH DEFICIT", "ПИКОВЫЙ РАЗРЫВ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "-${viewModel.formatCurrency(result.peakCashDeficit)}",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Black,
-                            color = Color(0xFFFF5252)
+                            color = Color(0xFFFF5252),
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
                             text = tr("Maximum tied-up cash", "Макс. вымывание денег"),
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 9.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
                 }
@@ -203,26 +208,31 @@ fun CashGapTimelineCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(ExecutiveCard)
                         .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
-                        .padding(12.dp)
+                        .padding(10.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.SpaceBetween) {
                         Text(
                             text = tr("OVERDRAFT COST", "ЦЕНА ОВЕРДРАФТА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "-${viewModel.formatCurrency(result.overdraftCost)}",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Black,
-                            color = GoldAccent
+                            color = GoldAccent,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
                             text = "${result.overdraftRatePct}% ${tr("annual rate", "годовых")}",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 9.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
                 }
@@ -235,26 +245,31 @@ fun CashGapTimelineCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(ExecutiveCard)
                         .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
-                        .padding(12.dp)
+                        .padding(10.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.SpaceBetween) {
                         Text(
                             text = tr("REAL MARGIN", "РЕАЛЬНАЯ МАРЖА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${result.cashAdjustedMarginPct}%",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Black,
-                            color = if (result.cashAdjustedMarginPct >= 15.0) EmeraldPrimary else GoldAccent
+                            color = if (result.cashAdjustedMarginPct >= 15.0) EmeraldPrimary else GoldAccent,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Text(
                             text = "${tr("Nominal", "Номинал")}: ${result.nominalMarginPct}%",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 9.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
                         )
                     }
                 }
@@ -278,13 +293,16 @@ fun CashGapTimelineCard(
                             text = tr("CASH FLOW TIMELINE & CCC", "ТАЙМЛАЙН ДЕНЕГ И ЦИКЛ CCC"),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = ElectricCyan
+                            color = ElectricCyan,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "CCC = ${result.cashConversionCycleDays} ${tr("days", "дн.")}",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (result.cashConversionCycleDays > 30) Color(0xFFFF7043) else EmeraldPrimary
+                            color = if (result.cashConversionCycleDays > 30) Color(0xFFFF7043) else EmeraldPrimary,
+                            softWrap = false
                         )
                     }
 
@@ -294,38 +312,40 @@ fun CashGapTimelineCard(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("1", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "${tr("Day", "День")} 0: ${tr("Prepayments & Logistics", "Аванс, логистика, пошлины")}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = tr("Immediate cash outlays", "Выбытие живых денег на старте"),
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("1", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = "${tr("Day", "День")} 0: ${tr("Prepayments & Logistics", "Аванс, логистика, пошлины")}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = tr("Immediate cash outlays", "Выбытие живых денег на старте"),
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         Text(
                             text = "-${viewModel.formatCurrency(result.prepaymentsDayZero)}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252)
+                            color = Color(0xFFFF5252),
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 
@@ -333,38 +353,40 @@ fun CashGapTimelineCard(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("2", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "${tr("Day", "День")} ${result.supplierPayDays}: ${tr("Supplier Balance (DPO)", "Оплата поставщику (DPO)")}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = tr("Peak working capital deficit reached", "Достигнут пик кассового разрыва"),
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("2", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = "${tr("Day", "День")} ${result.supplierPayDays}: ${tr("Supplier Balance (DPO)", "Оплата поставщику (DPO)")}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = tr("Peak working capital deficit reached", "Достигнут пик кассового разрыва"),
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         Text(
                             text = "-${viewModel.formatCurrency(result.supplierBalance)}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252)
+                            color = Color(0xFFFF5252),
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 
@@ -372,38 +394,40 @@ fun CashGapTimelineCard(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(EmeraldPrimary.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "${tr("Day", "День")} ${result.totalCashGapDays}: ${tr("Customer Inflow (DSO)", "Поступление от клиента (DSO)")}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = tr("Cash gap closed, profit realized", "Разрыв закрыт, прибыль зафиксирована"),
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldPrimary.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = "${tr("Day", "День")} ${result.totalCashGapDays}: ${tr("Customer Inflow (DSO)", "Поступление от клиента (DSO)")}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = tr("Cash gap closed, profit realized", "Разрыв закрыт, прибыль зафиксирована"),
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         Text(
                             text = "+${viewModel.formatCurrency(result.dealRevenue)}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = EmeraldPrimary
+                            color = EmeraldPrimary,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
                 }
