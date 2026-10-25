@@ -94,19 +94,22 @@ fun RoiPnlModeler(
 
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 1 } }
     val formatMoney: (Double) -> String = { amount ->
+        val isNegative = amount < 0
+        val absAmount = Math.abs(amount)
         val formattedNum = NumberFormat.getNumberInstance(Locale.US).apply {
             maximumFractionDigits = 0
-        }.format(amount)
-        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$currencySymbol$formattedNum"
-        else "$currencySymbol $formattedNum"
+        }.format(absAmount)
+        val sign = if (isNegative) "-" else ""
+        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$sign$currencySymbol$formattedNum"
+        else "$sign$currencySymbol $formattedNum"
     }
 
-    val currentCac = cacInput.toDoubleOrNull() ?: initialCac
-    val currentLtv = ltvInput.toDoubleOrNull() ?: initialLtv
-    val currentChurn = churnInput.toDoubleOrNull() ?: initialChurnRatePct
-    val currentCohort = cohortInput.toIntOrNull() ?: initialCohortSize
-    val currentMargin = grossMarginInput.toDoubleOrNull() ?: initialGrossMarginPct
-    val currentOpex = opexInput.toDoubleOrNull() ?: initialMonthlyOpex
+    val currentCac = cacInput.replace(',', '.').toDoubleOrNull() ?: initialCac
+    val currentLtv = ltvInput.replace(',', '.').toDoubleOrNull() ?: initialLtv
+    val currentChurn = churnInput.replace(',', '.').toDoubleOrNull() ?: initialChurnRatePct
+    val currentCohort = cohortInput.replace(',', '.').toIntOrNull() ?: initialCohortSize
+    val currentMargin = grossMarginInput.replace(',', '.').toDoubleOrNull() ?: initialGrossMarginPct
+    val currentOpex = opexInput.replace(',', '.').toDoubleOrNull() ?: initialMonthlyOpex
 
     val forecast = remember(currentCac, currentLtv, currentChurn, currentCohort, currentMargin, currentOpex) {
         RoiForecastEngine.calculate12MonthForecast(
@@ -422,7 +425,7 @@ fun RoiPnlModeler(
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             Text(
-                                                text = if (isProfit) "+${formatMoney(pt.cumulativeProfit)}" else "-${formatMoney(Math.abs(pt.cumulativeProfit))}",
+                                                text = if (isProfit) "+${formatMoney(pt.cumulativeProfit)}" else formatMoney(pt.cumulativeProfit),
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = if (isProfit) EmeraldPrimary else MaterialTheme.colorScheme.error

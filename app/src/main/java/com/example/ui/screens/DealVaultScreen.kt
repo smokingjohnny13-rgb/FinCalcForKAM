@@ -57,6 +57,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.FolderOpen
+import com.example.data.model.PaymentFrequency
 import com.example.data.model.SavedDeal
 import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
@@ -364,7 +366,105 @@ fun DealVaultScreen(
             }
         }
 
+        if (savedDeals.isNotEmpty()) {
+            item {
+                val totalVaultValue = savedDeals.sumOf { it.dealValue }
+                val avgMargin = if (savedDeals.isNotEmpty()) savedDeals.map { it.marginPct }.average() else 0.0
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ExecutiveCard)
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = tr("TOTAL PORTFOLIO PIPELINE", "СУММА ВСЕХ СОХРАНЕННЫХ СДЕЛОК"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 10.sp
+                            )
+                            Text(
+                                text = viewModel.formatCurrency(totalVaultValue),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
+                                color = EmeraldPrimary
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = tr("AVG DEAL MARGIN", "СРЕДНЯЯ МАРЖА"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 10.sp
+                            )
+                            Text(
+                                text = "${String.format(Locale.US, "%.1f", avgMargin)}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = GoldAccent
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(ExecutiveSurface)
+                        .border(1.dp, ExecutiveBorder, RoundedCornerShape(14.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Text(
+                            text = tr("No Saved Deal Scenarios", "Нет сохраненных сделок"),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = tr(
+                                "Configure terms in any calculator tab and tap 'Save Model' above to keep records.",
+                                "Настройте параметры в любом калькуляторе и нажмите 'Сохранить' выше."
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+
         items(savedDeals, key = { it.id }) { deal ->
+            val freqAbbr = when (deal.frequency) {
+                PaymentFrequency.WEEKLY -> tr("wk", "нед")
+                PaymentFrequency.BIWEEKLY -> tr("2-wk", "2нед")
+                PaymentFrequency.MONTHLY -> tr("mo", "мес")
+                PaymentFrequency.QUARTERLY -> tr("qtr", "кв")
+                PaymentFrequency.ANNUALLY -> tr("yr", "год")
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -420,7 +520,7 @@ fun DealVaultScreen(
                         }
                         Column {
                             Text(tr("PAYMENT", "ПЛАТЕЖ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${viewModel.formatCurrency(deal.periodicPayment)} / ${deal.frequency.displayName.take(2)}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("${viewModel.formatCurrency(deal.periodicPayment)} / $freqAbbr", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Column {
                             Text(tr("MARGIN", "МАРЖА"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

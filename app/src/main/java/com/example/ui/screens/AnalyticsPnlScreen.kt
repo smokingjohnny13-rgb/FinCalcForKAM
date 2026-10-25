@@ -107,8 +107,8 @@ fun AnalyticsPnlScreen(
                     title = tr("Projected ROI", "Прогнозный ROI"),
                     value = "${pnl.roiPct}%",
                     subtitle = tr("Gain on Investment", "Доходность на вложенный капитал"),
-                    badgeText = if (pnl.roiPct >= 100) tr("2x+ Return", "Доходность 2x+") else tr("Positive", "В плюсе"),
-                    badgeColor = EmeraldPrimary,
+                    badgeText = if (pnl.roiPct >= 100) tr("2x+ Return", "Доходность 2x+") else if (pnl.roiPct >= 0) tr("Positive", "В плюсе") else tr("Deficit", "Убыток"),
+                    badgeColor = if (pnl.roiPct >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
                     icon = Icons.Default.ShowChart,
                     modifier = Modifier
                         .weight(1f)
@@ -180,7 +180,7 @@ fun AnalyticsPnlScreen(
                         Text(
                             text = "${tr("Net Margin", "Чистая маржа")}: ${pnl.netMarginPct}%",
                             style = MaterialTheme.typography.labelSmall,
-                            color = EmeraldPrimary,
+                            color = if (pnl.netProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -190,16 +190,16 @@ fun AnalyticsPnlScreen(
                     PnlRowItem(tr("Direct Delivery / COGS", "Прямая себестоимость / COGS"), "- ${viewModel.formatCurrency(pnl.cogs)}", isDeduction = true)
 
                     HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                    PnlRowItem("${tr("Gross Profit", "Валовая прибыль")} (${pnl.grossMarginPct}%)", viewModel.formatCurrency(pnl.grossProfit), isBold = true, valueColor = EmeraldPrimary)
+                    PnlRowItem("${tr("Gross Profit", "Валовая прибыль")} (${pnl.grossMarginPct}%)", viewModel.formatCurrency(pnl.grossProfit), isBold = true, valueColor = if (pnl.grossProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error)
 
                     PnlRowItem(tr("Sales & Delivery OPEX", "Операционные расходы (OPEX)"), "- ${viewModel.formatCurrency(pnl.operatingExpenses)}", isDeduction = true)
 
                     HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
-                    PnlRowItem("${tr("Operating EBITDA", "Операционная EBITDA")} (${pnl.ebitdaMarginPct}%)", viewModel.formatCurrency(pnl.ebitda), isBold = true, valueColor = ElectricCyan)
+                    PnlRowItem("${tr("Operating EBITDA", "Операционная EBITDA")} (${pnl.ebitdaMarginPct}%)", viewModel.formatCurrency(pnl.ebitda), isBold = true, valueColor = if (pnl.ebitda >= 0) ElectricCyan else MaterialTheme.colorScheme.error)
                     PnlRowItem(tr("Estimated Tax (20% est.)", "Налог на прибыль (расчет 20%)"), "- ${viewModel.formatCurrency(if (pnl.ebitda > 0) pnl.ebitda * 0.20 else 0.0)}", isDeduction = true)
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), thickness = 1.5.dp)
-                    PnlRowItem("${tr("Net Contract Profit", "Чистая прибыль контракта")} (${pnl.netMarginPct}%)", viewModel.formatCurrency(pnl.netProfit), isBold = true, valueColor = EmeraldPrimary)
+                    PnlRowItem("${tr("Net Contract Profit", "Чистая прибыль контракта")} (${pnl.netMarginPct}%)", viewModel.formatCurrency(pnl.netProfit), isBold = true, valueColor = if (pnl.netProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -366,35 +366,43 @@ fun AnalyticsPnlScreen(
                             .background(ExecutiveCard)
                             .padding(12.dp)
                     ) {
+                        val unitP = unitPrice.toDoubleOrNull() ?: 500.0
+                        val unitC = unitCost.toDoubleOrNull() ?: 150.0
+                        val isAttainable = (unitP - unitC) > 0.0
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1.2f)) {
                                 Text(
                                     text = tr("BREAK-EVEN VOLUME", "ТОЧКА БЕЗУБЫТОЧНОСТИ"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "${pnl.breakEvenUnits.toInt()} ${tr("units / licenses", "шт. / лицензий")}",
+                                    text = if (isAttainable) {
+                                        "${pnl.breakEvenUnits.toInt()} ${tr("units / licenses", "шт. / лицензий")}"
+                                    } else {
+                                        tr("Unattainable (Price ≤ Cost)", "Недостижимо (Цена ≤ Себест.)")
+                                    },
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = if (isAttainable) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
                                 )
                             }
-                            Column(horizontalAlignment = Alignment.End) {
+                            Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = tr("MINIMUM REVENUE", "МИНИМАЛЬНАЯ ВЫРУЧКА"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = viewModel.formatCurrency(pnl.breakEvenRevenue),
+                                    text = if (isAttainable) viewModel.formatCurrency(pnl.breakEvenRevenue) else "—",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = GoldAccent
+                                    color = if (isAttainable) GoldAccent else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

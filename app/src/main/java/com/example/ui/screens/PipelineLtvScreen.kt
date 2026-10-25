@@ -84,6 +84,10 @@ fun PipelineLtvScreen(
     }
 
     val localizedHealthLabel = when (healthLabel) {
+        "Critical (Losing Money)" -> tr("Critical (Loss)", "Критично (Убыток)")
+        "Caution (Low Margin)" -> tr("Caution (Low)", "Внимание (Низкий возврат)")
+        "Healthy (B2B Ideal)" -> tr("Healthy (Ideal)", "Здоровый (Идеал)")
+        "Exceptional (Under-investing)" -> tr("Hyper-Efficient", "Сверхэффективно")
         "Hyper-Efficient" -> tr("Hyper-Efficient", "Сверхэффективно")
         "Healthy SaaS" -> tr("Healthy SaaS", "Здоровый SaaS")
         "High Risk" -> tr("High Risk", "Высокий риск")
@@ -346,13 +350,13 @@ fun PipelineLtvScreen(
                     // Funnel Visual Step Progress Bars
                     funnelSummary.stages.forEachIndexed { index, stage ->
                         val leadBase = (leads.toDoubleOrNull() ?: 1.0).coerceAtLeast(1.0)
-                        val stageRatio = (stage.count.toFloat() / leadBase.toFloat()).coerceIn(0.01f, 1f)
+                        val stageRatio = if (stage.count <= 0) 0f else (stage.count.toFloat() / leadBase.toFloat()).coerceIn(0.01f, 1f)
 
                         val localizedStageName = when (stage.name) {
                             "Leads / Prospects" -> tr("Leads / Prospects", "Лиды / Проспекты")
                             "Marketing Qualified (MQL)" -> tr("Marketing Qualified (MQL)", "Квалифицировано маркетингом (MQL)")
                             "Sales Qualified (SQL)" -> tr("Sales Qualified (SQL)", "Квалифицировано продажами (SQL)")
-                            "Opportunities" -> tr("Opportunities", "Сделки / Переговоры")
+                            "Opportunities", "Proposals / Opportunities" -> tr("Opportunities", "Сделки / Переговоры")
                             "Closed Won Deals" -> tr("Closed Won Deals", "Успешно закрытые сделки")
                             else -> stage.name
                         }
@@ -395,6 +399,9 @@ fun PipelineLtvScreen(
                             .background(ExecutiveCard)
                             .padding(12.dp)
                     ) {
+                        val leadCount = (leads.toDoubleOrNull() ?: 0.0)
+                        val revenuePerLead = if (leadCount > 0) funnelSummary.totalPipelineValue / leadCount else 0.0
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -402,7 +409,7 @@ fun PipelineLtvScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = tr("PROJECTED WON PIPELINE VALUE", "ПРОГНОЗ ВЫРУЧКИ ПО ВОРОНКЕ"),
+                                    text = tr("PROJECTED PIPELINE", "ПРОГНОЗ ВЫРУЧКИ"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -411,6 +418,20 @@ fun PipelineLtvScreen(
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = EmeraldPrimary
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = tr("VALUE / LEAD", "ДОХОД / ЛИД"),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = viewModel.formatCurrency(revenuePerLead),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricCyan
                                 )
                             }
 

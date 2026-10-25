@@ -554,7 +554,7 @@ class BigDealViewModel(
         selectedCategory.value = CargoCategory.CUSTOM
         updateLandedCostCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Calibrated Express Multiplier: $calibrated")
+            _userMessage.emit(str("Calibrated Express Multiplier: $calibrated", "Вычислен экспресс-коэффициент: $calibrated", appLanguage.value))
         }
     }
 
@@ -568,7 +568,7 @@ class BigDealViewModel(
         }
         onMarginCostOrPriceChanged()
         viewModelScope.launch {
-            _userMessage.emit("Landed Cost $${landed.toInt()} transferred to Margin & Pricing Solver")
+            _userMessage.emit(str("Landed Cost ${formatCurrency(landed)} transferred to Margin Solver", "Себестоимость ${formatCurrency(landed)} передана в расчет маржи", appLanguage.value))
         }
     }
 
@@ -577,7 +577,7 @@ class BigDealViewModel(
         principalAmount.value = landed.toInt().toString()
         updateFinancing()
         viewModelScope.launch {
-            _userMessage.emit("Deal value updated with Landed Cost: $${landed.toInt()}")
+            _userMessage.emit(str("Deal principal updated with Landed Cost: ${formatCurrency(landed)}", "Сумма сделки обновлена себестоимостью: ${formatCurrency(landed)}", appLanguage.value))
         }
     }
 
@@ -673,7 +673,7 @@ class BigDealViewModel(
         pnlDurationMonths.value = "12"
         updatePnlCalculations()
         viewModelScope.launch {
-            _userMessage.emit("Applied 12-Month Cohort Forecast to Contract P&L")
+            _userMessage.emit(str("Applied 12-Month Cohort Forecast to Contract P&L", "Прогноз когорты 12м применен к P&L контракта", appLanguage.value))
         }
     }
 
@@ -702,7 +702,7 @@ class BigDealViewModel(
                 updatedAt = System.currentTimeMillis()
             )
             dealRepository.saveDeal(deal)
-            _userMessage.emit("Deal proposal saved & synced: ${deal.title}")
+            _userMessage.emit(str("Deal proposal saved & synced: ${deal.title}", "Сценарий сделки сохранен и синхронизирован: ${deal.title}", appLanguage.value))
         }
     }
 
@@ -724,14 +724,14 @@ class BigDealViewModel(
         updatePnlCalculations()
 
         viewModelScope.launch {
-            _userMessage.emit("Loaded scenario: ${deal.title}")
+            _userMessage.emit(str("Loaded scenario: ${deal.title}", "Загружен сценарий: ${deal.title}", appLanguage.value))
         }
     }
 
     fun deleteDeal(dealId: String) {
         viewModelScope.launch {
             dealRepository.deleteDeal(dealId)
-            _userMessage.emit("Deal scenario deleted")
+            _userMessage.emit(str("Deal scenario deleted", "Сценарий сделки удален", appLanguage.value))
         }
     }
 
@@ -818,11 +818,18 @@ class BigDealViewModel(
 
     fun formatCurrency(amount: Double): String {
         val sym = activeCurrency.value.symbol
+        val isNegative = amount < 0
+        val absAmount = Math.abs(amount)
         val formattedNum = java.text.NumberFormat.getNumberInstance(java.util.Locale.US).apply {
             maximumFractionDigits = 2
             minimumFractionDigits = 2
-        }.format(amount)
-        return if (sym == "$" || sym == "€" || sym == "£" || sym == "¥" || sym == "₽") "$sym$formattedNum" else "$sym $formattedNum"
+        }.format(absAmount)
+        val sign = if (isNegative) "-" else ""
+        return if (sym == "$" || sym == "€" || sym == "£" || sym == "¥" || sym == "₽") {
+            "$sign$sym$formattedNum"
+        } else {
+            "$sign$sym $formattedNum"
+        }
     }
 
     // --- Price Waterfall Triggers ---

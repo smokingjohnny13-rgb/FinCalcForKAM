@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -49,6 +50,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -107,6 +109,11 @@ fun LandedCostScreen(
     var countryMenuExpanded by remember { mutableStateOf(false) }
 
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(isReverse) {
+        listState.scrollToItem(0)
+    }
 
     val categories = listOf(
         CargoCategory.ELECTRONICS,
@@ -116,21 +123,24 @@ fun LandedCostScreen(
         CargoCategory.UNIVERSAL
     )
 
-    LazyColumn(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .testTag("landed_cost_screen")
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            Spacer(modifier = Modifier.height(4.dp))
+        // Pinned Header & Calculation Mode Switch
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = tr("EXPRESS COEFFICIENTS & LANDED COST", "ЭКСПРЕСС-КОЭФФИЦИЕНТЫ И СЕБЕСТОИМОСТЬ"),
                         style = MaterialTheme.typography.labelMedium,
@@ -186,10 +196,8 @@ fun LandedCostScreen(
                     }
                 }
             }
-        }
 
-        // 1. Calculation Mode Tabs: Direct (FOB -> Landed) vs Reverse (Landed -> FOB) vs Calibration
-        item {
+            // Calculation Mode Tabs: Direct (FOB -> Landed) vs Reverse (Landed -> FOB)
             TabRow(
                 selectedTabIndex = if (!isReverse) 0 else 1,
                 containerColor = ExecutiveSurfaceVariant,
@@ -223,7 +231,14 @@ fun LandedCostScreen(
             }
         }
 
-        // 2. Primary Hero Result Card
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 2. Primary Hero Result Card
         item {
             Box(
                 modifier = Modifier
@@ -713,6 +728,7 @@ fun LandedCostScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable
