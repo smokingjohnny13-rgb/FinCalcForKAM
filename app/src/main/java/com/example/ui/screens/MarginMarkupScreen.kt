@@ -17,20 +17,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Balance
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Handshake
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,11 +56,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.MarginMarkupSolver
 import com.example.ui.components.CommercialAnalystCard
 import com.example.ui.components.FinancialInputField
+import com.example.ui.components.FobLandedCostDialog
 import com.example.ui.components.KamNegotiationCard
 import com.example.ui.components.LandedCostModeler
 import com.example.ui.components.MarginVsMarkupCalculator
@@ -87,7 +94,7 @@ fun MarginMarkupScreen(
     val marginState by viewModel.marginState.collectAsState()
 
     var activeSubTab by remember { mutableIntStateOf(0) }
-    var showLandedCostModeler by remember { mutableStateOf(false) }
+    var showFobLandedCostDialog by remember { mutableStateOf(false) }
 
     val tabs = listOf(
         tr("Margin & Markup", "Маржа и Наценка") to Icons.Default.Percent,
@@ -247,39 +254,69 @@ fun MarginMarkupScreen(
                             }
 
                             // Landed Cost Modeler Shortcut for FOB import calculations
-                            Row(
+                            Card(
+                                onClick = { showFobLandedCostDialog = true },
+                                colors = CardDefaults.cardColors(containerColor = ExecutiveSurfaceVariant),
+                                border = BorderStroke(1.dp, ExecutiveBorder),
+                                shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(ExecutiveSurfaceVariant)
-                                    .clickable { showLandedCostModeler = !showLandedCostModeler }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .testTag("btn_open_fob_modeler")
                             ) {
-                                Text(
-                                    text = tr("Calculate unit cost from FOB (1.28–1.75)", "Рассчитать себестоимость через FOB (1.28–1.75)"),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = EmeraldPrimary
-                                )
-                                Text(
-                                    text = if (showLandedCostModeler) tr("Hide ▴", "Скрыть ▴") else tr("Landed Cost Modeler ▾", "Landed Cost Modeler ▾"),
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            if (showLandedCostModeler) {
-                                LandedCostModeler(
-                                    initialFobPrice = marginCost.toDoubleOrNull() ?: 1000.0,
-                                    currencySymbol = currencySym,
-                                    onApplyToMargin = { computedCost ->
-                                        viewModel.onMarginCostOrPriceChanged(newCost = computedCost.toInt().toString())
-                                        showLandedCostModeler = false
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(EmeraldPrimary.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocalShipping,
+                                            contentDescription = null,
+                                            tint = EmeraldPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = tr("Calculate unit cost from FOB (1.28–1.75)", "Рассчитать себестоимость через FOB"),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = tr("Express freight, duty & VAT coefficients", "Экспресс-коэффициенты логистики, пошлин и НДС (1.28–1.75)"),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = EmeraldPrimary,
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(EmeraldPrimary.copy(alpha = 0.15f))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = tr("FOB ▾", "FOB ▾"),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = EmeraldPrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            softWrap = false
+                                        )
+                                    }
+                                }
                             }
 
                             // Profit Yield Banner
@@ -463,4 +500,17 @@ fun MarginMarkupScreen(
         }
     }
 }
+
+    if (showFobLandedCostDialog) {
+        val fobPrice = marginCost.toDoubleOrNull() ?: 1000.0
+        FobLandedCostDialog(
+            initialFobPrice = fobPrice,
+            currencySymbol = currencySym,
+            onDismissRequest = { showFobLandedCostDialog = false },
+            onApplyToMargin = { computedCost ->
+                viewModel.applyFobLandedCostToMargin(computedCost)
+                showFobLandedCostDialog = false
+            }
+        )
+    }
 }

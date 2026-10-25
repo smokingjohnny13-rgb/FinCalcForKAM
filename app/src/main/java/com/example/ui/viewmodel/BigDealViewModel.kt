@@ -560,15 +560,26 @@ class BigDealViewModel(
 
     fun transferLandedCostToMarginSolver() {
         val landed = _landedCostResult.value.landedCost
-        marginCostInput.value = landed.toInt().toString()
+        applyFobLandedCostToMargin(landed)
+    }
+
+    fun applyFobLandedCostToMargin(landedCost: Double) {
+        val landedInt = landedCost.toInt()
+        marginCostInput.value = landedInt.toString()
         val currentPrice = marginPriceInput.value.toDoubleOrNull() ?: 0.0
-        if (currentPrice <= landed) {
-            val suggestedPrice = (landed / (1.0 - 0.35)).toInt()
+        if (currentPrice <= landedCost) {
+            val suggestedPrice = (landedCost / (1.0 - 0.35)).toInt()
             marginPriceInput.value = suggestedPrice.toString()
         }
         onMarginCostOrPriceChanged()
         viewModelScope.launch {
-            _userMessage.emit(str("Landed Cost ${formatCurrency(landed)} transferred to Margin Solver", "Себестоимость ${formatCurrency(landed)} передана в расчет маржи", appLanguage.value))
+            _userMessage.emit(
+                str(
+                    "Landed cost ${formatCurrency(landedCost)} applied from FOB",
+                    "Себестоимость ${formatCurrency(landedCost)} применена из FOB",
+                    appLanguage.value
+                )
+            )
         }
     }
 

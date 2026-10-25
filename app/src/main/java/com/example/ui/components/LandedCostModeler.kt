@@ -16,10 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocalShipping
@@ -43,6 +47,8 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +57,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.ui.theme.ExecutiveMidnight
 import com.example.data.model.CargoCategory
 import com.example.domain.calculator.LandedCostCalculator
 import com.example.ui.i18n.LocalAppLanguage
@@ -361,7 +370,12 @@ fun LandedCostModeler(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.testTag("modeler_btn_apply_margin")
                         ) {
-                            Text(tr("To Margin", "В расчет маржи"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "${tr("Apply", "Применить")} (${formatMoney(result.landedCost)})",
+                                color = Color.Black,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -495,6 +509,105 @@ fun LandedCostModeler(
                         Text("${tr("VAT", "НДС")}: ${formatMoney(result.importVatAmount)}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * High-impact modal dialog for FOB-to-Landed cost conversions.
+ * Triggered from Commercial Pricing / Margin screen to compute customs, logistics, and VAT.
+ */
+@Composable
+fun FobLandedCostDialog(
+    initialFobPrice: Double = 1000.0,
+    currencySymbol: String = "$",
+    onDismissRequest: () -> Unit,
+    onApplyToMargin: (Double) -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .heightIn(max = 680.dp)
+                .padding(vertical = 12.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .border(1.5.dp, EmeraldPrimary.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                .testTag("dialog_fob_landed_cost"),
+            color = ExecutiveMidnight
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f, fill = false),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldPrimary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalShipping,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = tr("FOB → LANDED COST MODELER", "РАСЧЕТ СЕБЕСТОИМОСТИ ИЗ FOB"),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = EmeraldPrimary,
+                                letterSpacing = 0.5.sp
+                            )
+                            Text(
+                                text = tr(
+                                    "Express coefficients 1.28–1.75 for import deals",
+                                    "Экспресс-коэффициенты 1.28–1.75 для импорта"
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
+
+                LandedCostModeler(
+                    initialFobPrice = initialFobPrice,
+                    currencySymbol = currencySymbol,
+                    onApplyToMargin = onApplyToMargin,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
