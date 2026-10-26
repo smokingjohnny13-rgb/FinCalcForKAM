@@ -93,12 +93,11 @@ fun RoiPnlModeler(
     var opexInput by remember { mutableStateOf(initialMonthlyOpex.toInt().toString()) }
 
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 1 } }
+    val moneyFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 0 } }
     val formatMoney: (Double) -> String = { amount ->
         val isNegative = amount < 0
         val absAmount = Math.abs(amount)
-        val formattedNum = NumberFormat.getNumberInstance(Locale.US).apply {
-            maximumFractionDigits = 0
-        }.format(absAmount)
+        val formattedNum = moneyFmt.format(absAmount)
         val sign = if (isNegative) "-" else ""
         if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$sign$currencySymbol$formattedNum"
         else "$sign$currencySymbol $formattedNum"

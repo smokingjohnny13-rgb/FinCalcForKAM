@@ -114,14 +114,20 @@ fun MarginVsMarkupCalculator(
     }
 
     val numberFmt = remember { NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 2 } }
-
-    val formatMoney: (Double) -> String = { amount ->
-        val formattedNum = NumberFormat.getNumberInstance(Locale.US).apply {
+    val moneyFmt = remember {
+        NumberFormat.getNumberInstance(Locale.US).apply {
             maximumFractionDigits = 2
             minimumFractionDigits = 2
-        }.format(amount)
-        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$currencySymbol$formattedNum"
-        else "$currencySymbol $formattedNum"
+        }
+    }
+
+    val formatMoney: (Double) -> String = { amount ->
+        val isNegative = amount < 0
+        val absAmount = Math.abs(amount)
+        val formattedNum = moneyFmt.format(absAmount)
+        val sign = if (isNegative) "-" else ""
+        if (currencySymbol == "$" || currencySymbol == "€" || currencySymbol == "₽") "$sign$currencySymbol$formattedNum"
+        else "$sign$currencySymbol $formattedNum"
     }
 
     val currentMultiplier = 1.0 + (markupValue / 100.0)

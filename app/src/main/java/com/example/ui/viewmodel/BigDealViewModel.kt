@@ -827,14 +827,18 @@ class BigDealViewModel(
         selectActiveCurrency(newRate.code)
     }
 
+    private val currencyNumberFormat = java.text.NumberFormat.getNumberInstance(java.util.Locale.US).apply {
+        maximumFractionDigits = 2
+        minimumFractionDigits = 2
+    }
+
     fun formatCurrency(amount: Double): String {
         val sym = activeCurrency.value.symbol
         val isNegative = amount < 0
         val absAmount = Math.abs(amount)
-        val formattedNum = java.text.NumberFormat.getNumberInstance(java.util.Locale.US).apply {
-            maximumFractionDigits = 2
-            minimumFractionDigits = 2
-        }.format(absAmount)
+        val formattedNum = synchronized(currencyNumberFormat) {
+            currencyNumberFormat.format(absAmount)
+        }
         val sign = if (isNegative) "-" else ""
         return if (sym == "$" || sym == "€" || sym == "£" || sym == "¥" || sym == "₽") {
             "$sign$sym$formattedNum"
