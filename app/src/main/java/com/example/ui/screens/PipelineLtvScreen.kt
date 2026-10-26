@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -364,19 +365,25 @@ fun PipelineLtvScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = localizedStageName,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "${stage.count} (${stage.conversionRateFromPrev}%)",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (index == 0) MaterialTheme.colorScheme.onSurfaceVariant else EmeraldPrimary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                             }
                             LinearProgressIndicator(

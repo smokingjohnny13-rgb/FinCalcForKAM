@@ -103,7 +103,10 @@ fun MultiCurrencyCreditCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.CurrencyExchange,
                         contentDescription = null,
@@ -126,7 +129,7 @@ fun MultiCurrencyCreditCard(
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = { viewModel.importDealToMultiCredit() },
                     shape = RoundedCornerShape(8.dp),
@@ -134,7 +137,7 @@ fun MultiCurrencyCreditCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp)
+                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp, softWrap = false, maxLines = 1)
                 }
             }
 
@@ -472,7 +475,7 @@ private fun CurrencyLegCardItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1.1f)) {
                     Text(
                         text = tr("Credit Principal", "Тело кредита"),
                         style = MaterialTheme.typography.labelSmall,
@@ -483,11 +486,13 @@ private fun CurrencyLegCardItem(
                         text = "${leg.currencySymbol} ${String.format(Locale.US, "%,.0f", leg.principalInCurrency)}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
 
-                Column {
+                Column(modifier = Modifier.weight(0.9f)) {
                     Text(
                         text = tr("Loan Rate", "Ставка займа"),
                         style = MaterialTheme.typography.labelSmall,
@@ -498,22 +503,28 @@ private fun CurrencyLegCardItem(
                         text = "${leg.annualRatePct}% ${tr("p.a.", "год.")}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = GoldAccent
+                        color = GoldAccent,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
+                Column(modifier = Modifier.weight(1.2f), horizontalAlignment = Alignment.End) {
                     Text(
                         text = tr("Repayment (Hedged)", "Возврат (с хеджем)"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 10.sp
+                        fontSize = 10.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                     )
                     Text(
                         text = "$baseCurrencyCode ${String.format(Locale.US, "%,.0f", leg.totalRepaymentInBaseHedged)}",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = EmeraldPrimary
+                        color = EmeraldPrimary,
+                        softWrap = false,
+                        maxLines = 1,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                     )
                 }
             }
@@ -521,20 +532,26 @@ private fun CurrencyLegCardItem(
             if (leg.isHedgeProfitable) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = tr("Without hedge under FX surge:", "Без хеджа при скачке курса:"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "$baseCurrencyCode ${String.format(Locale.US, "%,.0f", leg.totalRepaymentInBaseUnhedged)} (+${String.format(Locale.US, "%,.0f", leg.fxRiskDeltaInBase)})",
                         style = MaterialTheme.typography.labelSmall,
                         color = GoldAccent,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
+                        softWrap = false,
+                        maxLines = 1,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                     )
                 }
             }

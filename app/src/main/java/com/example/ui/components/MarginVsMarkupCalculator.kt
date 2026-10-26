@@ -507,15 +507,20 @@ fun MarginVsMarkupCalculator(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(tr("REQUIRED SELLING PRICE", "РАСЧЕТНАЯ ЦЕНА ПРОДАЖИ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(formatMoney(calculatedPrice), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                            Text(formatMoney(calculatedPrice), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, softWrap = false, maxLines = 1)
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(tr("NET PROFIT YIELD", "ДОХОД С ЕДИНИЦЫ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("+${formatMoney(calculatedProfit)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(tr("NET PROFIT YIELD", "ДОХОД С ЕДИНИЦЫ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                            Text("+${formatMoney(calculatedProfit)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = EmeraldPrimary, softWrap = false, maxLines = 1, textAlign = androidx.compose.ui.text.style.TextAlign.End)
                         }
                     }
 

@@ -91,7 +91,10 @@ fun PaymentTermsCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
@@ -114,7 +117,7 @@ fun PaymentTermsCard(
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = { viewModel.importTermsFromDeal() },
                     shape = RoundedCornerShape(8.dp),
@@ -122,7 +125,7 @@ fun PaymentTermsCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp)
+                    Text(tr("From Deal", "Из сделки"), fontSize = 11.sp, softWrap = false, maxLines = 1)
                 }
             }
 
@@ -284,8 +287,10 @@ fun PaymentTermsCard(
                             text = tr("COMPARISON: TERMS VS. EARLY PAYMENT DISCOUNT", "СРАВНЕНИЕ: ОТСРОЧКА VS. СКИДКА ЗА ПРЕДОПЛАТУ"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (result.isCashDiscountAdvantageous) {
                                 tr("Prepayment is better! 💡", "Предоплата выгоднее! 💡")
@@ -294,7 +299,10 @@ fun PaymentTermsCard(
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = if (result.isCashDiscountAdvantageous) EmeraldPrimary else GoldAccent,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            softWrap = false,
+                            maxLines = 1,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
                         )
                     }
 

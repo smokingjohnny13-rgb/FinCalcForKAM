@@ -94,7 +94,10 @@ fun HurdleRoicGuardrailCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -131,7 +134,7 @@ fun HurdleRoicGuardrailCard(
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = { viewModel.importDealToHurdleRoic() },
                     colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
@@ -303,7 +306,9 @@ fun HurdleRoicGuardrailCard(
                             text = "${if (result.economicValueAdded >= 0) "+" else ""}${viewModel.formatCurrency(result.economicValueAdded)}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
-                            color = if (result.economicValueAdded >= 0) EmeraldPrimary else Color(0xFFFF5252)
+                            color = if (result.economicValueAdded >= 0) EmeraldPrimary else Color(0xFFFF5252),
+                            softWrap = false,
+                            maxLines = 1
                         )
                         Text(
                             text = tr("Net value creation", "Чистая стоимость"),

@@ -263,8 +263,10 @@ fun LandedCostScreen(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 0.8.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
@@ -275,7 +277,9 @@ fun LandedCostScreen(
                                 text = "K = ${expressCoeff}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = EmeraldPrimary,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
                     }
@@ -293,7 +297,7 @@ fun LandedCostScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = if (!isReverse) tr("FACTORY PRICE (FOB)", "ЦЕНА ЗАВОДА (FOB)") else tr("TARGET WAREHOUSE COST", "ЦЕЛЕВАЯ СЕБЕСТОИМОСТЬ СКЛАДА"),
                                 style = MaterialTheme.typography.labelSmall,
@@ -303,20 +307,30 @@ fun LandedCostScreen(
                                 text = if (!isReverse) viewModel.formatCurrency(result.fobPrice) else viewModel.formatCurrency(result.landedCost),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = tr("FREIGHT + CUSTOMS + VAT", "ДОСТАВКА + ТАМОЖНЯ + НДС"),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                             Text(
                                 text = "+${viewModel.formatCurrency(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = GoldAccent
+                                color = GoldAccent,
+                                softWrap = false,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                         }
                     }
@@ -430,8 +444,10 @@ fun LandedCostScreen(
                         Text(
                             text = tr("Have exact broker invoice?", "Есть точный счет от брокера?"),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         OutlinedButton(
                             onClick = { viewModel.calibrateCoefficientFromPrices() },
                             shape = RoundedCornerShape(6.dp),

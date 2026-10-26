@@ -115,7 +115,10 @@ fun CommercialAnalystCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Balance,
                             contentDescription = null,
@@ -138,7 +141,7 @@ fun CommercialAnalystCard(
                             )
                         }
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
@@ -149,7 +152,9 @@ fun CommercialAnalystCard(
                             text = if (tradeOffResult.isDeferralCheaper) tr("Deferral is Cheaper", "Отсрочка выгоднее") else tr("Discount is Cheaper", "Скидка выгоднее"),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (tradeOffResult.isDeferralCheaper) EmeraldPrimary else GoldAccent
+                            color = if (tradeOffResult.isDeferralCheaper) EmeraldPrimary else GoldAccent,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
                 }
@@ -226,7 +231,7 @@ fun CommercialAnalystCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "${tr("DISCOUNT COST", "ЦЕНА СКИДКИ")} (${tradeOffResult.proposedDiscountPct}%)",
                                     style = MaterialTheme.typography.labelSmall,
@@ -237,33 +242,47 @@ fun CommercialAnalystCard(
                                     text = viewModel.formatCurrency(tradeOffResult.discountCostAmount),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
                                 Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(18.dp))
                                 Text(
                                     text = "Δ = ${viewModel.formatCurrency(Math.abs(tradeOffResult.netDifferenceAmount))}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = EmeraldPrimary,
-                                    fontSize = 10.sp
+                                    fontSize = 10.sp,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column(horizontalAlignment = Alignment.End) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.End
+                            ) {
                                 Text(
                                     text = "${tr("DEFERRAL COST", "ЦЕНА ОТСРОЧКИ")} (+${tradeOffResult.proposedDeferralDays} ${tr("d.", "дн.")})",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 9.sp
+                                    fontSize = 9.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
                                     text = viewModel.formatCurrency(tradeOffResult.deferralCostAmount),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                             }
                         }
@@ -346,7 +365,10 @@ fun CommercialAnalystCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ShoppingBag,
                             contentDescription = null,
@@ -369,7 +391,7 @@ fun CommercialAnalystCard(
                             )
                         }
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         AssistChip(
                             onClick = { showBasketEditor = !showBasketEditor },
@@ -403,7 +425,7 @@ fun CommercialAnalystCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1.1f)) {
                             Text(
                                 text = tr("BLENDED PACKAGE MARGIN", "СРЕДНЕВЗВЕШЕННАЯ МАРЖА ПАКЕТА"),
                                 style = MaterialTheme.typography.labelSmall,
@@ -414,33 +436,45 @@ fun CommercialAnalystCard(
                                 text = "${basketResult.blendedMarginPct}%",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Black,
-                                color = if (basketResult.blendedMarginPct >= 20.0) EmeraldPrimary else GoldAccent
+                                color = if (basketResult.blendedMarginPct >= 20.0) EmeraldPrimary else GoldAccent,
+                                softWrap = false,
+                                maxLines = 1
                             )
                             Text(
                                 text = "${tr("Gross Profit", "Валовая прибыль")}: ${viewModel.formatCurrency(basketResult.totalGrossProfit)}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
-
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(
+                            modifier = Modifier.weight(0.9f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = tr("TOTAL BASKET REVENUE", "ВЫРУЧКА КОРЗИНЫ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 9.sp
+                                fontSize = 9.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                             Text(
                                 text = viewModel.formatCurrency(basketResult.totalRevenue),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                softWrap = false,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                             Text(
                                 text = "${tr("KVI Share", "Доля KVI")}: ${basketResult.kviRevenueSharePct}% | ${tr("Tail", "Хвост")}: ${basketResult.highMarginRevenueSharePct}%",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = ElectricCyan
+                                color = ElectricCyan,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                         }
                     }
@@ -589,7 +623,10 @@ fun CommercialAnalystCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.TrendingDown,
                             contentDescription = null,
@@ -614,6 +651,7 @@ fun CommercialAnalystCard(
                     }
 
                     if (rebateResult.isCliffDangerZone) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
@@ -624,7 +662,9 @@ fun CommercialAnalystCard(
                                 text = tr("CLIFF DANGER", "ОПАСНОСТЬ СТУПЕНИ"),
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.error,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
                     }
@@ -718,7 +758,7 @@ fun CommercialAnalystCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1.1f)) {
                                 Text(
                                     text = tr("NET MARGIN AFTER RETRO-BONUS", "ЧИСТАЯ МАРЖА ПОСЛЕ РЕТРО-БОНУСА"),
                                     style = MaterialTheme.typography.labelSmall,
@@ -729,33 +769,47 @@ fun CommercialAnalystCard(
                                     text = "${rebateResult.netMarginAfterRebatePct}%",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Black,
-                                    color = if (rebateResult.netMarginAfterRebatePct >= 20.0) EmeraldPrimary else if (rebateResult.netMarginAfterRebatePct >= 10.0) GoldAccent else MaterialTheme.colorScheme.error
+                                    color = if (rebateResult.netMarginAfterRebatePct >= 20.0) EmeraldPrimary else if (rebateResult.netMarginAfterRebatePct >= 10.0) GoldAccent else MaterialTheme.colorScheme.error,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                                 Text(
                                     text = "${tr("Margin drop", "Падение маржи")}: -${rebateResult.marginDropPp} п.п.",
                                     fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.error
+                                    color = MaterialTheme.colorScheme.error,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
-
-                            Column(horizontalAlignment = Alignment.End) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(
+                                modifier = Modifier.weight(0.9f),
+                                horizontalAlignment = Alignment.End
+                            ) {
                                 Text(
                                     text = "${tr("ACTIVE REBATE TIER", "АКТИВНЫЙ ТИР")}: T${rebateResult.activeTierNumber} (${rebateResult.appliedRebatePct}%)",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = GoldAccent,
                                     fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
                                     text = "-${viewModel.formatCurrency(rebateResult.rebateAmount)}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.error
+                                    color = MaterialTheme.colorScheme.error,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
                                     text = "${tr("Net Profit", "Прибыль после ретро")}: ${viewModel.formatCurrency(rebateResult.netProfitAfterRebate)}",
                                     fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                             }
                         }

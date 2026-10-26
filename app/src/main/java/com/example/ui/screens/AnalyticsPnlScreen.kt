@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -161,7 +162,10 @@ fun AnalyticsPnlScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Assessment,
                                 contentDescription = null,
@@ -176,12 +180,14 @@ fun AnalyticsPnlScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${tr("Net Margin", "Чистая маржа")}: ${pnl.netMarginPct}%",
                             style = MaterialTheme.typography.labelSmall,
                             color = if (pnl.netProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 
@@ -435,13 +441,18 @@ private fun PnlRowItem(
             text = title,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = if (isBold) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isBold) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
         )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (isDeduction) MaterialTheme.colorScheme.onSurfaceVariant else valueColor
+            color = if (isDeduction) MaterialTheme.colorScheme.onSurfaceVariant else valueColor,
+            softWrap = false,
+            maxLines = 1,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
         )
     }
 }

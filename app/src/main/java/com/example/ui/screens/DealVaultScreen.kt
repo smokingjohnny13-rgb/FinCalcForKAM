@@ -383,7 +383,7 @@ fun DealVaultScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1.2f)) {
                             Text(
                                 text = tr("TOTAL PORTFOLIO PIPELINE", "СУММА ВСЕХ СОХРАНЕННЫХ СДЕЛОК"),
                                 style = MaterialTheme.typography.labelSmall,
@@ -394,22 +394,31 @@ fun DealVaultScreen(
                                 text = viewModel.formatCurrency(totalVaultValue),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Black,
-                                color = EmeraldPrimary
+                                color = EmeraldPrimary,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
-
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(
+                            modifier = Modifier.weight(0.8f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = tr("AVG DEAL MARGIN", "СРЕДНЯЯ МАРЖА"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 10.sp
+                                fontSize = 10.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                             Text(
                                 text = "${String.format(Locale.US, "%.1f", avgMargin)}%",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = GoldAccent
+                                color = GoldAccent,
+                                softWrap = false,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                         }
                     }
@@ -512,22 +521,23 @@ fun DealVaultScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1.1f)) {
                             Text(tr("VALUE", "СУММА"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(viewModel.formatCurrency(deal.dealValue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                            Text(viewModel.formatCurrency(deal.dealValue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = EmeraldPrimary, softWrap = false, maxLines = 1)
                         }
-                        Column {
+                        Column(modifier = Modifier.weight(1.3f)) {
                             Text(tr("PAYMENT", "ПЛАТЕЖ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${viewModel.formatCurrency(deal.periodicPayment)} / $freqAbbr", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("${viewModel.formatCurrency(deal.periodicPayment)} / $freqAbbr", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, softWrap = false, maxLines = 1)
                         }
-                        Column {
+                        Column(modifier = Modifier.weight(0.7f)) {
                             Text(tr("MARGIN", "МАРЖА"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${deal.marginPct}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = GoldAccent)
+                            Text("${deal.marginPct}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = GoldAccent, softWrap = false, maxLines = 1)
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(tr("TAP TO LOAD", "ОТКРЫТЬ"), style = MaterialTheme.typography.labelSmall, color = ElectricCyan, fontWeight = FontWeight.Bold)
+                        Column(modifier = Modifier.weight(0.9f), horizontalAlignment = Alignment.End) {
+                            Text(tr("TAP TO LOAD", "ОТКРЫТЬ"), style = MaterialTheme.typography.labelSmall, color = ElectricCyan, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.End, softWrap = false, maxLines = 1)
                         }
                     }
                 }

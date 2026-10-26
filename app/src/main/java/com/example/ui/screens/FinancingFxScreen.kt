@@ -246,7 +246,7 @@ fun FinancingFxScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = tr("TOTAL PAYMENTS", "ИТОГО ВЫПЛАТ"),
                                         style = MaterialTheme.typography.labelSmall,
@@ -256,20 +256,30 @@ fun FinancingFxScreen(
                                         text = viewModel.formatCurrency(amortization.totalPayments),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        softWrap = false,
+                                        maxLines = 1
                                     )
                                 }
-                                Column(horizontalAlignment = Alignment.End) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.End
+                                ) {
                                     Text(
                                         text = tr("FINANCING INTEREST", "ПРОЦЕНТЫ БАНКУ"),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                                     )
                                     Text(
                                         text = "+${viewModel.formatCurrency(amortization.totalInterest)}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = GoldAccent
+                                        color = GoldAccent,
+                                        softWrap = false,
+                                        maxLines = 1,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                                     )
                                 }
                             }
@@ -413,7 +423,10 @@ fun FinancingFxScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Payments,
                                     contentDescription = null,
@@ -559,7 +572,7 @@ fun FinancingFxScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1.1f)) {
                                     Text(
                                         text = tr("CONVERTED CONTRACT VALUE", "СУММА В ЦЕЛЕВОЙ ВАЛЮТЕ"),
                                         style = MaterialTheme.typography.labelSmall,
@@ -569,21 +582,30 @@ fun FinancingFxScreen(
                                         text = "$targetCurrency ${numberFmt.format(convertedValue)}",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        softWrap = false,
+                                        maxLines = 1
                                     )
                                 }
-
-                                Column(horizontalAlignment = Alignment.End) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(
+                                    modifier = Modifier.weight(0.9f),
+                                    horizontalAlignment = Alignment.End
+                                ) {
                                     Text(
                                         text = tr("PARITY CROSS-RATE", "ПАРИТЕТНЫЙ КРОСС-КУРС"),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.End
                                     )
                                     Text(
                                         text = "1 $baseCurrency = $crossRate $targetCurrency",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = ElectricCyan,
-                                        fontWeight = FontWeight.SemiBold
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                        softWrap = false,
+                                        maxLines = 1
                                     )
                                 }
                             }

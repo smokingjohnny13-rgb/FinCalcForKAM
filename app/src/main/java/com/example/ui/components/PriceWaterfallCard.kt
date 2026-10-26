@@ -100,7 +100,10 @@ fun PriceWaterfallCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Storefront,
                         contentDescription = null,
@@ -123,7 +126,7 @@ fun PriceWaterfallCard(
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
@@ -134,7 +137,9 @@ fun PriceWaterfallCard(
                         text = "Net: ${viewModel.formatCurrency(result.netNetPrice)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = EmeraldPrimary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
             }
@@ -466,13 +471,18 @@ private fun WaterfallRow(
             text = label,
             fontSize = if (isPrimary) 12.sp else 11.sp,
             fontWeight = if (isPrimary) FontWeight.Bold else FontWeight.Normal,
-            color = if (isPrimary) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (isPrimary) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
         )
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = amount,
             fontSize = if (isPrimary) 12.sp else 11.sp,
             fontWeight = if (isPrimary) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (isDeduction) MaterialTheme.colorScheme.onSurfaceVariant else color
+            color = if (isDeduction) MaterialTheme.colorScheme.onSurfaceVariant else color,
+            softWrap = false,
+            maxLines = 1,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End
         )
     }
 }

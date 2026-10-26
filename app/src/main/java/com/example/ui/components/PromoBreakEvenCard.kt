@@ -102,7 +102,10 @@ fun PromoBreakEvenCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Campaign,
                         contentDescription = null,
@@ -125,7 +128,7 @@ fun PromoBreakEvenCard(
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = { viewModel.importPromoFromWaterfall() },
                     shape = RoundedCornerShape(8.dp),
@@ -133,7 +136,7 @@ fun PromoBreakEvenCard(
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(tr("From Waterfall", "Из Водопада"), fontSize = 11.sp)
+                    Text(tr("From Waterfall", "Из Водопада"), fontSize = 11.sp, softWrap = false, maxLines = 1)
                 }
             }
 
@@ -350,13 +353,18 @@ fun PromoBreakEvenCard(
                             text = tr("ACTUAL LIFT SIMULATOR", "СИМУЛЯТОР ФАКТИЧЕСКОГО ПРИРОСТА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${tr("Expected Lift", "Ожидаемый рост")}: +${simLiftInput}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            softWrap = false,
+                            maxLines = 1,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
                         )
                     }
 
@@ -379,17 +387,21 @@ fun PromoBreakEvenCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(tr("PROJECTED VOLUME", "ПРОГНОЗНЫЙ ОБЪЕМ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("${result.simulatedUnits.toInt()} ${tr("units", "шт")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("${result.simulatedUnits.toInt()} ${tr("units", "шт")}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, softWrap = false, maxLines = 1)
                         }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(tr("GROSS PROFIT", "ВАЛОВАЯ ПРИБЫЛЬ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1.2f), horizontalAlignment = Alignment.End) {
+                            Text(tr("GROSS PROFIT", "ВАЛОВАЯ ПРИБЫЛЬ"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.End)
                             Text(
                                 text = "${viewModel.formatCurrency(result.simulatedProfit)} (${if (result.simulatedProfitDelta >= 0) "+" else ""}${viewModel.formatCurrency(result.simulatedProfitDelta)})",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (result.simulatedIsProfitable) EmeraldPrimary else MaterialTheme.colorScheme.error
+                                color = if (result.simulatedIsProfitable) EmeraldPrimary else MaterialTheme.colorScheme.error,
+                                softWrap = false,
+                                maxLines = 1,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End
                             )
                         }
                     }
@@ -414,7 +426,8 @@ fun PromoBreakEvenCard(
                         text = tr("Elasticity Scenarios Matrix (+10% ... +150%)", "Матрица сценариев эластичности (+10% ... +150%)"),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
                     )
                     Icon(
                         imageVector = if (showScenarios) Icons.Default.ExpandLess else Icons.Default.ExpandMore,

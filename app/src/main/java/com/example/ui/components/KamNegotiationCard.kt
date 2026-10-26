@@ -118,7 +118,10 @@ fun KamNegotiationCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Handshake,
                             contentDescription = null,
@@ -141,7 +144,7 @@ fun KamNegotiationCard(
                             )
                         }
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = { viewModel.toggleKamOnePager(true) },
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary.copy(alpha = 0.2f)),
@@ -150,7 +153,7 @@ fun KamNegotiationCard(
                     ) {
                         Icon(Icons.Default.Bolt, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(tr("One-Pager", "Шпаргалка"), fontSize = 11.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
+                        Text(tr("One-Pager", "Шпаргалка"), fontSize = 11.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold, softWrap = false, maxLines = 1)
                     }
                 }
 
@@ -427,7 +430,10 @@ fun KamNegotiationCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Rule,
                             contentDescription = null,
@@ -450,7 +456,7 @@ fun KamNegotiationCard(
                             )
                         }
                     }
-
+                    Spacer(modifier = Modifier.width(8.dp))
                     // Risk Badge
                     val riskBadgeColor = when (slaResult.riskLevel) {
                         SlaRiskLevel.SAFE -> EmeraldPrimary
@@ -467,7 +473,9 @@ fun KamNegotiationCard(
                             text = if (LocalAppLanguage.current == com.example.ui.i18n.AppLanguage.RU) slaResult.riskLevel.labelRu else slaResult.riskLevel.labelEn,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = riskBadgeColor
+                            color = riskBadgeColor,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
                 }
@@ -571,7 +579,7 @@ fun KamNegotiationCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1.1f)) {
                                 Text(
                                     text = tr("POCKET MARGIN (ACTUAL CASH PROFIT)", "КАРМАННАЯ МАРЖА (ПОСЛЕ ШТРАФОВ)"),
                                     style = MaterialTheme.typography.labelSmall,
@@ -582,33 +590,47 @@ fun KamNegotiationCard(
                                     text = "${slaResult.pocketMarginPct}%",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Black,
-                                    color = if (slaResult.pocketMarginPct >= 20.0) EmeraldPrimary else GoldAccent
+                                    color = if (slaResult.pocketMarginPct >= 20.0) EmeraldPrimary else GoldAccent,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                                 Text(
                                     text = "${tr("Pocket Profit", "Чистыми в кассу")}: ${viewModel.formatCurrency(slaResult.pocketNetProfit)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
-
-                            Column(horizontalAlignment = Alignment.End) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(
+                                modifier = Modifier.weight(0.9f),
+                                horizontalAlignment = Alignment.End
+                            ) {
                                 Text(
                                     text = tr("TOTAL RETAIL SLA PENALTIES", "ШТРАФЫ СЕТИ ЗА НЕДОПОСТАВКУ"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 9.sp
+                                    fontSize = 9.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
                                     text = "-${viewModel.formatCurrency(slaResult.totalPenaltyAmount)}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.error
+                                    color = MaterialTheme.colorScheme.error,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
                                     text = "${tr("Margin Erosion", "Эрозия маржи")}: -${slaResult.marginErosionPp} п.п.",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.error
+                                    color = MaterialTheme.colorScheme.error,
+                                    softWrap = false,
+                                    maxLines = 1,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                             }
                         }
