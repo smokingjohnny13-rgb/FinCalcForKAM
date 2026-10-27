@@ -25,8 +25,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Bolt
@@ -34,6 +36,10 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Verified
+import com.example.ui.components.AiAuditUiState
+import com.example.ui.components.AiDealAuditDialog
+import com.example.ui.components.FinancialFormulaDialog
+import com.example.util.configureAppCheck
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,6 +96,7 @@ import com.example.ui.screens.PipelineLtvScreen
 import com.example.ui.theme.BigDealTheme
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.GoldLight
+import com.example.ui.theme.GoldAccent
 import com.example.ui.theme.ExecutiveBorder
 import com.example.ui.theme.ExecutiveMidnight
 import com.example.ui.theme.ExecutiveSurface
@@ -108,6 +115,8 @@ enum class NavigationTab(val label: String, val icon: ImageVector) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Configure App Check with launch intent before any UI or Firebase operations
+        configureAppCheck(this, intent)
         enableEdgeToEdge()
 
         val authRepo = AuthRepository(applicationContext)
@@ -148,6 +157,9 @@ fun BigDealAppRoot(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCurrencyDialog by remember { mutableStateOf(false) }
+    var showAiAuditDialog by remember { mutableStateOf(false) }
+    var showFormulaGlossary by remember { mutableStateOf(false) }
+
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val tabs = NavigationTab.values()
     val activeDealTitle by viewModel.dealTitle.collectAsState()
@@ -155,9 +167,9 @@ fun BigDealAppRoot(
     val context = LocalContext.current
 
     val currentLanguage by viewModel.appLanguage.collectAsState()
-
     val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val showKamOnePager by viewModel.showKamOnePagerDialog.collectAsState()
+    val aiAuditState by viewModel.aiAuditState.collectAsState()
 
     if (showCurrencyDialog) {
         CurrencySelectionDialog(
@@ -170,6 +182,20 @@ fun BigDealAppRoot(
         KamOnePagerDialog(
             viewModel = viewModel,
             onDismissRequest = { viewModel.toggleKamOnePager(false) }
+        )
+    }
+
+    if (showAiAuditDialog) {
+        AiDealAuditDialog(
+            state = aiAuditState,
+            onAuditRequest = { viewModel.runExpressAudit() },
+            onDismissRequest = { showAiAuditDialog = false }
+        )
+    }
+
+    if (showFormulaGlossary) {
+        FinancialFormulaDialog(
+            onDismissRequest = { showFormulaGlossary = false }
         )
     }
 
@@ -243,6 +269,53 @@ fun BigDealAppRoot(
                             }
                         },
                         actions = {
+                            // AI Express Risk Audit Button (Gemini 3.8 Flash)
+                            Button(
+                                onClick = {
+                                    showAiAuditDialog = true
+                                    if (aiAuditState is AiAuditUiState.Idle) {
+                                        viewModel.runExpressAudit()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent.copy(alpha = 0.22f)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("action_express_audit")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = GoldAccent,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = tr("AI Audit", "AI Риски"),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = GoldAccent
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(3.dp))
+
+                            // Local Offline Formulas & Playbook Button (∑)
+                            IconButton(
+                                onClick = { showFormulaGlossary = true },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .testTag("action_open_formulas")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Functions,
+                                    contentDescription = tr("Formulas & Playbook", "Формулы и подсказки"),
+                                    tint = ElectricCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(3.dp))
+
                             // Quick KAM One-Pager Button
                             Button(
                                 onClick = { viewModel.toggleKamOnePager(true) },

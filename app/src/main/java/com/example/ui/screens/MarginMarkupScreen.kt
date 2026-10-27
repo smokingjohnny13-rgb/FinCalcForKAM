@@ -254,6 +254,7 @@ fun MarginMarkupScreen(
                                     onValueChange = {
                                         viewModel.onMarginCostOrPriceChanged(newCost = it)
                                     },
+                                    formulaId = "landed_cost",
                                     prefix = currencySym,
                                     modifier = Modifier.weight(1f),
                                     testTag = "input_margin_cost"
@@ -264,6 +265,7 @@ fun MarginMarkupScreen(
                                     onValueChange = {
                                         viewModel.onMarginCostOrPriceChanged(newPrice = it)
                                     },
+                                    formulaId = "gross_margin",
                                     prefix = currencySym,
                                     modifier = Modifier.weight(1f),
                                     testTag = "input_margin_price"

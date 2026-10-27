@@ -228,6 +228,7 @@ fun PaymentTermsCard(
                                 viewModel.termsDays.value = it
                                 viewModel.updatePaymentTermsCalculations()
                             },
+                            formulaId = "terms_cost",
                             suffix = tr("d", "дн"),
                             modifier = Modifier.weight(1f),
                             testTag = "input_terms_days"

@@ -47,6 +47,8 @@ import com.example.domain.calculator.KamScenario
 import com.example.domain.calculator.KamCorridorResult
 import com.example.domain.calculator.RetailSlaPenaltyResult
 import com.example.domain.calculator.KamOnePagerSummary
+import com.example.data.ai.AiDealRiskAuditor
+import com.example.ui.components.AiAuditUiState
 import com.example.domain.calculator.CommercialAnalystEngine
 import com.example.domain.calculator.TradeOffArbitrageResult
 import com.example.domain.calculator.BasketSkuItem
@@ -1321,5 +1323,53 @@ class BigDealViewModel(
             )
         }
     }
+
+    // 13. AI Express Deal Risk Auditor (Firebase AI Logic Gemini 3.8 Flash)
+    private val aiRiskAuditor = AiDealRiskAuditor()
+    private val _aiAuditState = MutableStateFlow<AiAuditUiState>(AiAuditUiState.Idle)
+    val aiAuditState: StateFlow<AiAuditUiState> = _aiAuditState.asStateFlow()
+
+    fun resetAiAuditState() {
+        _aiAuditState.value = AiAuditUiState.Idle
+    }
+
+    fun runExpressAudit() {
+        viewModelScope.launch {
+            _aiAuditState.value = AiAuditUiState.Loading
+            val margin = _marginState.value
+            val waterfall = _waterfallResult.value
+            val terms = _paymentTermsResult.value
+            val cashGap = _cashGapResult.value
+            val promo = _promoResult.value
+            val isRu = appLanguage.value == com.example.ui.i18n.AppLanguage.RU
+
+            val result = aiRiskAuditor.auditDeal(
+                dealTitle = dealTitle.value,
+                clientName = clientName.value,
+                currency = activeCurrency.value.code,
+                costPrice = margin.cost,
+                sellingPrice = margin.sellingPrice,
+                grossMarginPct = margin.marginPct,
+                netNetPrice = waterfall.netNetPrice,
+                netNetMarginPct = waterfall.supplierMarginPct,
+                paymentTermsDays = terms.paymentDays,
+                financingCostPct = terms.annualInterestRatePct,
+                cashGapDays = cashGap.cashConversionCycleDays,
+                logisticsAndRebatesPct = waterfall.backBonusPct + waterfall.frontDiscountPct,
+                breakEvenVolumeLiftPct = promo.breakEvenVolumeLiftPct,
+                languageRu = isRu
+            )
+
+            result.fold(
+                onSuccess = { audit ->
+                    _aiAuditState.value = AiAuditUiState.Success(audit)
+                },
+                onFailure = { error ->
+                    _aiAuditState.value = AiAuditUiState.Error(error.localizedMessage ?: "Audit failed")
+                }
+            )
+        }
+    }
 }
+
 

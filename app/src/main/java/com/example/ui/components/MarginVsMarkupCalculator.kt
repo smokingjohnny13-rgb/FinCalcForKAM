@@ -376,6 +376,7 @@ fun MarginVsMarkupCalculator(
                             markupInput = String.format(Locale.US, "%.1f", markupValue)
                             onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
+                        formulaId = "gross_margin",
                         suffix = "%",
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "input_desired_margin"
@@ -433,6 +434,7 @@ fun MarginVsMarkupCalculator(
                             marginInput = String.format(Locale.US, "%.1f", marginValue)
                             onStrategySelected?.invoke(marginValue, markupValue, 1.0 + (markupValue / 100.0))
                         },
+                        formulaId = "markup",
                         suffix = "%",
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "input_applied_markup"

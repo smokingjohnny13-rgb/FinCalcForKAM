@@ -1,16 +1,26 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.example.ui.theme.ExecutiveBorder
 import com.example.ui.theme.ExecutiveSurfaceVariant
 
@@ -22,8 +32,19 @@ fun FinancialInputField(
     modifier: Modifier = Modifier,
     prefix: String? = null,
     suffix: String? = null,
-    testTag: String = "financial_input"
+    testTag: String = "financial_input",
+    formulaId: String? = null,
+    onInfoClick: (() -> Unit)? = null
 ) {
+    var showFormulaDialog by remember { mutableStateOf(false) }
+
+    if (showFormulaDialog && formulaId != null) {
+        FinancialFormulaDialog(
+            initialFormulaId = formulaId,
+            onDismissRequest = { showFormulaDialog = false }
+        )
+    }
+
     OutlinedTextField(
         value = value,
         onValueChange = { input ->
@@ -51,6 +72,29 @@ fun FinancialInputField(
                 )
             }
         },
+        trailingIcon = if (formulaId != null || onInfoClick != null) {
+            {
+                IconButton(
+                    onClick = {
+                        if (onInfoClick != null) {
+                            onInfoClick()
+                        } else if (formulaId != null) {
+                            showFormulaDialog = true
+                        }
+                    },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag("${testTag}_info_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = "Formula & Negotiation Tip",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        } else null,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(

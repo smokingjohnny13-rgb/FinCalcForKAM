@@ -286,6 +286,7 @@ fun PriceWaterfallCard(
                                 viewModel.waterfallBackBonus.value = it
                                 viewModel.updateWaterfallCalculations()
                             },
+                            formulaId = "net_net_price",
                             suffix = "%",
                             modifier = Modifier.weight(1f),
                             testTag = "input_waterfall_back_bonus"
