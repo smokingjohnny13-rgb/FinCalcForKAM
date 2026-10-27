@@ -206,6 +206,21 @@ class BigDealViewModel(
         appLanguage.value = lang
     }
 
+    // Scientific & Ergonomic Theme Mode (Dark Obsidian vs Light Nordic Slate)
+    val isDarkTheme = MutableStateFlow(true)
+
+    fun toggleTheme() {
+        isDarkTheme.value = !isDarkTheme.value
+        val msg = if (isDarkTheme.value) {
+            str("Obsidian Executive Dark Theme enabled", "Включена обсидиановая темная тема", appLanguage.value)
+        } else {
+            str("Ergonomic Nordic Light Theme enabled", "Включена эргономичная светлая тема", appLanguage.value)
+        }
+        viewModelScope.launch {
+            _userMessage.emit(msg)
+        }
+    }
+
     val activeCurrency = MutableStateFlow(CurrencyEngine.findByCode("USD"))
     val customCurrencies = MutableStateFlow(CurrencyEngine.DEFAULT_CURRENCIES)
 

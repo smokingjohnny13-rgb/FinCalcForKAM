@@ -25,7 +25,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Payments
@@ -87,6 +89,7 @@ import com.example.ui.screens.MarginMarkupScreen
 import com.example.ui.screens.PipelineLtvScreen
 import com.example.ui.theme.BigDealTheme
 import com.example.ui.theme.EmeraldPrimary
+import com.example.ui.theme.GoldLight
 import com.example.ui.theme.ExecutiveBorder
 import com.example.ui.theme.ExecutiveMidnight
 import com.example.ui.theme.ExecutiveSurface
@@ -111,14 +114,15 @@ class MainActivity : ComponentActivity() {
         val dealRepo = DealRepository()
 
         setContent {
-            BigDealTheme(darkTheme = true) {
-                val viewModel: BigDealViewModel = viewModel {
-                    BigDealViewModel(
-                        dealRepository = dealRepo,
-                        authRepository = authRepo
-                    )
-                }
+            val viewModel: BigDealViewModel = viewModel {
+                BigDealViewModel(
+                    dealRepository = dealRepo,
+                    authRepository = authRepo
+                )
+            }
+            val isDarkTheme by viewModel.isDarkTheme.collectAsState()
 
+            BigDealTheme(darkTheme = isDarkTheme) {
                 val snackbarHostState = remember { SnackbarHostState() }
 
                 LaunchedEffect(Unit) {
@@ -152,6 +156,7 @@ fun BigDealAppRoot(
 
     val currentLanguage by viewModel.appLanguage.collectAsState()
 
+    val isDarkTheme by viewModel.isDarkTheme.collectAsState()
     val showKamOnePager by viewModel.showKamOnePagerDialog.collectAsState()
 
     if (showCurrencyDialog) {
@@ -276,6 +281,23 @@ fun BigDealAppRoot(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = ElectricCyan
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(3.dp))
+
+                            // Theme Toggle Button (Obsidian Dark vs Nordic Light)
+                            IconButton(
+                                onClick = { viewModel.toggleTheme() },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .testTag("action_toggle_theme")
+                            ) {
+                                Icon(
+                                    imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = tr("Toggle Light / Dark Theme", "Переключить тему оформления"),
+                                    tint = if (isDarkTheme) GoldLight else Color(0xFF475569),
+                                    modifier = Modifier.size(17.dp)
                                 )
                             }
 

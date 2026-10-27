@@ -42,22 +42,24 @@ fun MetricCard(
     icon: ImageVector? = null,
     testTag: String = "metric_card"
 ) {
+    val isDark = com.example.ui.theme.LocalIsDarkTheme.current
+    val cardBg = if (isDark) {
+        Brush.verticalGradient(listOf(Color(0xFF17233D), Color(0xFF0F172B)))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFF9FAFB)))
+    }
+    val cardBorder = if (isDark) {
+        Brush.verticalGradient(listOf(Color(0xFF2B3C66), Color(0xFF1B2744)))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFFDCE4EF), Color(0xFFCBD5E1)))
+    }
+
     Box(
         modifier = modifier
             .testTag(testTag)
             .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF182544), Color(0xFF10182E))
-                )
-            )
-            .border(
-                1.dp,
-                Brush.verticalGradient(
-                    listOf(Color(0xFF2E4070), Color(0xFF1C2744))
-                ),
-                RoundedCornerShape(14.dp)
-            )
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(14.dp))
             .padding(12.dp)
     ) {
         Column(
