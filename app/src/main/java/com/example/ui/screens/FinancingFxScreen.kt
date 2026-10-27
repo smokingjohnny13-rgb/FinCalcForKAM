@@ -35,6 +35,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -152,11 +154,19 @@ fun FinancingFxScreen(
                 selectedTabIndex = activeSubTab.ordinal,
                 containerColor = ExecutiveSurfaceVariant,
                 contentColor = MaterialTheme.colorScheme.primary,
-                edgePadding = 0.dp,
+                edgePadding = 4.dp,
+                divider = {},
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeSubTab.ordinal]),
+                        color = EmeraldPrimary,
+                        height = 2.5.dp
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
             ) {
                 FinancingSubTab.values().forEach { tab ->
                     val selected = activeSubTab == tab
@@ -170,11 +180,17 @@ fun FinancingFxScreen(
                     Tab(
                         selected = selected,
                         onClick = { activeSubTab = tab },
+                        modifier = Modifier
+                            .padding(vertical = 4.dp, horizontal = 2.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (selected) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                         text = {
                             Text(
                                 text = tabText,
                                 fontSize = 11.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                             )
                         }
                     )

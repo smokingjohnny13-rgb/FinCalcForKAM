@@ -30,6 +30,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -204,29 +206,49 @@ fun MarginVsMarkupCalculator(
                 selectedTabIndex = activeInputMode,
                 containerColor = ExecutiveSurfaceVariant,
                 contentColor = MaterialTheme.colorScheme.primary,
+                divider = {},
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeInputMode]),
+                        color = EmeraldPrimary,
+                        height = 2.5.dp
+                    )
+                },
                 modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
             ) {
                 Tab(
                     selected = activeInputMode == 0,
                     onClick = { activeInputMode = 0 },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (activeInputMode == 0) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                     text = {
                         Text(
                             text = tr("Set Margin % → Get Markup", "Задать Маржу % → Наценка"),
                             fontSize = 11.sp,
-                            fontWeight = if (activeInputMode == 0) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (activeInputMode == 0) FontWeight.Bold else FontWeight.Normal,
+                            color = if (activeInputMode == 0) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                 )
                 Tab(
                     selected = activeInputMode == 1,
                     onClick = { activeInputMode = 1 },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (activeInputMode == 1) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                     text = {
                         Text(
                             text = tr("Set Markup % → Get Margin", "Задать Наценку % → Маржа"),
                             fontSize = 11.sp,
-                            fontWeight = if (activeInputMode == 1) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (activeInputMode == 1) FontWeight.Bold else FontWeight.Normal,
+                            color = if (activeInputMode == 1) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                 )

@@ -48,6 +48,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -202,6 +204,14 @@ fun LandedCostScreen(
                 selectedTabIndex = if (!isReverse) 0 else 1,
                 containerColor = ExecutiveSurfaceVariant,
                 contentColor = MaterialTheme.colorScheme.primary,
+                divider = {},
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[if (!isReverse) 0 else 1]),
+                        color = EmeraldPrimary,
+                        height = 2.5.dp
+                    )
+                },
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
@@ -209,22 +219,56 @@ fun LandedCostScreen(
                 Tab(
                     selected = !isReverse,
                     onClick = { viewModel.setLandedReverseMode(false) },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (!isReverse) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                     text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ArrowDownward, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowDownward,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = if (!isReverse) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(tr("Direct: FOB → Warehouse", "Прямой: FOB → Склад"), fontSize = 11.sp, fontWeight = if (!isReverse) FontWeight.Bold else FontWeight.Normal)
+                            Text(
+                                text = tr("Direct: FOB → Warehouse", "Прямой: FOB → Склад"),
+                                fontSize = 11.sp,
+                                fontWeight = if (!isReverse) FontWeight.Bold else FontWeight.Normal,
+                                color = if (!isReverse) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 )
                 Tab(
                     selected = isReverse,
                     onClick = { viewModel.setLandedReverseMode(true) },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isReverse) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                     text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowUpward,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = if (isReverse) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(tr("Reverse: Warehouse → FOB", "Реверс: Склад → FOB"), fontSize = 11.sp, fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal)
+                            Text(
+                                text = tr("Reverse: Warehouse → FOB", "Реверс: Склад → FOB"),
+                                fontSize = 11.sp,
+                                fontWeight = if (isReverse) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isReverse) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 )

@@ -41,6 +41,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -139,7 +141,15 @@ fun MarginMarkupScreen(
             selectedTabIndex = activeSubTab,
             containerColor = ExecutiveSurfaceVariant,
             contentColor = MaterialTheme.colorScheme.primary,
-            edgePadding = 0.dp,
+            edgePadding = 4.dp,
+            divider = {},
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[activeSubTab]),
+                    color = EmeraldPrimary,
+                    height = 2.5.dp
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
@@ -151,8 +161,15 @@ fun MarginMarkupScreen(
                 Tab(
                     selected = isSelected,
                     onClick = { activeSubTab = index },
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) EmeraldPrimary.copy(alpha = 0.12f) else Color.Transparent),
                     text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
                             Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = if (isSelected) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(

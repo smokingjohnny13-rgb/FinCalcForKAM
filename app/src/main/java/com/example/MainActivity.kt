@@ -57,6 +57,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material3.Surface
 import com.example.ui.i18n.AppLanguage
 import com.example.ui.i18n.LocalAppLanguage
 import com.example.ui.i18n.tr
@@ -170,131 +174,203 @@ fun BigDealAppRoot(
             containerColor = ExecutiveMidnight,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(EmeraldPrimary),
-                                contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ExecutiveMidnight)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                ) {
+                    TopAppBar(
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(
-                                    text = "BD",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 16.sp,
-                                    color = Color.Black
-                                )
-                            }
-
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(EmeraldPrimary, Color(0xFF059669))
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = "BigDeal",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.size(4.dp))
-                                    Icon(
-                                        imageVector = Icons.Default.Verified,
-                                        contentDescription = null,
-                                        tint = EmeraldPrimary,
-                                        modifier = Modifier.size(14.dp)
+                                        text = "BD",
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 15.sp,
+                                        color = Color.Black
                                     )
                                 }
+
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "BigDeal",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.size(4.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(EmeraldPrimary.copy(alpha = 0.2f))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        ) {
+                                            Text(
+                                                text = "PRO",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = EmeraldPrimary
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = tr("B2B Commercial Deal Desk", "B2B Калькулятор сделок"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        },
+                        actions = {
+                            // Quick KAM One-Pager Button
+                            Button(
+                                onClick = { viewModel.toggleKamOnePager(true) },
+                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary.copy(alpha = 0.18f)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("action_kam_one_pager")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = EmeraldPrimary,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
-                                    text = tr("BDM & KAM Executive Workstation", "Рабочее место BDM и KAM руководителя"),
+                                    text = tr("KAM", "КАМ"),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldPrimary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(3.dp))
+
+                            // Language Selector Button (EN / RU)
+                            Button(
+                                onClick = { viewModel.toggleLanguage() },
+                                colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("action_toggle_language")
+                            ) {
+                                Text(
+                                    text = if (currentLanguage == AppLanguage.EN) "EN" else "RU",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricCyan
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(3.dp))
+
+                            // Currency Selector Button
+                            Button(
+                                onClick = { showCurrencyDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("action_select_currency")
+                            ) {
+                                Text(
+                                    text = "${activeCurrency.symbol} ${activeCurrency.code} ▾",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldPrimary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(2.dp))
+
+                            // Quick PDF Export icon
+                            IconButton(
+                                onClick = { viewModel.exportPdf(context) },
+                                modifier = Modifier.testTag("action_export_pdf")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PictureAsPdf,
+                                    contentDescription = tr("Export PDF Proposal", "Экспорт КП в PDF"),
+                                    tint = EmeraldPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = ExecutiveMidnight
+                        )
+                    )
+
+                    // Active Deal Context Banner Strip
+                    val activeDeal = activeDealTitle.ifBlank { tr("Commercial Contract Proposal", "Коммерческое предложение") }
+                    val activeClient = activeClientName.ifBlank { tr("Enterprise Client", "Корпоративный клиент") }
+
+                    Surface(
+                        color = ExecutiveSurface.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(width = 0.5.dp, color = ExecutiveBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Payments,
+                                    contentDescription = null,
+                                    tint = ElectricCyan,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "$activeDeal • $activeClient",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(ExecutiveSurfaceVariant)
+                                    .clickable { selectedTab = 5 }
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = tr("Vault ➔", "Сделки ➔"),
+                                    fontSize = 10.sp,
+                                    color = EmeraldPrimary,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
-                    },
-                    actions = {
-                        // Quick KAM One-Pager Button
-                        Button(
-                            onClick = { viewModel.toggleKamOnePager(true) },
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary.copy(alpha = 0.2f)),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                            modifier = Modifier.testTag("action_kam_one_pager")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = null,
-                                tint = EmeraldPrimary,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = tr("KAM", "КАМ"),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        // Language Selector Button (EN / RU)
-                        Button(
-                            onClick = { viewModel.toggleLanguage() },
-                            colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                            modifier = Modifier.testTag("action_toggle_language")
-                        ) {
-                            Text(
-                                text = if (currentLanguage == AppLanguage.EN) "🇺🇸 EN" else "🇷🇺 RU",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ElectricCyan
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        // Currency Selector Button
-                        Button(
-                            onClick = { showCurrencyDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = ExecutiveSurfaceVariant),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                            modifier = Modifier.testTag("action_select_currency")
-                        ) {
-                            Text(
-                                text = "${activeCurrency.symbol} ${activeCurrency.code} ▾",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        // Quick PDF Export icon
-                        IconButton(
-                            onClick = { viewModel.exportPdf(context) },
-                            modifier = Modifier.testTag("action_export_pdf")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PictureAsPdf,
-                                contentDescription = tr("Export PDF Proposal", "Экспорт КП в PDF"),
-                                tint = EmeraldPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = ExecutiveMidnight
-                    ),
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
-                )
+                    }
+                }
             },
             bottomBar = {
                 NavigationBar(
@@ -310,10 +386,10 @@ fun BigDealAppRoot(
                         val selected = selectedTab == index
                         val tabLabel = when (tab) {
                             NavigationTab.FINANCING -> tr("Finance", "Финансы")
-                            NavigationTab.LANDED -> tr("Landed", "Себестоимость")
+                            NavigationTab.LANDED -> tr("Landed", "Себест.")
                             NavigationTab.MARGIN -> tr("Margin", "Маржа")
                             NavigationTab.PIPELINE -> tr("Pipeline", "Воронка")
-                            NavigationTab.ANALYTICS -> tr("Analytics", "Аналитика")
+                            NavigationTab.ANALYTICS -> tr("Analytics", "P&L / ROI")
                             NavigationTab.VAULT -> tr("Vault", "Сделки")
                         }
                         NavigationBarItem(

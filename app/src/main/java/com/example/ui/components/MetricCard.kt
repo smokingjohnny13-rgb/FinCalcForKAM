@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Brush
 import com.example.ui.theme.ExecutiveBorder
 import com.example.ui.theme.ExecutiveCard
 
@@ -45,8 +46,18 @@ fun MetricCard(
         modifier = modifier
             .testTag(testTag)
             .clip(RoundedCornerShape(14.dp))
-            .background(ExecutiveCard)
-            .border(1.dp, ExecutiveBorder, RoundedCornerShape(14.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF182544), Color(0xFF10182E))
+                )
+            )
+            .border(
+                1.dp,
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2E4070), Color(0xFF1C2744))
+                ),
+                RoundedCornerShape(14.dp)
+            )
             .padding(12.dp)
     ) {
         Column(
@@ -56,13 +67,13 @@ fun MetricCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = title.uppercase(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 0.6.sp,
+                    letterSpacing = 0.8.sp,
                     fontWeight = FontWeight.SemiBold,
                     minLines = 2,
                     maxLines = 2,
@@ -73,12 +84,20 @@ fun MetricCard(
                 )
                 if (icon != null) {
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
             }
 
