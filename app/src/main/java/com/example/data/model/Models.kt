@@ -22,7 +22,9 @@ data class AmortizationRow(
     val payment: Double,
     val principal: Double,
     val interest: Double,
-    val remainingBalance: Double
+    val remainingBalance: Double,
+    val isGracePeriod: Boolean = false,
+    val rateAppliedPct: Double = 0.0
 )
 
 data class AmortizationSummary(
@@ -30,7 +32,15 @@ data class AmortizationSummary(
     val totalPayments: Double,
     val totalInterest: Double,
     val schedule: List<AmortizationRow>,
-    val frequency: PaymentFrequency
+    val frequency: PaymentFrequency,
+    val hasGracePeriod: Boolean = false,
+    val gracePeriodsCount: Int = 0,
+    val gracePeriodicPayment: Double = 0.0,
+    val postGracePeriodicPayment: Double = 0.0,
+    val graceInterestRatePct: Double = 0.0,
+    val postGraceInterestRatePct: Double = 0.0,
+    val totalGracePayments: Double = 0.0,
+    val totalPostGracePayments: Double = 0.0
 )
 
 data class LtvMetrics(

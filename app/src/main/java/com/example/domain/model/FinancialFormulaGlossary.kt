@@ -155,6 +155,20 @@ object FinancialFormulaGlossary {
             definitionRu = "Лучшая альтернатива переговорному соглашению: заранее утвержденная граница (Walkaway floor), ниже которой опускаться запрещено внутренним регламентом.",
             kamTipEn = "Never enter a negotiation meeting without a defined Walkaway price in this app. Knowing your walkaway threshold gives you unshakeable leverage at the table.",
             kamTipRu = "Никогда не садитесь за стол переговоров без зафиксированной в приложении минимальной цены. Знание своего порога дает железную уверенность перед закупщиком."
+        ),
+        FormulaItem(
+            id = "grace_period",
+            category = FormulaCategory.TERMS_FINANCING,
+            titleEn = "Grace Period & Two-Tier Financing",
+            titleRu = "Грейс-период и двухставочный процент",
+            formulaLatexEn = "PMT_grace = Principal × (r_grace / m)\nPMT_post = Principal × [r_post·(1+r_post)^n_post / ((1+r_post)^n_post - 1)]",
+            formulaLatexRu = "Плат_грейс = Долг × (r_льготная / m)\nПлат_пост = Долг × [r_стандарт·(1+r_стандарт)^n_пост / ((1+r_стандарт)^n_пост - 1)]",
+            definitionEn = "A structured financing mechanism where the client enjoys a subsidized promotional rate (or 0% moratorium) during initial months, followed by standard amortization at normal APR.",
+            definitionRu = "Структурированный график платежей, при котором клиент получает льготную ставку (или 0% мораторий) в первые месяцы, а затем выплачивает остаток по стандартной ставке.",
+            kamTipEn = "Offer 3-6 months grace period as a powerful closing concession for cash-constrained enterprise clients without slashing your core contract value.",
+            kamTipRu = "Предлагайте 3-6 месяцев грейс-периода клиентам с временным дефицитом ликвидности вместо прямой скидки: вы защищаете контрактную цену, давая клиенту передышку на запуск проекта.",
+            warningEn = "Ensure your internal cost of money during grace is factored into the post-grace interest margin.",
+            warningRu = "Убедитесь, что отсрочка по телу кредита не приведет к кассовому разрыву вашей компании."
         )
     )
 

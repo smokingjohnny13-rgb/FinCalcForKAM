@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -34,6 +35,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -96,6 +99,11 @@ fun FinancingFxScreen(
     val tenureMonths by viewModel.tenureMonths.collectAsState()
     val frequency by viewModel.paymentFrequency.collectAsState()
     val amortization by viewModel.amortization.collectAsState()
+
+    val isGracePeriodEnabled by viewModel.isGracePeriodEnabled.collectAsState()
+    val graceTenureMonths by viewModel.graceTenureMonths.collectAsState()
+    val graceInterestRate by viewModel.graceInterestRate.collectAsState()
+    val postGraceInterestRate by viewModel.postGraceInterestRate.collectAsState()
 
     val baseCurrency by viewModel.selectedCurrency.collectAsState()
     val targetCurrency by viewModel.targetCurrency.collectAsState()
@@ -207,7 +215,7 @@ fun FinancingFxScreen(
         ) {
             // === SECTION A: LOAN & AMORTIZATION ===
             if (activeSubTab == FinancingSubTab.ALL || activeSubTab == FinancingSubTab.LOAN) {
-                // 1. Primary Highlight Banner: Calculated Periodic Payment
+                // 1. Primary Highlight Banner: Calculated Periodic Payment / Grace Period Structure
                 item {
                     Box(
                         modifier = Modifier
@@ -217,40 +225,155 @@ fun FinancingFxScreen(
                             .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                             .padding(20.dp)
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "${freqLocalizedName.uppercase()} ${tr("INSTALLMENT", "ПЛАТЕЖ")}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    letterSpacing = 1.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(EmeraldPrimary.copy(alpha = 0.15f))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (amortization.hasGracePeriod) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "${interestRate}% APR",
+                                        text = "${freqLocalizedName.uppercase()} ${tr("TWO-TIER INSTALLMENT", "ДВУХСТАВОЧНЫЙ ПЛАТЕЖ")}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = EmeraldPrimary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        letterSpacing = 1.sp,
                                         fontWeight = FontWeight.Bold
                                     )
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(ElectricCyan.copy(alpha = 0.18f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${tr("Grace", "Грейс")}: ${amortization.graceInterestRatePct}%",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = ElectricCyan,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(GoldAccent.copy(alpha = 0.18f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${tr("Post", "После")}: ${amortization.postGraceInterestRatePct}%",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = GoldAccent,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
                                 }
-                            }
 
-                            Text(
-                                text = viewModel.formatCurrency(amortization.periodicPayment),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Black
-                            )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    // Grace Payment Card
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(ExecutiveSurfaceVariant)
+                                            .border(1.dp, ElectricCyan.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                            .padding(10.dp)
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = tr("IN GRACE", "В ГРЕЙС-ПЕРИОД"),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 9.sp,
+                                                color = ElectricCyan,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = viewModel.formatCurrency(amortization.gracePeriodicPayment),
+                                                style = MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Black,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "${tr("Installments", "Выплаты")} 1–${amortization.gracePeriodsCount}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+
+                                    // Post-Grace Payment Card
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(ExecutiveSurfaceVariant)
+                                            .border(1.dp, GoldAccent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                            .padding(10.dp)
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = tr("POST-GRACE", "ПОСЛЕ ГРЕЙСА"),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 9.sp,
+                                                color = GoldAccent,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = viewModel.formatCurrency(amortization.postGracePeriodicPayment),
+                                                style = MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Black,
+                                                color = EmeraldPrimary
+                                            )
+                                            Text(
+                                                text = "${tr("Installments", "Выплаты")} ${amortization.gracePeriodsCount + 1}–${amortization.schedule.size}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 9.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${freqLocalizedName.uppercase()} ${tr("INSTALLMENT", "ПЛАТЕЖ")}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        letterSpacing = 1.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(EmeraldPrimary.copy(alpha = 0.15f))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "${interestRate}% APR",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = EmeraldPrimary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = viewModel.formatCurrency(amortization.periodicPayment),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
 
                             HorizontalDivider(
                                 color = ExecutiveBorder,
@@ -423,6 +546,152 @@ fun FinancingFxScreen(
                     }
                 }
 
+                // 3b. Grace Period & Two-Tier Financing Configuration Card
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(ExecutiveSurface)
+                            .border(
+                                1.dp,
+                                if (isGracePeriodEnabled) ElectricCyan.copy(alpha = 0.5f) else ExecutiveBorder,
+                                RoundedCornerShape(14.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = tr("GRACE PERIOD & TWO-TIER APR", "ЛЬГОТНЫЙ ГРЕЙС-ПЕРИОД И ДВУХСТАВОЧНЫЙ %"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isGracePeriodEnabled) ElectricCyan else MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = tr(
+                                            "Reduced/subsidized rate during grace + standard APR post-grace",
+                                            "Льготная ставка в грейс + стандартная ставка после окончания"
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                }
+
+                                Switch(
+                                    checked = isGracePeriodEnabled,
+                                    onCheckedChange = { viewModel.toggleGracePeriod(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = EmeraldPrimary,
+                                        checkedTrackColor = EmeraldPrimary.copy(alpha = 0.25f)
+                                    ),
+                                    modifier = Modifier.testTag("switch_grace_period")
+                                )
+                            }
+
+                            if (isGracePeriodEnabled) {
+                                HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    FinancialInputField(
+                                        label = tr("Grace Duration", "Срок грейса"),
+                                        value = graceTenureMonths,
+                                        onValueChange = {
+                                            viewModel.graceTenureMonths.value = it
+                                            viewModel.updateFinancing()
+                                        },
+                                        suffix = tr("mo", "мес"),
+                                        formulaId = "grace_period",
+                                        modifier = Modifier.weight(1f),
+                                        testTag = "input_grace_tenure"
+                                    )
+                                    FinancialInputField(
+                                        label = tr("Grace Rate (%)", "Ставка в грейс (%)"),
+                                        value = graceInterestRate,
+                                        onValueChange = {
+                                            viewModel.graceInterestRate.value = it
+                                            viewModel.updateFinancing()
+                                        },
+                                        suffix = "%",
+                                        formulaId = "grace_period",
+                                        modifier = Modifier.weight(1f),
+                                        testTag = "input_grace_rate"
+                                    )
+                                }
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    FinancialInputField(
+                                        label = tr("Post-Grace Rate (%)", "Ставка после грейса (%)"),
+                                        value = postGraceInterestRate,
+                                        onValueChange = {
+                                            viewModel.postGraceInterestRate.value = it
+                                            viewModel.updateFinancing()
+                                        },
+                                        suffix = "%",
+                                        formulaId = "grace_period",
+                                        modifier = Modifier.weight(1f),
+                                        testTag = "input_post_grace_rate"
+                                    )
+                                }
+
+                                // Quick Grace Presets
+                                Text(
+                                    text = tr("QUICK GRACE PRESETS", "БЫСТРЫЕ ШАБЛОНЫ ГРЕЙСА:"),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 9.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    AssistChip(
+                                        onClick = {
+                                            viewModel.graceTenureMonths.value = "3"
+                                            viewModel.graceInterestRate.value = "0.0"
+                                            viewModel.updateFinancing()
+                                        },
+                                        label = { Text("0% (3 " + tr("mo", "мес") + ")", fontSize = 10.sp) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    AssistChip(
+                                        onClick = {
+                                            viewModel.graceTenureMonths.value = "6"
+                                            viewModel.graceInterestRate.value = "0.0"
+                                            viewModel.updateFinancing()
+                                        },
+                                        label = { Text("0% (6 " + tr("mo", "мес") + ")", fontSize = 10.sp) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    AssistChip(
+                                        onClick = {
+                                            viewModel.graceTenureMonths.value = "6"
+                                            viewModel.graceInterestRate.value = "3.0"
+                                            viewModel.updateFinancing()
+                                        },
+                                        label = { Text("3% (6 " + tr("mo", "мес") + ")", fontSize = 10.sp) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Expandable Amortization Schedule Preview
                 item {
                     Box(
@@ -481,7 +750,7 @@ fun FinancingFxScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("#", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
+                                    Text("#", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(42.dp))
                                     Text(tr("Payment", "Платеж"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                                     Text(tr("Principal", "Осн. долг"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                                     Text(tr("Interest", "Проценты"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
@@ -490,22 +759,55 @@ fun FinancingFxScreen(
 
                                 HorizontalDivider(color = ExecutiveBorder, thickness = 1.dp)
 
-                                amortization.schedule.take(12).forEach { row ->
+                                amortization.schedule.take(16).forEach { row ->
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(
+                                                if (row.isGracePeriod) ElectricCyan.copy(alpha = 0.08f)
+                                                else Color.Transparent
+                                            )
+                                            .padding(vertical = 2.dp, horizontal = 2.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("${row.period}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(30.dp))
-                                        Text(viewModel.formatCurrency(row.payment), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                                        Row(
+                                            modifier = Modifier.width(42.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${row.period}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (row.isGracePeriod) {
+                                                Spacer(modifier = Modifier.width(2.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(3.dp))
+                                                        .background(ElectricCyan.copy(alpha = 0.25f))
+                                                        .padding(horizontal = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "G",
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = ElectricCyan
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Text(viewModel.formatCurrency(row.payment), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = if (row.isGracePeriod) ElectricCyan else MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                                         Text(viewModel.formatCurrency(row.principal), style = MaterialTheme.typography.bodySmall, color = EmeraldPrimary, modifier = Modifier.weight(1f))
                                         Text(viewModel.formatCurrency(row.interest), style = MaterialTheme.typography.bodySmall, color = GoldAccent, modifier = Modifier.weight(1f))
                                         Text(viewModel.formatCurrency(row.remainingBalance), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1.2f))
                                     }
                                 }
 
-                                if (amortization.schedule.size > 12) {
+                                if (amortization.schedule.size > 16) {
                                     Text(
-                                        text = "+ ${amortization.schedule.size - 12} ${tr("additional installments included in exportable PDF", "следующих платежей включены в PDF-отчет")}",
+                                        text = "+ ${amortization.schedule.size - 16} ${tr("additional installments included in exportable PDF", "следующих платежей включены в PDF-отчет")}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(top = 4.dp)

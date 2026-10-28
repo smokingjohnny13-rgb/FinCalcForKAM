@@ -337,4 +337,79 @@ class BigDealCalculatorsTest {
         assertTrue(destructive.annualizedRoicPct < 10.0)
         assertTrue(destructive.economicValueAdded < 0.0)
     }
+
+    @Test
+    fun testAmortizationWithGracePeriodAndTwoTierRates() {
+        // Test Case 1: 0% grace period for 6 months on a 24-month loan of 120,000 at 12% post-grace
+        // Total periods = 24 monthly. Grace periods = 6 monthly.
+        // During grace (periods 1..6):
+        //   - payment = 0.0
+        //   - interest = 0.0
+        //   - principal paid = 0.0
+        //   - remaining balance remains 120,000.0
+        // Post-grace (periods 7..24):
+        //   - 18 remaining monthly periods amortizing 120,000.0 at 12% annual (1% per month)
+        //   - Periodic payment PMT = 120000 * 0.01 / (1 - 1.01^-18) ≈ 7319.66
+        val zeroGraceResult = AmortizationEngine.calculate(
+            principal = 120000.0,
+            annualInterestRatePct = 12.0,
+            tenureMonths = 24,
+            frequency = PaymentFrequency.MONTHLY,
+            hasGracePeriod = true,
+            graceTenureMonths = 6,
+            graceInterestRatePct = 0.0,
+            postGraceInterestRatePct = 12.0
+        )
+
+        assertTrue(zeroGraceResult.hasGracePeriod)
+        assertEquals(6, zeroGraceResult.gracePeriodsCount)
+        assertEquals(24, zeroGraceResult.schedule.size)
+        assertEquals(0.0, zeroGraceResult.gracePeriodicPayment, 0.01)
+        assertEquals(7317.85, zeroGraceResult.postGracePeriodicPayment, 0.5)
+
+        // Verify first 6 rows are grace
+        for (i in 0 until 6) {
+            val row = zeroGraceResult.schedule[i]
+            assertTrue(row.isGracePeriod)
+            assertEquals(0.0, row.rateAppliedPct, 0.01)
+            assertEquals(0.0, row.payment, 0.01)
+            assertEquals(0.0, row.interest, 0.01)
+            assertEquals(0.0, row.principal, 0.01)
+            assertEquals(120000.0, row.remainingBalance, 0.01)
+        }
+
+        // Verify period 7 is post-grace
+        val row7 = zeroGraceResult.schedule[6]
+        org.junit.Assert.assertFalse(row7.isGracePeriod)
+        assertEquals(12.0, row7.rateAppliedPct, 0.01)
+        assertEquals(1200.0, row7.interest, 0.1) // 1% of 120,000
+        assertEquals(7317.85, row7.payment, 0.5)
+
+        // Final period balance should be zero
+        assertEquals(0.0, zeroGraceResult.schedule.last().remainingBalance, 0.05)
+
+        // Test Case 2: Subsidized 3% grace for 6 months, followed by 15% post-grace rate
+        val subsidizedResult = AmortizationEngine.calculate(
+            principal = 100000.0,
+            annualInterestRatePct = 15.0,
+            tenureMonths = 18,
+            frequency = PaymentFrequency.MONTHLY,
+            hasGracePeriod = true,
+            graceTenureMonths = 6,
+            graceInterestRatePct = 3.0,
+            postGraceInterestRatePct = 15.0
+        )
+
+        assertTrue(subsidizedResult.hasGracePeriod)
+        assertEquals(6, subsidizedResult.gracePeriodsCount)
+        // In 3% grace: monthly interest = 100,000 * (0.03 / 12) = 250.0
+        assertEquals(250.0, subsidizedResult.gracePeriodicPayment, 0.01)
+        // Total grace payments = 6 * 250 = 1500.0
+        assertEquals(1500.0, subsidizedResult.totalGracePayments, 0.01)
+        // Post-grace remaining 12 periods amortizing 100,000 at 15% APR (1.25%/mo):
+        // PMT = 100000 * 0.0125 / (1 - 1.0125^-12) ≈ 9025.83
+        assertEquals(9025.83, subsidizedResult.postGracePeriodicPayment, 0.5)
+        assertEquals(0.0, subsidizedResult.schedule.last().remainingBalance, 0.05)
+    }
 }
+

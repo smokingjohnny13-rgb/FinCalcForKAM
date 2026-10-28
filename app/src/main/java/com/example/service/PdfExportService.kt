@@ -190,7 +190,11 @@ object PdfExportService {
         paint.color = Color.rgb(71, 85, 105)
         paint.textSize = 9f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        val termText = "Principal: ${currencyFmt.format(deal.dealValue)}   |   Annual Rate: ${deal.interestRatePct}%   |   Tenure: ${deal.tenureMonths} Months (${amortization.frequency.displayName})"
+        val termText = if (amortization.hasGracePeriod) {
+            "Principal: ${currencyFmt.format(deal.dealValue)} | Grace: ${amortization.gracePeriodsCount} per. @ ${amortization.graceInterestRatePct}% | Post-Grace: ${amortization.postGraceInterestRatePct}% APR (${amortization.frequency.displayName})"
+        } else {
+            "Principal: ${currencyFmt.format(deal.dealValue)}   |   Annual Rate: ${deal.interestRatePct}%   |   Tenure: ${deal.tenureMonths} Months (${amortization.frequency.displayName})"
+        }
         val totalCostText = "Total Financing Cost: ${currencyFmt.format(amortization.totalPayments)} (Interest: ${currencyFmt.format(amortization.totalInterest)})"
         canvas.drawText(termText, 30f, currentY, paint)
         currentY += 13f
@@ -213,8 +217,9 @@ object PdfExportService {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         val sampleRows = amortization.schedule.take(4)
         for (row in sampleRows) {
-            paint.color = Color.rgb(30, 41, 59)
-            canvas.drawText("#${row.period}", 35f, currentY, paint)
+            paint.color = if (row.isGracePeriod) Color.rgb(217, 119, 6) else Color.rgb(30, 41, 59)
+            val periodLabel = if (row.isGracePeriod) "#${row.period} (G)" else "#${row.period}"
+            canvas.drawText(periodLabel, 35f, currentY, paint)
             canvas.drawText(currencyFmt.format(row.payment), 120f, currentY, paint)
             canvas.drawText(currencyFmt.format(row.principal), 230f, currentY, paint)
             canvas.drawText(currencyFmt.format(row.interest), 340f, currentY, paint)

@@ -95,13 +95,23 @@ class BigDealViewModel(
     val tenureMonths = MutableStateFlow("24")
     val paymentFrequency = MutableStateFlow(PaymentFrequency.MONTHLY)
 
+    // Grace Period & Two-Tier Financing Modeler
+    val isGracePeriodEnabled = MutableStateFlow(false)
+    val graceTenureMonths = MutableStateFlow("6")
+    val graceInterestRate = MutableStateFlow("0.0")
+    val postGraceInterestRate = MutableStateFlow("12.0")
+
     private val _amortization = MutableStateFlow(
         AmortizationEngine.calculate(
             principal = 120000.0,
             annualInterestRatePct = 6.5,
             tenureMonths = 24,
             downPayment = 15000.0,
-            frequency = PaymentFrequency.MONTHLY
+            frequency = PaymentFrequency.MONTHLY,
+            hasGracePeriod = false,
+            graceTenureMonths = 6,
+            graceInterestRatePct = 0.0,
+            postGraceInterestRatePct = 12.0
         )
     )
     val amortization: StateFlow<AmortizationSummary> = _amortization.asStateFlow()
@@ -453,14 +463,31 @@ class BigDealViewModel(
         val down = downPayment.value.toDoubleOrNull() ?: 0.0
         val r = annualInterestRate.value.toDoubleOrNull() ?: 0.0
         val tenure = tenureMonths.value.toIntOrNull() ?: 12
+        val hasGrace = isGracePeriodEnabled.value
+        val graceTenure = graceTenureMonths.value.toIntOrNull() ?: 0
+        val graceRate = graceInterestRate.value.toDoubleOrNull() ?: 0.0
+        val postGraceRate = postGraceInterestRate.value.toDoubleOrNull() ?: r
+
         _amortization.value = AmortizationEngine.calculate(
             principal = p,
             annualInterestRatePct = r,
             tenureMonths = tenure,
             downPayment = down,
-            frequency = paymentFrequency.value
+            frequency = paymentFrequency.value,
+            hasGracePeriod = hasGrace,
+            graceTenureMonths = graceTenure,
+            graceInterestRatePct = graceRate,
+            postGraceInterestRatePct = postGraceRate
         )
         updateCurrencyConversion()
+    }
+
+    fun toggleGracePeriod(enabled: Boolean) {
+        isGracePeriodEnabled.value = enabled
+        if (enabled && (postGraceInterestRate.value.isEmpty() || postGraceInterestRate.value == "0.0")) {
+            postGraceInterestRate.value = annualInterestRate.value
+        }
+        updateFinancing()
     }
 
     fun setPaymentFrequency(freq: PaymentFrequency) {
