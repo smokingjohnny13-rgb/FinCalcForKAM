@@ -411,5 +411,63 @@ class BigDealCalculatorsTest {
         assertEquals(9025.83, subsidizedResult.postGracePeriodicPayment, 0.5)
         assertEquals(0.0, subsidizedResult.schedule.last().remainingBalance, 0.05)
     }
+
+    @Test
+    fun testLocalFinancialDealRiskAuditor() {
+        val auditor = com.example.data.ai.AiDealRiskAuditor()
+
+        // Critical Risk Deal: Net-Net price (48) below COGS (50) -> Negative or near-zero margin
+        val criticalDeal = auditor.auditDealLocal(
+            dealTitle = "Loss Making Promo",
+            clientName = "Discount Retailer",
+            currency = "USD",
+            costPrice = 50.0,
+            sellingPrice = 70.0,
+            grossMarginPct = 28.5,
+            netNetPrice = 48.0,
+            netNetMarginPct = -4.1,
+            paymentTermsDays = 60,
+            financingCostPct = 20.0,
+            cashGapDays = 65,
+            logisticsAndRebatesPct = 25.0,
+            breakEvenVolumeLiftPct = 85.0,
+            languageRu = true,
+            isFallback = false
+        )
+
+        assertEquals("CRITICAL_RISK", criticalDeal.verdict)
+        assertEquals(3, criticalDeal.theses.size)
+        assertTrue(criticalDeal.isFree)
+        assertTrue(criticalDeal.headline.contains("Критический риск"))
+        org.junit.Assert.assertNotNull(criticalDeal.theses.find { it.category == "MARGIN_AND_REBATES" })
+        org.junit.Assert.assertNotNull(criticalDeal.theses.find { it.category == "CASHFLOW_AND_TERMS" })
+        org.junit.Assert.assertNotNull(criticalDeal.theses.find { it.category == "KAM_COUNTER_PLAYBOOK" })
+
+        // Healthy Deal
+        val healthyDeal = auditor.auditDealLocal(
+            dealTitle = "Direct Enterprise Delivery",
+            clientName = "Prime Client",
+            currency = "USD",
+            costPrice = 40.0,
+            sellingPrice = 100.0,
+            grossMarginPct = 60.0,
+            netNetPrice = 85.0,
+            netNetMarginPct = 52.9,
+            paymentTermsDays = 15,
+            financingCostPct = 12.0,
+            cashGapDays = 15,
+            logisticsAndRebatesPct = 8.0,
+            breakEvenVolumeLiftPct = 12.0,
+            languageRu = false,
+            isFallback = true
+        )
+
+        assertEquals("GO_AHEAD", healthyDeal.verdict)
+        assertEquals(3, healthyDeal.theses.size)
+        assertTrue(healthyDeal.isFree)
+        assertTrue(healthyDeal.isOfflineFallback)
+        assertTrue(healthyDeal.headline.contains("Balanced"))
+    }
 }
+
 

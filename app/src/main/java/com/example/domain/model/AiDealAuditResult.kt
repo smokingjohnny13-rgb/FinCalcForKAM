@@ -13,5 +13,8 @@ data class AiDealAuditResult(
     val headline: String,
     val keyMetricCallout: String,
     val theses: List<DealRiskThesis>,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val isOfflineFallback: Boolean = false,
+    val auditSource: String = "Gemini 3.8 Flash (Cloud AI)",
+    val isFree: Boolean = true
 )

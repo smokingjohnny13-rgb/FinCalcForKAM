@@ -24,12 +24,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -80,6 +82,7 @@ sealed interface AiAuditUiState {
 fun AiDealAuditDialog(
     state: AiAuditUiState,
     onAuditRequest: () -> Unit,
+    onLocalAuditRequest: () -> Unit = onAuditRequest,
     onDismissRequest: () -> Unit
 ) {
     val lang = LocalAppLanguage.current
@@ -138,8 +141,8 @@ fun AiDealAuditDialog(
                             )
                             Text(
                                 text = tr(
-                                    "Boardroom audit • 1 click ➔ 3 counter-theses",
-                                    "Перед входом в переговорную • 1 клик ➔ 3 тезиса"
+                                    "Boardroom audit • Gemini 3.8 + Offline Math • 1 click ➔ 3 theses",
+                                    "Перед переговорной • Gemini 3.8 + Офлайн • 1 клик ➔ 3 тезиса"
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -168,7 +171,8 @@ fun AiDealAuditDialog(
                 when (state) {
                     is AiAuditUiState.Idle -> {
                         AuditIdleView(
-                            onStart = onAuditRequest
+                            onStartCloud = onAuditRequest,
+                            onStartLocal = onLocalAuditRequest
                         )
                     }
                     is AiAuditUiState.Loading -> {
@@ -177,13 +181,15 @@ fun AiDealAuditDialog(
                     is AiAuditUiState.Error -> {
                         AuditErrorView(
                             errorMessage = state.message,
-                            onRetry = onAuditRequest
+                            onRetry = onAuditRequest,
+                            onRunLocal = onLocalAuditRequest
                         )
                     }
                     is AiAuditUiState.Success -> {
                         AuditSuccessView(
                             result = state.result,
                             onReAudit = onAuditRequest,
+                            onReAuditLocal = onLocalAuditRequest,
                             onCopyAll = {
                                 copyThesesToClipboard(context, state.result)
                             }
@@ -197,7 +203,8 @@ fun AiDealAuditDialog(
 
 @Composable
 private fun AuditIdleView(
-    onStart: () -> Unit
+    onStartCloud: () -> Unit,
+    onStartLocal: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -208,11 +215,11 @@ private fun AuditIdleView(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.92f)
         ) {
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(76.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                     .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), CircleShape),
@@ -222,10 +229,10 @@ private fun AuditIdleView(
                     imageVector = Icons.Default.Gavel,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(42.dp)
+                    modifier = Modifier.size(38.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = tr(
                     "Entering the Negotiation Room?",
@@ -235,19 +242,20 @@ private fun AuditIdleView(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = tr(
-                    "AI will analyze your live deal math (COGS, discounts, back-rebates, payment delay, cost of capital) and formulate strictly 3 boardroom negotiation theses to protect margin.",
-                    "AI проанализирует текущую математику контракта (себестоимость, скидки, бэк-бонусы, отсрочку, стоимость денег) и выдаст ровно 3 тактических тезиса для защиты вашей маржи."
+                    "Analyze live deal math (COGS, discounts, back-rebates, payment delay, cost of capital) to formulate strictly 3 boardroom negotiation theses to protect margin. Works both via Cloud AI (Gemini 3.8 Flash) and instant offline math engine.",
+                    "Анализ текущей математики контракта (себестоимость, скидки, бэк-бонусы, отсрочка, стоимость денег) с формулированием ровно 3 тезисов для защиты маржи. Работает через облачный AI (Gemini 3.8 Flash) и мгновенный офлайн-движок."
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
-                onClick = onStart,
+                onClick = onStartCloud,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -261,8 +269,27 @@ private fun AuditIdleView(
                 Icon(Icons.Default.AutoAwesome, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = tr("Run Express Audit (Gemini 3.8)", "Запустить экспресс-аудит (Gemini 3.8)"),
+                    text = tr("AI Audit (Gemini 3.8 Flash)", "Запустить AI-аудит (Gemini 3.8 Flash)"),
                     fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = onStartLocal,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .testTag("run_local_audit_btn")
+            ) {
+                Icon(Icons.Default.Bolt, contentDescription = null, tint = ElectricCyan)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = tr("Instant Offline Audit (0 ms)", "Мгновенный офлайн-аудит (0 мс)"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = ElectricCyan
                 )
             }
         }
@@ -310,7 +337,8 @@ private fun AuditLoadingView() {
 @Composable
 private fun AuditErrorView(
     errorMessage: String,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onRunLocal: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -330,7 +358,7 @@ private fun AuditErrorView(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = tr("Audit Failed", "Ошибка аудита"),
+                text = tr("Cloud AI Unavailable", "Облачный сервис недоступен"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFEF4444)
@@ -342,14 +370,29 @@ private fun AuditErrorView(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
             Button(
+                onClick = onRunLocal,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(46.dp)
+            ) {
+                Icon(Icons.Default.Bolt, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(tr("Run Offline Audit", "Запустить офлайн-аудит"))
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
                 onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth(0.85f).height(44.dp)
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(tr("Retry Audit", "Повторить попытку"))
+                Text(tr("Retry Cloud AI (Gemini 3.8)", "Повторить через Gemini"))
             }
         }
     }
@@ -359,6 +402,7 @@ private fun AuditErrorView(
 private fun AuditSuccessView(
     result: AiDealAuditResult,
     onReAudit: () -> Unit,
+    onReAuditLocal: () -> Unit,
     onCopyAll: () -> Unit
 ) {
     val (verdictColor, verdictBg, verdictLabel) = when (result.verdict) {
@@ -383,6 +427,68 @@ private fun AuditSuccessView(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        // Source indicator
+        item {
+            Surface(
+                color = ExecutiveCard,
+                shape = RoundedCornerShape(8.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ExecutiveBorder)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (result.isOfflineFallback) Icons.Default.Bolt else Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = if (result.isOfflineFallback) ElectricCyan else GoldAccent,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = result.auditSource,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // Offline fallback explanation if cloud call wasn't available
+        if (result.isOfflineFallback) {
+            item {
+                Surface(
+                    color = ElectricCyan.copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ElectricCyan.copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Bolt,
+                            contentDescription = null,
+                            tint = ElectricCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = tr(
+                                "Calculated via BigDeal offline financial rule engine (deterministic, works without network).",
+                                "Рассчитано локальным финансовым движком BigDeal (детерминированно, работает без интернета)."
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+
         // Executive Verdict Banner
         item {
             Card(
@@ -444,7 +550,7 @@ private fun AuditSuccessView(
                     letterSpacing = 0.8.sp
                 )
 
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(
                         onClick = onCopyAll,
                         shape = RoundedCornerShape(8.dp),
@@ -455,14 +561,25 @@ private fun AuditSuccessView(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(tr("Copy All", "Копировать"), fontSize = 12.sp)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    IconButton(
+                        onClick = onReAuditLocal,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Bolt,
+                            contentDescription = tr("Calculate locally", "Локальный расчет"),
+                            tint = ElectricCyan
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
                         onClick = onReAudit,
                         modifier = Modifier.size(34.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = tr("Refresh", "Обновить"),
+                            contentDescription = tr("Refresh AI", "Обновить через AI"),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

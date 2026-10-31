@@ -86,8 +86,32 @@ class AiDealRiskAuditor {
         cashGapDays: Int,
         logisticsAndRebatesPct: Double,
         breakEvenVolumeLiftPct: Double,
-        languageRu: Boolean = true
+        languageRu: Boolean = true,
+        forceLocal: Boolean = false
     ): Result<AiDealAuditResult> {
+        // If local-only audit is requested, return deterministic local KAM engine immediately
+        if (forceLocal) {
+            return Result.success(
+                auditDealLocal(
+                    dealTitle = dealTitle,
+                    clientName = clientName,
+                    currency = currency,
+                    costPrice = costPrice,
+                    sellingPrice = sellingPrice,
+                    grossMarginPct = grossMarginPct,
+                    netNetPrice = netNetPrice,
+                    netNetMarginPct = netNetMarginPct,
+                    paymentTermsDays = paymentTermsDays,
+                    financingCostPct = financingCostPct,
+                    cashGapDays = cashGapDays,
+                    logisticsAndRebatesPct = logisticsAndRebatesPct,
+                    breakEvenVolumeLiftPct = breakEvenVolumeLiftPct,
+                    languageRu = languageRu,
+                    isFallback = false
+                )
+            )
+        }
+
         return try {
             val prompt = """
                 DEAL DOSSIER FOR NEGOTIATION ROOM AUDIT:
@@ -109,11 +133,12 @@ class AiDealRiskAuditor {
                 Conduct the 1-click Express Audit and provide strictly 3 actionable negotiation theses.
             """.trimIndent()
 
-            val response = withTimeout(60_000L) {
+            val response = withTimeout(30_000L) {
                 generativeModel.generateContent(prompt)
             }
 
-            val jsonString = response.text ?: throw IllegalStateException("Model returned empty audit response")
+            val rawText = response.text ?: throw IllegalStateException("Model returned empty audit response")
+            val jsonString = cleanJson(rawText)
             val root = JSONObject(jsonString)
 
             val verdict = root.optString("verdict", "CAUTION")
@@ -137,20 +162,247 @@ class AiDealRiskAuditor {
                 }
             }
 
+            if (theses.isEmpty()) {
+                throw IllegalStateException("Model response contained no theses")
+            }
+
             Result.success(
                 AiDealAuditResult(
                     verdict = verdict,
                     headline = headline,
                     keyMetricCallout = keyMetricCallout,
-                    theses = theses
+                    theses = theses,
+                    isOfflineFallback = false,
+                    auditSource = "Gemini 3.8 Flash (Cloud AI)"
                 )
             )
         } catch (e: CancellationException) {
             // Re-throw to preserve coroutine cancellation
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Express AI deal audit failed", e)
-            Result.failure(e)
+            Log.w(TAG, "Gemini cloud AI call failed (${e.message}); seamlessly falling back to local financial audit engine", e)
+            // Seamless zero-downtime fallback to local deterministic rule engine
+            Result.success(
+                auditDealLocal(
+                    dealTitle = dealTitle,
+                    clientName = clientName,
+                    currency = currency,
+                    costPrice = costPrice,
+                    sellingPrice = sellingPrice,
+                    grossMarginPct = grossMarginPct,
+                    netNetPrice = netNetPrice,
+                    netNetMarginPct = netNetMarginPct,
+                    paymentTermsDays = paymentTermsDays,
+                    financingCostPct = financingCostPct,
+                    cashGapDays = cashGapDays,
+                    logisticsAndRebatesPct = logisticsAndRebatesPct,
+                    breakEvenVolumeLiftPct = breakEvenVolumeLiftPct,
+                    languageRu = languageRu,
+                    isFallback = true
+                )
+            )
         }
     }
+
+    private fun cleanJson(raw: String): String {
+        val trimmed = raw.trim()
+        val stripped = if (trimmed.startsWith("```json")) {
+            trimmed.removePrefix("```json").removeSuffix("```").trim()
+        } else if (trimmed.startsWith("```")) {
+            trimmed.removePrefix("```").removeSuffix("```").trim()
+        } else {
+            trimmed
+        }
+        val start = stripped.indexOf('{')
+        val end = stripped.lastIndexOf('}')
+        return if (start != -1 && end != -1 && end > start) {
+            stripped.substring(start, end + 1)
+        } else {
+            stripped
+        }
+    }
+
+    fun auditDealLocal(
+        dealTitle: String,
+        clientName: String,
+        currency: String,
+        costPrice: Double,
+        sellingPrice: Double,
+        grossMarginPct: Double,
+        netNetPrice: Double,
+        netNetMarginPct: Double,
+        paymentTermsDays: Int,
+        financingCostPct: Double,
+        cashGapDays: Int,
+        logisticsAndRebatesPct: Double,
+        breakEvenVolumeLiftPct: Double,
+        languageRu: Boolean = true,
+        isFallback: Boolean = false
+    ): AiDealAuditResult {
+        val marginErosionPts = grossMarginPct - netNetMarginPct
+        val costOfDeferralPct = financingCostPct * (paymentTermsDays / 365.0)
+
+        val isCritical = netNetMarginPct <= 5.0 || netNetPrice < costPrice
+        val isCaution = !isCritical && (netNetMarginPct < 18.0 || paymentTermsDays > 45 || breakEvenVolumeLiftPct > 35.0 || marginErosionPts > 12.0)
+
+        val verdict = when {
+            isCritical -> "CRITICAL_RISK"
+            isCaution -> "CAUTION"
+            else -> "GO_AHEAD"
+        }
+
+        val headline = if (languageRu) {
+            when {
+                isCritical -> "Критический риск сделки: Net-Net цена (${"%.2f".format(netNetPrice)} $currency) на грани или ниже себестоимости (${"%.2f".format(costPrice)} $currency)."
+                isCaution -> "Внимание: заметное сжатие маржи бонусами (-${"%.1f".format(marginErosionPts)} п.п.) и отсрочкой платежа (${paymentTermsDays} дн.)."
+                else -> "Сбалансированная структура сделки: чистая Net-Net маржа ${"%.1f".format(netNetMarginPct)}% обеспечивает запас прочности."
+            }
+        } else {
+            when {
+                isCritical -> "Critical deal risk: Net-Net price (${"%.2f".format(netNetPrice)} $currency) is near or below unit cost (${"%.2f".format(costPrice)} $currency)."
+                isCaution -> "Caution: significant margin compression from rebates (-${"%.1f".format(marginErosionPts)} pts) and deferral (${paymentTermsDays} days)."
+                else -> "Balanced contract structure: healthy Net-Net margin of ${"%.1f".format(netNetMarginPct)}% preserves safety buffer."
+            }
+        }
+
+        val keyMetricCallout = if (languageRu) {
+            "Net-Net маржа: ${"%.1f".format(netNetMarginPct)}% (порог: >18%)"
+        } else {
+            "Net-Net Margin: ${"%.1f".format(netNetMarginPct)}% (target: >18%)"
+        }
+
+        // Thesis 1: Margin & Rebate trap
+        val thesis1 = if (languageRu) {
+            if (marginErosionPts > 10.0 || netNetMarginPct < 15.0) {
+                DealRiskThesis(
+                    category = "MARGIN_AND_REBATES",
+                    title = "Скрытая эрозия маржинальности бэк-бонусами и логистикой",
+                    description = "Суммарный срез ретро-бонусами и скидками (${"%.1f".format(logisticsAndRebatesPct)}%) снижает валовую маржу с ${"%.1f".format(grossMarginPct)}% до ${"%.1f".format(netNetMarginPct)}%. На единицу товара вы зарабатываете всего ${"%.2f".format(netNetPrice - costPrice)} $currency.",
+                    actionableTactic = "Перевести ретро-бонус в дифференцированную шкалу только при 100% выполнении квартального плана выборки сети, либо исключить логистику из расчета бонуса.",
+                    severity = if (isCritical) "CRITICAL" else "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "MARGIN_AND_REBATES",
+                    title = "Контроль дисконтной базы контракта",
+                    description = "Уровень скидок и бонусов (${"%.1f".format(logisticsAndRebatesPct)}%) сохраняет приемлемую маржинальность ${"%.1f".format(netNetMarginPct)}%, но требует защиты от дополнительных промо-уступок.",
+                    actionableTactic = "Не объединять фронт-скидку и маркетинговые услуги в единый инвойс; фиксировать маркетинговый бюджет отдельным приложением с актами оказанных услуг.",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        } else {
+            if (marginErosionPts > 10.0 || netNetMarginPct < 15.0) {
+                DealRiskThesis(
+                    category = "MARGIN_AND_REBATES",
+                    title = "Hidden Margin Leakage via Back-Rebates & Logistics",
+                    description = "Total discount and rebate drag (${"%.1f".format(logisticsAndRebatesPct)}%) shrinks gross margin from ${"%.1f".format(grossMarginPct)}% down to ${"%.1f".format(netNetMarginPct)}%. Net profit per unit is only ${"%.2f".format(netNetPrice - costPrice)} $currency.",
+                    actionableTactic = "Tie retrospective bonuses strictly to 100% target volume achievement; carve out freight and pallet handling from bonus calculation base.",
+                    severity = if (isCritical) "CRITICAL" else "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "MARGIN_AND_REBATES",
+                    title = "Discount Base Control",
+                    description = "Combined discount exposure (${"%.1f".format(logisticsAndRebatesPct)}%) preserves healthy unit profitability at ${"%.1f".format(netNetMarginPct)}%.",
+                    actionableTactic = "Maintain separation between on-invoice discounts and marketing service fees with quarterly deliverable milestones.",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        }
+
+        // Thesis 2: Working Capital & Deferral
+        val thesis2 = if (languageRu) {
+            if (paymentTermsDays > 30 || cashGapDays > 40) {
+                DealRiskThesis(
+                    category = "CASHFLOW_AND_TERMS",
+                    title = "Финансовая стоимость отсрочки (${paymentTermsDays} дн.) и кассовый разрыв",
+                    description = "Отсрочка в ${paymentTermsDays} дней при стоимости фондирования ${"%.1f".format(financingCostPct)}% годовых эквивалентна скрытой скидке ${"%.2f".format(costOfDeferralPct)}%. Операционный разрыв составляет ${cashGapDays} дней.",
+                    actionableTactic = "Предложить байеру сконто: скидка 1.5–2% при оплате в течение 10 дней, либо ограничить максимальный кредитный лимит суммой одной поставки.",
+                    severity = if (paymentTermsDays >= 60) "CRITICAL" else "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "CASHFLOW_AND_TERMS",
+                    title = "Управляемый оборотный капитал",
+                    description = "Срок оплаты (${paymentTermsDays} дн.) и финансовый цикл (${cashGapDays} дн.) находятся в безопасной зоне при ставке ${"%.1f".format(financingCostPct)}%.",
+                    actionableTactic = "Использовать жесткий кредитный стоп-ордер: следующая отгрузка блокируется до закрытия предыдущей накладной.",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        } else {
+            if (paymentTermsDays > 30 || cashGapDays > 40) {
+                DealRiskThesis(
+                    category = "CASHFLOW_AND_TERMS",
+                    title = "Cost of Capital & Cash Gap Exposure (${paymentTermsDays} days)",
+                    description = "Payment deferral of ${paymentTermsDays} days under a ${"%.1f".format(financingCostPct)}% cost of capital creates a hidden price discount of ${"%.2f".format(costOfDeferralPct)}% with a ${cashGapDays}-day cash gap.",
+                    actionableTactic = "Counter with early payment cash discount (2% within 10 days) or cap revolving accounts receivable credit limit to one shipment value.",
+                    severity = if (paymentTermsDays >= 60) "CRITICAL" else "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "CASHFLOW_AND_TERMS",
+                    title = "Controlled Working Capital Cycle",
+                    description = "Payment terms (${paymentTermsDays} days) and cash gap (${cashGapDays} days) remain within acceptable corporate liquidity parameters.",
+                    actionableTactic = "Establish automated shipment hold rules triggered upon any past-due invoices.",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        }
+
+        // Thesis 3: KAM Counter-Playbook & Trade-offs
+        val thesis3 = if (languageRu) {
+            if (breakEvenVolumeLiftPct > 30.0) {
+                DealRiskThesis(
+                    category = "KAM_COUNTER_PLAYBOOK",
+                    title = "Высокий барьер промо-безубыточности (+${"%.1f".format(breakEvenVolumeLiftPct)}%)",
+                    description = "Любая дополнительная промо-скидка требует взрывного роста объема на +${"%.1f".format(breakEvenVolumeLiftPct)}%. Без гарантированной торцевой выкладки или каталога сети это приведет к прямым убыткам.",
+                    actionableTactic = "Соглашаться на промо-цену только при письменной гарантии ритейлера о размещении на торце/паллете на 14 дней и подтвержденном предзаказе объема.",
+                    severity = "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "KAM_COUNTER_PLAYBOOK",
+                    title = "Правило жесткого размена уступок (BATNA Playbook)",
+                    description = "Если закупщик требует снижения цены или увеличения отсрочки свыше ${paymentTermsDays} дней, не соглашайтесь без встречной выгоды.",
+                    actionableTactic = "Связывать уступки в пакет: «Мы готовы рассмотреть отсрочку ${paymentTermsDays + 15} дней в обмен на листинг 2 позиций премиум-линейки без платы за ввод».",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        } else {
+            if (breakEvenVolumeLiftPct > 30.0) {
+                DealRiskThesis(
+                    category = "KAM_COUNTER_PLAYBOOK",
+                    title = "Steep Promo Break-Even Volume Lift (+${"%.1f".format(breakEvenVolumeLiftPct)}%)",
+                    description = "Discounting requires an aggressive volume spike of +${"%.1f".format(breakEvenVolumeLiftPct)}% to avoid profit erosion. Unachievable without prominent endcap placement.",
+                    actionableTactic = "Condition promotional pricing on mandatory secondary display (endcap/gondola) and minimum purchase volume commitment.",
+                    severity = "WARNING"
+                )
+            } else {
+                DealRiskThesis(
+                    category = "KAM_COUNTER_PLAYBOOK",
+                    title = "Concession Trade-Off Strategy (BATNA Playbook)",
+                    description = "Prevent one-sided buyer concessions on price or payment deferrals beyond ${paymentTermsDays} days.",
+                    actionableTactic = "Trade concessions in packages: match extended payment terms with the listing of higher-margin SKUs or exclusivity.",
+                    severity = "OPPORTUNITY"
+                )
+            }
+        }
+
+        val sourceLabel = if (isFallback) {
+            if (languageRu) "Финансовый экспресс-аудит (Офлайн-резерв)" else "Executive Financial Audit (Offline Fallback)"
+        } else {
+            if (languageRu) "Финансовый экспресс-аудит (Локально)" else "Executive Financial Audit (Local Engine)"
+        }
+
+        return AiDealAuditResult(
+            verdict = verdict,
+            headline = headline,
+            keyMetricCallout = keyMetricCallout,
+            theses = listOf(thesis1, thesis2, thesis3),
+            isOfflineFallback = isFallback,
+            auditSource = sourceLabel,
+            isFree = true
+        )
+    }
 }
+

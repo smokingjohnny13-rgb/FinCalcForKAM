@@ -189,6 +189,7 @@ fun BigDealAppRoot(
         AiDealAuditDialog(
             state = aiAuditState,
             onAuditRequest = { viewModel.runExpressAudit() },
+            onLocalAuditRequest = { viewModel.runLocalAudit() },
             onDismissRequest = { showAiAuditDialog = false }
         )
     }

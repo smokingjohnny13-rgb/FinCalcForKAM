@@ -1360,7 +1360,7 @@ class BigDealViewModel(
         _aiAuditState.value = AiAuditUiState.Idle
     }
 
-    fun runExpressAudit() {
+    fun runExpressAudit(forceLocal: Boolean = false) {
         viewModelScope.launch {
             _aiAuditState.value = AiAuditUiState.Loading
             val margin = _marginState.value
@@ -1384,7 +1384,8 @@ class BigDealViewModel(
                 cashGapDays = cashGap.cashConversionCycleDays,
                 logisticsAndRebatesPct = waterfall.backBonusPct + waterfall.frontDiscountPct,
                 breakEvenVolumeLiftPct = promo.breakEvenVolumeLiftPct,
-                languageRu = isRu
+                languageRu = isRu,
+                forceLocal = forceLocal
             )
 
             result.fold(
@@ -1396,6 +1397,10 @@ class BigDealViewModel(
                 }
             )
         }
+    }
+
+    fun runLocalAudit() {
+        runExpressAudit(forceLocal = true)
     }
 }
 
