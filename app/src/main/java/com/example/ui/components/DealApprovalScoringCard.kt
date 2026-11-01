@@ -6,7 +6,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.HourglassTop
@@ -51,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.DealApprovalStatus
@@ -342,73 +346,194 @@ fun DealApprovalScoringCard(
         }
 
         // 5. Action Buttons (Submit for Approval / Approve / Reject)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Button(
-                onClick = { viewModel.submitDealForApproval() },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .weight(1.2f)
-                    .height(48.dp)
-                    .testTag("submit_deal_approval_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Black
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = tr("Submit for Approval", "На согласование"),
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
-            }
-
-            Button(
-                onClick = { viewModel.approveDeal() },
-                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .testTag("approve_deal_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = Color.Black
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = tr("Approve", "Утвердить"),
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
-            }
-
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val rejectReason = tr("Margin threshold violated", "Нарушен порог маржинальности")
-            OutlinedButton(
-                onClick = { viewModel.rejectDeal(rejectReason) },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-                modifier = Modifier
-                    .weight(0.9f)
-                    .height(48.dp)
-                    .testTag("reject_deal_btn")
-            ) {
-                Text(
-                    text = tr("Reject", "Отклонить"),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+
+            if (maxWidth >= 480.dp) {
+                // Wide layout (tablets / landscape): all 3 in a balanced row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { viewModel.submitDealForApproval() },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .height(40.dp)
+                            .testTag("submit_deal_approval_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = tr("Submit for Approval", "На согласование"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Button(
+                        onClick = { viewModel.approveDeal() },
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .testTag("approve_deal_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = tr("Approve", "Утвердить"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { viewModel.rejectDeal(rejectReason) },
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .testTag("reject_deal_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = Color(0xFFEF4444)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = tr("Reject", "Отклонить"),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEF4444),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            } else {
+                // Mobile layout: Clean 2-tier aligned structure preventing boundary clipping & word breaks
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Top: Primary KAM initiation action (Submit for Approval)
+                    Button(
+                        onClick = { viewModel.submitDealForApproval() },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .testTag("submit_deal_approval_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = tr("Submit for Approval", "На согласование"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // Bottom: Executive decision pair (Approve & Reject) side-by-side with equal width and height
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { viewModel.approveDeal() },
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .testTag("approve_deal_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = tr("Approve", "Утвердить"),
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.rejectDeal(rejectReason) },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .testTag("reject_deal_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = Color(0xFFEF4444)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = tr("Reject", "Отклонить"),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFEF4444),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
             }
         }
     }

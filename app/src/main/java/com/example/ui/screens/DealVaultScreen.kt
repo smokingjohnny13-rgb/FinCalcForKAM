@@ -170,10 +170,12 @@ fun DealVaultScreen(
         if (vaultSubTab == 0) {
             item {
                 DealApprovalScoringCard(viewModel = viewModel)
+                Spacer(modifier = Modifier.height(36.dp))
             }
         } else if (vaultSubTab == 1) {
             item {
                 ClientNegotiationCard(viewModel = viewModel)
+                Spacer(modifier = Modifier.height(36.dp))
             }
         } else {
             // 1. Cloud Sync & Multi-Device Collaboration Card
