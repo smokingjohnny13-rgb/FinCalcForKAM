@@ -184,6 +184,12 @@ class ClientNegotiationRepository {
         }
     }
 
+    fun deleteClient(clientId: String) {
+        val current = _clients.value.toMutableList()
+        current.removeAll { it.id == clientId }
+        _clients.value = current
+    }
+
     fun addNegotiationTouchpoint(clientId: String, touchpoint: NegotiationTouchpoint) {
         val current = _clients.value.toMutableList()
         val index = current.indexOfFirst { it.id == clientId }

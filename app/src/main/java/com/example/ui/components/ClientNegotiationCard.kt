@@ -18,15 +18,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PriceCheck
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.AlertDialog
@@ -36,6 +40,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -55,6 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ClientNegotiationProfile
@@ -84,6 +90,9 @@ fun ClientNegotiationCard(
     val sym = activeCurrency.symbol
 
     var showAddRoundDialog by remember { mutableStateOf(false) }
+    var showEditClientDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var isNewClientMode by remember { mutableStateOf(false) }
     val dateFmt = remember { SimpleDateFormat("dd.MM.yyyy", Locale.US) }
 
     Column(
@@ -92,7 +101,7 @@ fun ClientNegotiationCard(
             .testTag("client_negotiation_card"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Client Horizontal Selector Chips
+        // 1. Client Horizontal Selector Chips + "+ New Client" Button
         Text(
             text = tr("SELECT CLIENT PROFILE", "ВЫБЕРИТЕ ПРОФИЛЬ КЛИЕНТА"),
             style = MaterialTheme.typography.labelSmall,
@@ -105,8 +114,41 @@ fun ClientNegotiationCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // "+ New Client" action chip
+            Surface(
+                color = ExecutiveCard,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldPrimary.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .clickable {
+                        isNewClientMode = true
+                        showEditClientDialog = true
+                    }
+                    .testTag("btn_add_client_chip")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PersonAdd,
+                        contentDescription = null,
+                        tint = EmeraldPrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = tr("+ Client", "+ Клиент"),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = EmeraldPrimary
+                    )
+                }
+            }
+
             clients.forEach { client ->
                 val isSelected = client.id == selectedClient?.id
                 Surface(
@@ -150,6 +192,48 @@ fun ClientNegotiationCard(
             }
         }
 
+        if (selectedClient == null || clients.isEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = ExecutiveCard),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ExecutiveBorder),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = tr("No client profiles yet", "Нет созданных профилей клиентов"),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = tr(
+                            "Add your first client to configure agreed payment terms, discounts, rebates, and past deals.",
+                            "Создайте первого контрагента, чтобы настроить условия отсрочки, скидки, бонусы и историю сделок."
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = {
+                            isNewClientMode = true
+                            showEditClientDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(tr("Create Client", "Создать клиента"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         selectedClient?.let { client ->
             // 2. Client Overview Header
             Card(
@@ -164,7 +248,7 @@ fun ClientNegotiationCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = client.name,
                                 style = MaterialTheme.typography.titleMedium,
@@ -178,27 +262,69 @@ fun ClientNegotiationCard(
                             )
                         }
 
-                        Button(
-                            onClick = {
-                                viewModel.selectClient(client.id)
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = tr("Apply Terms", "Применить"),
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp
-                            )
+                            // Edit client button
+                            IconButton(
+                                onClick = {
+                                    isNewClientMode = false
+                                    showEditClientDialog = true
+                                },
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .testTag("btn_edit_client")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = tr("Edit Client", "Редактировать клиента"),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+
+                            // Delete client button
+                            IconButton(
+                                onClick = {
+                                    showDeleteConfirmDialog = true
+                                },
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .testTag("btn_delete_client")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = tr("Delete Client", "Удалить клиента"),
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+
+                            // Apply terms to Deal Approval
+                            Button(
+                                onClick = {
+                                    viewModel.selectClient(client.id)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowForward,
+                                    contentDescription = null,
+                                    tint = Color.Black,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = tr("Apply", "Применить"),
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
 
@@ -392,6 +518,59 @@ fun ClientNegotiationCard(
                     }
                 }
             }
+        }
+
+        // Edit / New Client Dialog
+        if (showEditClientDialog) {
+            ClientEditDialog(
+                initialClient = if (isNewClientMode) null else selectedClient,
+                isNew = isNewClientMode,
+                currencySymbol = sym,
+                onDismiss = { showEditClientDialog = false },
+                onSave = { updatedProfile ->
+                    viewModel.saveClientProfile(updatedProfile, isNew = isNewClientMode)
+                    showEditClientDialog = false
+                }
+            )
+        }
+
+        // Delete Client Confirmation Dialog
+        if (showDeleteConfirmDialog && selectedClient != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmDialog = false },
+                title = {
+                    Text(
+                        text = tr("Delete Client?", "Удалить контрагента?"),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = tr(
+                            "Are you sure you want to delete '${selectedClient!!.name}'? All agreed terms and negotiation history will be removed.",
+                            "Вы уверены, что хотите удалить '${selectedClient!!.name}'? Все согласованные условия и история переговоров будут удалены."
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteClientProfile(selectedClient!!.id)
+                            showDeleteConfirmDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                    ) {
+                        Text(tr("Delete", "Удалить"), color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                        Text(tr("Cancel", "Отмена"))
+                    }
+                }
+            )
         }
 
         // Add Round Dialog
@@ -611,6 +790,171 @@ private fun AddNegotiationRoundDialog(
                 }
             ) {
                 Text(tr("Save Round", "Сохранить"))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(tr("Cancel", "Отмена"))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ClientEditDialog(
+    initialClient: ClientNegotiationProfile?,
+    isNew: Boolean,
+    currencySymbol: String,
+    onDismiss: () -> Unit,
+    onSave: (ClientNegotiationProfile) -> Unit
+) {
+    var nameInput by remember { mutableStateOf(if (isNew) "" else initialClient?.name ?: "") }
+    var industryInput by remember { mutableStateOf(if (isNew) "" else initialClient?.industry ?: "") }
+    var creditLimitInput by remember { mutableStateOf(if (isNew) "100000" else "%.0f".format(initialClient?.creditLimit ?: 100000.0)) }
+    var termsDaysInput by remember { mutableStateOf(if (isNew) "30" else (initialClient?.agreedPaymentTermsDays ?: 30).toString()) }
+    var onInvDiscountInput by remember { mutableStateOf(if (isNew) "5.0" else "%.1f".format(initialClient?.standardOnInvoiceDiscountPct ?: 5.0)) }
+    var maxDiscountInput by remember { mutableStateOf(if (isNew) "10.0" else "%.1f".format(initialClient?.maxAllowedDiscountPct ?: 10.0)) }
+    var offInvBonusInput by remember { mutableStateOf(if (isNew) "6.0" else "%.1f".format(initialClient?.standardOffInvoiceBonusPct ?: 6.0)) }
+    var annualRebateInput by remember { mutableStateOf(if (isNew) "2.5" else "%.1f".format(initialClient?.annualVolumeRebatePct ?: 2.5)) }
+    var notesInput by remember { mutableStateOf(if (isNew) "" else initialClient?.notes ?: "") }
+
+    val scrollState = rememberScrollState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (isNew) tr("New Client Profile", "Новый профиль клиента") else tr("Edit Client Profile", "Редактировать клиента"),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    label = { Text(tr("Client / Company Name", "Название компании / контрагента")) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = industryInput,
+                    onValueChange = { industryInput = it },
+                    label = { Text(tr("Industry / Segment", "Отрасль / Сегмент")) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = termsDaysInput,
+                        onValueChange = { termsDaysInput = it },
+                        label = { Text(tr("Terms (Days)", "Отсрочка (дней)")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = creditLimitInput,
+                        onValueChange = { creditLimitInput = it },
+                        label = { Text(tr("Credit Limit ($currencySymbol)", "Лимит ($currencySymbol)")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = onInvDiscountInput,
+                        onValueChange = { onInvDiscountInput = it },
+                        label = { Text(tr("Discount %", "Скидка %")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = maxDiscountInput,
+                        onValueChange = { maxDiscountInput = it },
+                        label = { Text(tr("Max Disc %", "Макс скидка %")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = offInvBonusInput,
+                        onValueChange = { offInvBonusInput = it },
+                        label = { Text(tr("Rebate %", "Бонус %")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = annualRebateInput,
+                        onValueChange = { annualRebateInput = it },
+                        label = { Text(tr("Vol Rebate %", "Годовой бонус %")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = notesInput,
+                    onValueChange = { notesInput = it },
+                    label = { Text(tr("Negotiation Notes & Insights", "Особенности и заметки")) },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val finalName = nameInput.ifBlank { if (isNew) "New Client Corporation" else (initialClient?.name ?: "Client") }
+                    val finalIndustry = industryInput.ifBlank { "B2B Trade & Distribution" }
+                    val finalCredit = creditLimitInput.toDoubleOrNull() ?: 150000.0
+                    val finalTerms = termsDaysInput.toIntOrNull() ?: 30
+                    val finalOnInv = onInvDiscountInput.toDoubleOrNull() ?: 5.0
+                    val finalMaxDisc = maxDiscountInput.toDoubleOrNull() ?: 10.0
+                    val finalBonus = offInvBonusInput.toDoubleOrNull() ?: 6.0
+                    val finalRebate = annualRebateInput.toDoubleOrNull() ?: 2.5
+
+                    val updated = if (isNew || initialClient == null) {
+                        ClientNegotiationProfile(
+                            name = finalName,
+                            industry = finalIndustry,
+                            creditLimit = finalCredit,
+                            agreedPaymentTermsDays = finalTerms,
+                            standardOnInvoiceDiscountPct = finalOnInv,
+                            maxAllowedDiscountPct = finalMaxDisc,
+                            standardOffInvoiceBonusPct = finalBonus,
+                            annualVolumeRebatePct = finalRebate,
+                            notes = notesInput
+                        )
+                    } else {
+                        initialClient.copy(
+                            name = finalName,
+                            industry = finalIndustry,
+                            creditLimit = finalCredit,
+                            agreedPaymentTermsDays = finalTerms,
+                            standardOnInvoiceDiscountPct = finalOnInv,
+                            maxAllowedDiscountPct = finalMaxDisc,
+                            standardOffInvoiceBonusPct = finalBonus,
+                            annualVolumeRebatePct = finalRebate,
+                            notes = notesInput
+                        )
+                    }
+                    onSave(updated)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+            ) {
+                Text(tr("Save Profile", "Сохранить профиль"), color = Color.Black, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

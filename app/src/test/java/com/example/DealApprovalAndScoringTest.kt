@@ -158,4 +158,43 @@ class DealApprovalAndScoringTest {
         assertEquals(3, updatedOmni.negotiationHistory.size)
         assertEquals(3, updatedOmni.negotiationHistory.first().roundNumber)
     }
+
+    @Test
+    fun `test client repository add edit delete operations`() {
+        val repo = ClientNegotiationRepository()
+        val initialCount = repo.clients.value.size
+
+        // 1. Add new client
+        val newProfile = com.example.data.model.ClientNegotiationProfile(
+            name = "AeroTech Defense Logistics",
+            industry = "Aerospace & Government Contracts",
+            creditLimit = 1200000.0,
+            agreedPaymentTermsDays = 45,
+            standardOnInvoiceDiscountPct = 4.0,
+            maxAllowedDiscountPct = 8.0,
+            standardOffInvoiceBonusPct = 5.0,
+            annualVolumeRebatePct = 2.0,
+            notes = "Strict government SLA and annual audits"
+        )
+        repo.addClient(newProfile)
+        assertEquals(initialCount + 1, repo.clients.value.size)
+        assertEquals("AeroTech Defense Logistics", repo.clients.value.first().name)
+
+        // 2. Update client
+        val updated = newProfile.copy(
+            agreedPaymentTermsDays = 30,
+            creditLimit = 1500000.0,
+            notes = "Terms reduced to 30 days"
+        )
+        repo.updateClient(updated)
+        val fetched = repo.clients.value.first { it.id == newProfile.id }
+        assertEquals(30, fetched.agreedPaymentTermsDays)
+        assertEquals(1500000.0, fetched.creditLimit, 0.01)
+        assertEquals("Terms reduced to 30 days", fetched.notes)
+
+        // 3. Delete client
+        repo.deleteClient(newProfile.id)
+        assertEquals(initialCount, repo.clients.value.size)
+        assertTrue(repo.clients.value.none { it.id == newProfile.id })
+    }
 }

@@ -1519,6 +1519,43 @@ class BigDealViewModel(
         }
     }
 
+    fun saveClientProfile(profile: ClientNegotiationProfile, isNew: Boolean) {
+        if (isNew) {
+            clientRepository.addClient(profile)
+            selectClient(profile.id)
+            viewModelScope.launch {
+                _userMessage.emit(str("Client '${profile.name}' added successfully!", "Контрагент '${profile.name}' успешно добавлен!", appLanguage.value))
+            }
+        } else {
+            clientRepository.updateClient(profile)
+            if (selectedClientId.value == profile.id) {
+                selectClient(profile.id)
+            }
+            viewModelScope.launch {
+                _userMessage.emit(str("Client '${profile.name}' updated!", "Данные контрагента '${profile.name}' обновлены!", appLanguage.value))
+            }
+        }
+    }
+
+    fun deleteClientProfile(clientId: String) {
+        val client = clientsList.value.firstOrNull { it.id == clientId }
+        val name = client?.name ?: "Client"
+        clientRepository.deleteClient(clientId)
+        val remaining = clientsList.value
+        if (selectedClientId.value == clientId) {
+            val next = remaining.firstOrNull()
+            if (next != null) {
+                selectClient(next.id)
+            } else {
+                selectedClientId.value = ""
+                clientName.value = ""
+            }
+        }
+        viewModelScope.launch {
+            _userMessage.emit(str("Client '$name' deleted", "Контрагент '$name' удален", appLanguage.value))
+        }
+    }
+
     fun addNegotiationRound(
         clientId: String,
         buyerDemands: String,
