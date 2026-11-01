@@ -80,47 +80,41 @@ object DealScoringEngine {
             DealScoringLevel.MARGIN_DESTROYER -> (netNetMarginPct * 2.0).toInt().coerceIn(5, 45)
         }
 
-        val riskVerdict = if (languageRu) {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "НИЗКИЙ РИСК: Сделка генерирует здоровую прибыль выше hurdle rate"
-                DealScoringLevel.BORDERLINE -> "СРЕДНИЙ РИСК: Просадка маржи бонусами и длительной отсрочкой"
-                DealScoringLevel.MARGIN_DESTROYER -> "КРИТИЧЕСКИЙ РИСК: Убыточная сделка или сжатие маржи ниже себестоимости"
-            }
-        } else {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "LOW RISK: Healthy margin well above hurdle rate threshold"
-                DealScoringLevel.BORDERLINE -> "MEDIUM RISK: Margin compression via rebates and capital freeze"
-                DealScoringLevel.MARGIN_DESTROYER -> "CRITICAL RISK: Deal destroys margin or sells below unit cost"
-            }
+        val riskVerdictRu = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "НИЗКИЙ РИСК: Сделка генерирует здоровую прибыль выше hurdle rate"
+            DealScoringLevel.BORDERLINE -> "СРЕДНИЙ РИСК: Просадка маржи бонусами и длительной отсрочкой"
+            DealScoringLevel.MARGIN_DESTROYER -> "КРИТИЧЕСКИЙ РИСК: Убыточная сделка или сжатие маржи ниже себестоимости"
         }
+        val riskVerdictEn = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "LOW RISK: Healthy margin well above hurdle rate threshold"
+            DealScoringLevel.BORDERLINE -> "MEDIUM RISK: Margin compression via rebates and capital freeze"
+            DealScoringLevel.MARGIN_DESTROYER -> "CRITICAL RISK: Deal destroys margin or sells below unit cost"
+        }
+        val riskVerdict = if (languageRu) riskVerdictRu else riskVerdictEn
 
-        val trafficLightSummary = if (languageRu) {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "🟢 Прибыльная сделка: Net-Net маржа ${"%.1f".format(netNetMarginPct)}% с запасом покрывает отсрочку ${safeDays} дн."
-                DealScoringLevel.BORDERLINE -> "🟡 Пограничная сделка: Бонусы (${"%.1f".format(offInvoiceBonusPct)}%) и отсрочка съедают ${"%.2f".format(costOfDeferralAmount)} прибыли."
-                DealScoringLevel.MARGIN_DESTROYER -> "🔴 Уничтожает маржу: Net-Net цена (${"%.2f".format(netNetPrice)}) на грани себестоимости (${"%.2f".format(safeCost)}), прибыль с учетом отсрочки отрицательная или минимальна."
-            }
-        } else {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "🟢 Profitable Deal: Net-Net margin ${"%.1f".format(netNetMarginPct)}% comfortably covers ${safeDays} days deferral."
-                DealScoringLevel.BORDERLINE -> "🟡 Borderline Deal: Rebates (${"%.1f".format(offInvoiceBonusPct)}%) and deferral drain ${"%.2f".format(costOfDeferralAmount)} of profit."
-                DealScoringLevel.MARGIN_DESTROYER -> "🔴 Margin Destroyer: Net-Net price (${"%.2f".format(netNetPrice)}) is near unit cost (${"%.2f".format(safeCost)}), capital cost turns deal toxic."
-            }
+        val trafficLightSummaryRu = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "🟢 Прибыльная сделка: Net-Net маржа ${"%.1f".format(netNetMarginPct)}% с запасом покрывает отсрочку ${safeDays} дн."
+            DealScoringLevel.BORDERLINE -> "🟡 Пограничная сделка: Бонусы (${"%.1f".format(offInvoiceBonusPct)}%) и отсрочка съедают ${"%.2f".format(costOfDeferralAmount)} прибыли."
+            DealScoringLevel.MARGIN_DESTROYER -> "🔴 Уничтожает маржу: Net-Net цена (${"%.2f".format(netNetPrice)}) на грани себестоимости (${"%.2f".format(safeCost)}), прибыль с учетом отсрочки отрицательная или минимальна."
         }
+        val trafficLightSummaryEn = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "🟢 Profitable Deal: Net-Net margin ${"%.1f".format(netNetMarginPct)}% comfortably covers ${safeDays} days deferral."
+            DealScoringLevel.BORDERLINE -> "🟡 Borderline Deal: Rebates (${"%.1f".format(offInvoiceBonusPct)}%) and deferral drain ${"%.2f".format(costOfDeferralAmount)} of profit."
+            DealScoringLevel.MARGIN_DESTROYER -> "🔴 Margin Destroyer: Net-Net price (${"%.2f".format(netNetPrice)}) is near unit cost (${"%.2f".format(safeCost)}), capital cost turns deal toxic."
+        }
+        val trafficLightSummary = if (languageRu) trafficLightSummaryRu else trafficLightSummaryEn
 
-        val actionableGuidance = if (languageRu) {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "Зеленый коридор: КАМ может утверждать сделку самостоятельно. Рекомендуется фиксировать контрактные объемы на квартал."
-                DealScoringLevel.BORDERLINE -> "Требуется согласование коммерческого директора. Размен: сократить отсрочку с ${safeDays} до 30 дней в обмен на 1% скидки."
-                DealScoringLevel.MARGIN_DESTROYER -> "БЛОКИРОВКА СОГЛАСОВАНИЯ: Снизить ретро-бонусы минимум на ${(marginErosionPts * 0.6).toInt()}% либо поднять базовую цену. Согласование только через CEO/CFO."
-            }
-        } else {
-            when (scoringLevel) {
-                DealScoringLevel.PROFITABLE -> "Green corridor: KAM can self-approve. Secure quarterly volume commitments."
-                DealScoringLevel.BORDERLINE -> "Commercial Director approval required. Counter-trade: reduce payment terms from ${safeDays} to 30 days for 1% cash discount."
-                DealScoringLevel.MARGIN_DESTROYER -> "APPROVAL BLOCKED: Cut rebates by ${(marginErosionPts * 0.6).toInt()}% or raise list price. CEO/CFO escalation required."
-            }
+        val actionableGuidanceRu = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "Зеленый коридор: КАМ может утверждать сделку самостоятельно. Рекомендуется фиксировать контрактные объемы на квартал."
+            DealScoringLevel.BORDERLINE -> "Требуется согласование коммерческого директора. Размен: сократить отсрочку с ${safeDays} до 30 дней в обмен на 1% скидки."
+            DealScoringLevel.MARGIN_DESTROYER -> "БЛОКИРОВКА СОГЛАСОВАНИЯ: Снизить ретро-бонусы минимум на ${(marginErosionPts * 0.6).toInt()}% либо поднять базовую цену. Согласование только через CEO/CFO."
         }
+        val actionableGuidanceEn = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> "Green corridor: KAM can self-approve. Secure quarterly volume commitments."
+            DealScoringLevel.BORDERLINE -> "Commercial Director approval required. Counter-trade: reduce payment terms from ${safeDays} to 30 days for 1% cash discount."
+            DealScoringLevel.MARGIN_DESTROYER -> "APPROVAL BLOCKED: Cut rebates by ${(marginErosionPts * 0.6).toInt()}% or raise list price. CEO/CFO escalation required."
+        }
+        val actionableGuidance = if (languageRu) actionableGuidanceRu else actionableGuidanceEn
 
         return DealScoringResult(
             scoringLevel = scoringLevel,
@@ -143,8 +137,14 @@ object DealScoringEngine {
             profitAfterCostOfCapital = r2(profitAfterCostOfCapital),
             riskScore = riskScore.coerceIn(0, 100),
             riskVerdict = riskVerdict,
+            riskVerdictEn = riskVerdictEn,
+            riskVerdictRu = riskVerdictRu,
             trafficLightSummary = trafficLightSummary,
+            trafficLightSummaryEn = trafficLightSummaryEn,
+            trafficLightSummaryRu = trafficLightSummaryRu,
             actionableGuidance = actionableGuidance,
+            actionableGuidanceEn = actionableGuidanceEn,
+            actionableGuidanceRu = actionableGuidanceRu,
             canAutoApprove = scoringLevel == DealScoringLevel.PROFITABLE
         )
     }

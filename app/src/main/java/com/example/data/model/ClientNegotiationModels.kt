@@ -61,8 +61,14 @@ data class DealScoringResult(
     val profitAfterCostOfCapital: Double,
     val riskScore: Int, // 0 to 100 (100 = safe, 0 = toxic)
     val riskVerdict: String,
+    val riskVerdictEn: String = riskVerdict,
+    val riskVerdictRu: String = riskVerdict,
     val trafficLightSummary: String,
+    val trafficLightSummaryEn: String = trafficLightSummary,
+    val trafficLightSummaryRu: String = trafficLightSummary,
     val actionableGuidance: String,
+    val actionableGuidanceEn: String = actionableGuidance,
+    val actionableGuidanceRu: String = actionableGuidance,
     val canAutoApprove: Boolean
 )
 

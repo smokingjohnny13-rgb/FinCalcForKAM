@@ -46,6 +46,27 @@ class DealApprovalAndScoringTest {
     }
 
     @Test
+    fun `test deal scoring english localization`() {
+        val result = DealScoringEngine.calculate(
+            sellingPrice = 100.0,
+            costPrice = 50.0,
+            volumeUnits = 1000,
+            onInvoiceDiscountPct = 5.0,
+            offInvoiceBonusPct = 6.0,
+            paymentTermsDays = 30,
+            financingAnnualRatePct = 18.0,
+            languageRu = false
+        )
+
+        assertTrue(result.trafficLightSummaryEn.contains("Profitable Deal"))
+        assertTrue(result.trafficLightSummaryRu.contains("Прибыльная сделка"))
+        assertTrue(result.actionableGuidanceEn.contains("Green corridor"))
+        assertTrue(result.actionableGuidanceRu.contains("Зеленый коридор"))
+        assertTrue(result.trafficLightSummary.contains("Profitable Deal"))
+        assertTrue(result.riskVerdict.contains("LOW RISK"))
+    }
+
+    @Test
     fun `test borderline deal scoring yellow corridor`() {
         // Borderline deal: List $100, Cost $68, 10% discount, 8% bonus, 60 days deferral
         val result = DealScoringEngine.calculate(

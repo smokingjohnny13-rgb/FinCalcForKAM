@@ -403,6 +403,16 @@ app/src/main/java/com/example/
       - Нижняя строка: сбалансированная пара управленческих решений («Утвердить» и «Отклонить») с равным весом `weight(1f)`, высотой `38.dp`, иконками `CheckCircle` и `Close`, строгим выравниванием и защитой от переносов.
     - На планшетах и широких экранах (`>= 480.dp`) кнопки автоматически выстраиваются в аккуратный единый ряд.
     - Добавлен комфортный отступ снизу (`Spacer = 36.dp`) в `DealVaultScreen`, предотвращающий залипание кнопок к нижней панели навигации.
+47. **Полная двуязычная локализация Deal Approval & Client Negotiation:**
+    - Устранена рассинхронизация языка: в `DealScoringResult` добавлены двуязычные поля (`trafficLightSummaryEn`/`Ru`, `actionableGuidanceEn`/`Ru`, `riskVerdictEn`/`Ru`).
+    - В UI (`DealApprovalScoringCard.kt`) вывод переведен на динамическую функцию `tr()`, мгновенно реагирующую на переключатель EN/RU в статус-баре.
+    - В `BigDealViewModel` при смене языка (`toggleLanguage`/`setLanguage`) вызывается перерасчет сделки, а начальное состояние синхронизировано с дефолтным языком EN.
+    - Исправлены заголовки 4-х столпов в карточке контрагента (`ClientNegotiationCard.kt`): TERMS, REBATES, DISCOUNTS, PAST DEALS.
+48. **Устранение вертикального переноса шрифтов в графике кэшфлоу (`RoiPnlModeler.kt`):**
+    - Исправлен баг, при котором длинный заголовок (`12-MONTH CUMULATIVE CASHFLOW TIMELINE`) вытеснял плашку окупаемости (`Payback @ Month 2.3 🎯`), сжимая её в 1 вертикальный столбец из 17 строк.
+    - Заголовок сбалансирован (`12-MONTH CUMULATIVE CASHFLOW`, `weight(1f, fill = false)`, `maxLines = 1`, `overflow = TextOverflow.Ellipsis`).
+    - Метка окупаемости вынесена в аккуратный бейдж-плашку (`Surface`, `Payback: M2.3 🎯`) с защитой от переносов (`softWrap = false`, `maxLines = 1`).
+    - В нижней панели навигации (`MainActivity.kt`) зафиксирован размер шрифта (`9.sp`, `softWrap = false`), что предотвратило разрыв вкладки "Analytics" на "Analytic\ns".
 
 ---
 

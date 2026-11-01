@@ -500,8 +500,10 @@ fun BigDealAppRoot(
                             label = {
                                 Text(
                                     text = tabLabel,
-                                    fontSize = 10.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                    fontSize = 9.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(

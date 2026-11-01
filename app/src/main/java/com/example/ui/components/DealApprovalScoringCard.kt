@@ -606,7 +606,7 @@ private fun DealTrafficLightBanner(
 
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = scoring.trafficLightSummary,
+                text = tr(scoring.trafficLightSummaryEn, scoring.trafficLightSummaryRu),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -626,7 +626,7 @@ private fun DealTrafficLightBanner(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = scoring.actionableGuidance,
+                        text = tr(scoring.actionableGuidanceEn, scoring.actionableGuidanceRu),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp

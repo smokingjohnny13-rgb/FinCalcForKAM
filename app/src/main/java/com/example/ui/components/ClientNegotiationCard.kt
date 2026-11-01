@@ -221,7 +221,7 @@ fun ClientNegotiationCard(
             ) {
                 // Pillar 1: Условия (Payment terms, days)
                 ClientPillarCard(
-                    title = tr("УСЛОВИЯ (TERMS)", "УСЛОВИЯ"),
+                    title = tr("TERMS", "УСЛОВИЯ"),
                     headline = "${client.agreedPaymentTermsDays} ${tr("days", "дн.")}",
                     detail = "${tr("Credit Limit", "Лимит")}: $sym ${"%.0f".format(client.creditLimit / 1000)}k",
                     icon = Icons.Default.CalendarMonth,
@@ -231,7 +231,7 @@ fun ClientNegotiationCard(
 
                 // Pillar 2: Бонусы (Off-invoice bonuses, retro)
                 ClientPillarCard(
-                    title = tr("БОНУСЫ (REBATES)", "БОНУСЫ"),
+                    title = tr("REBATES", "БОНУСЫ"),
                     headline = "${"%.1f".format(client.standardOffInvoiceBonusPct)}%",
                     detail = "+${"%.1f".format(client.annualVolumeRebatePct)}% ${tr("volume bonus", "годовой бонус")}",
                     icon = Icons.Default.Stars,
@@ -246,7 +246,7 @@ fun ClientNegotiationCard(
             ) {
                 // Pillar 3: Скидки (Discounts)
                 ClientPillarCard(
-                    title = tr("СКИДКИ (DISCOUNTS)", "СКИДКИ"),
+                    title = tr("DISCOUNTS", "СКИДКИ"),
                     headline = "${"%.1f".format(client.standardOnInvoiceDiscountPct)}%",
                     detail = "${tr("Max allowed", "Макс. порог")}: ${"%.1f".format(client.maxAllowedDiscountPct)}%",
                     icon = Icons.Default.Percent,
@@ -257,7 +257,7 @@ fun ClientNegotiationCard(
                 // Pillar 4: Предыдущие сделки (Past Deals Count & Total)
                 val totalPastVolume = client.pastDeals.sumOf { it.dealValue }
                 ClientPillarCard(
-                    title = tr("ПРЕДЫДУЩИЕ СДЕЛКИ", "ИСТОРИЯ СДЕЛОК"),
+                    title = tr("PAST DEALS", "ИСТОРИЯ СДЕЛОК"),
                     headline = "${client.pastDeals.size} ${tr("deals", "сделок")}",
                     detail = "$sym ${viewModel.formatCurrency(totalPastVolume)}",
                     icon = Icons.Default.PriceCheck,

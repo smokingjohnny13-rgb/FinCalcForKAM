@@ -220,10 +220,12 @@ class BigDealViewModel(
 
     fun toggleLanguage() {
         appLanguage.value = appLanguage.value.toggle()
+        recalculateDealScoring()
     }
 
     fun setLanguage(lang: com.example.ui.i18n.AppLanguage) {
         appLanguage.value = lang
+        recalculateDealScoring()
     }
 
     // Scientific & Ergonomic Theme Mode (Dark Obsidian vs Light Nordic Slate)
@@ -1438,7 +1440,8 @@ class BigDealViewModel(
             onInvoiceDiscountPct = 5.0,
             offInvoiceBonusPct = 8.0,
             paymentTermsDays = 30,
-            financingAnnualRatePct = 18.0
+            financingAnnualRatePct = 18.0,
+            languageRu = false
         )
     )
     val dealScoringResult: StateFlow<DealScoringResult> = _dealScoringResult.asStateFlow()

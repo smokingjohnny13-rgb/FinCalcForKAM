@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.LtvCalculator
@@ -379,18 +381,33 @@ fun RoiPnlModeler(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = tr("12-MONTH CUMULATIVE CASHFLOW TIMELINE", "ГРАФИК НАКОПЛЕННОГО ДЕНЕЖНОГО ПОТОКА"),
+                            text = tr("12-MONTH CUMULATIVE CASHFLOW", "ГРАФИК ДЕНЕЖНОГО ПОТОКА (12М)"),
                             style = MaterialTheme.typography.labelSmall,
+                            fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         if (forecast.paybackMonth > 0.0) {
-                            Text(
-                                text = "${tr("Payback @ Month", "Окупаемость на месяце")} ${forecast.paybackMonth} 🎯",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = EmeraldPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Surface(
+                                color = EmeraldPrimary.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldPrimary.copy(alpha = 0.4f)),
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Text(
+                                    text = "${tr("Payback", "Окупаемость")}: M${forecast.paybackMonth} 🎯",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 11.sp,
+                                    color = EmeraldPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                )
+                            }
                         }
                     }
 
