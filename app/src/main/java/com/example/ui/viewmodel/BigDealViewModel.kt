@@ -54,6 +54,14 @@ import com.example.domain.calculator.TradeOffArbitrageResult
 import com.example.domain.calculator.BasketSkuItem
 import com.example.domain.calculator.BlendedBasketResult
 import com.example.domain.calculator.RebateTierSimulationResult
+import com.example.data.model.ClientNegotiationProfile
+import com.example.data.model.DealApprovalStatus
+import com.example.data.model.DealScoringLevel
+import com.example.data.model.DealScoringResult
+import com.example.data.model.NegotiationTouchpoint
+import com.example.data.repository.ClientNegotiationRepository
+import com.example.domain.calculator.DealScoringEngine
+import kotlinx.coroutines.flow.combine
 import com.example.service.PdfExportService
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -1401,6 +1409,137 @@ class BigDealViewModel(
 
     fun runLocalAudit() {
         runExpressAudit(forceLocal = true)
+    }
+
+    // 14. Deal Approval, Deal Scoring (Traffic Light) & Client Negotiation History
+    private val clientRepository = ClientNegotiationRepository()
+    val clientsList: StateFlow<List<ClientNegotiationProfile>> = clientRepository.clients
+
+    val selectedClientId = MutableStateFlow<String?>("client-omnitech-01")
+    val selectedClient: StateFlow<ClientNegotiationProfile?> = combine(clientsList, selectedClientId) { list, id ->
+        list.firstOrNull { it.id == id } ?: list.firstOrNull()
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    // Deal Approval Inputs
+    val dealApprovalSellingPrice = MutableStateFlow("100.0")
+    val dealApprovalCostPrice = MutableStateFlow("55.0")
+    val dealApprovalVolumeUnits = MutableStateFlow("1500")
+    val dealApprovalDiscountPct = MutableStateFlow("5.0")
+    val dealApprovalBonusPct = MutableStateFlow("8.0")
+    val dealApprovalPaymentDays = MutableStateFlow("30")
+    val dealApprovalFinancingRate = MutableStateFlow("18.0")
+    val dealApprovalStatus = MutableStateFlow(DealApprovalStatus.DRAFT)
+
+    private val _dealScoringResult = MutableStateFlow(
+        DealScoringEngine.calculate(
+            sellingPrice = 100.0,
+            costPrice = 55.0,
+            volumeUnits = 1500,
+            onInvoiceDiscountPct = 5.0,
+            offInvoiceBonusPct = 8.0,
+            paymentTermsDays = 30,
+            financingAnnualRatePct = 18.0
+        )
+    )
+    val dealScoringResult: StateFlow<DealScoringResult> = _dealScoringResult.asStateFlow()
+
+    fun recalculateDealScoring() {
+        val sp = dealApprovalSellingPrice.value.toDoubleOrNull() ?: 100.0
+        val cp = dealApprovalCostPrice.value.toDoubleOrNull() ?: 55.0
+        val vol = dealApprovalVolumeUnits.value.toIntOrNull() ?: 1000
+        val disc = dealApprovalDiscountPct.value.toDoubleOrNull() ?: 0.0
+        val bonus = dealApprovalBonusPct.value.toDoubleOrNull() ?: 0.0
+        val days = dealApprovalPaymentDays.value.toIntOrNull() ?: 30
+        val rate = dealApprovalFinancingRate.value.toDoubleOrNull() ?: 18.0
+        val isRu = appLanguage.value == com.example.ui.i18n.AppLanguage.RU
+
+        _dealScoringResult.value = DealScoringEngine.calculate(
+            sellingPrice = sp,
+            costPrice = cp,
+            volumeUnits = vol,
+            onInvoiceDiscountPct = disc,
+            offInvoiceBonusPct = bonus,
+            paymentTermsDays = days,
+            financingAnnualRatePct = rate,
+            languageRu = isRu
+        )
+    }
+
+    fun submitDealForApproval() {
+        dealApprovalStatus.value = DealApprovalStatus.PENDING_APPROVAL
+        viewModelScope.launch {
+            _userMessage.emit(str("Deal submitted for approval (Pending)", "Сделка отправлена на согласование", appLanguage.value))
+        }
+    }
+
+    fun approveDeal() {
+        dealApprovalStatus.value = DealApprovalStatus.APPROVED
+        val currentScoring = _dealScoringResult.value
+        val client = selectedClient.value
+        val newDeal = SavedDeal(
+            title = dealTitle.value,
+            clientName = client?.name ?: clientName.value,
+            currencyCode = activeCurrency.value.code,
+            dealValue = currentScoring.totalRevenue,
+            interestRatePct = currentScoring.costOfDeferralPct,
+            tenureMonths = (currentScoring.paymentTermsDays / 30).coerceAtLeast(1),
+            marginPct = currentScoring.netNetMarginPct,
+            markupPct = if (currentScoring.costPrice > 0) ((currentScoring.netNetPrice - currentScoring.costPrice) / currentScoring.costPrice) * 100.0 else 0.0,
+            roiPct = currentScoring.netNetMarginPct * 2.2,
+            paybackMonths = (currentScoring.paymentTermsDays.toDouble() / 30.0)
+        )
+        viewModelScope.launch {
+            dealRepository.saveDeal(newDeal)
+            client?.let {
+                clientRepository.attachPastDealToClient(it.id, newDeal)
+            }
+            _userMessage.emit(str("Deal approved and saved to client portfolio!", "Сделка утверждена и добавлена в портфель клиента!", appLanguage.value))
+        }
+    }
+
+    fun rejectDeal(reason: String = "") {
+        dealApprovalStatus.value = DealApprovalStatus.REJECTED
+        viewModelScope.launch {
+            _userMessage.emit(str("Deal rejected: $reason", "Сделка отклонена: $reason", appLanguage.value))
+        }
+    }
+
+    fun selectClient(clientId: String) {
+        selectedClientId.value = clientId
+        val client = clientsList.value.firstOrNull { it.id == clientId }
+        if (client != null) {
+            clientName.value = client.name
+            dealApprovalPaymentDays.value = client.agreedPaymentTermsDays.toString()
+            dealApprovalDiscountPct.value = client.standardOnInvoiceDiscountPct.toString()
+            dealApprovalBonusPct.value = client.standardOffInvoiceBonusPct.toString()
+            recalculateDealScoring()
+        }
+    }
+
+    fun addNegotiationRound(
+        clientId: String,
+        buyerDemands: String,
+        kamCounter: String,
+        discountPct: Double,
+        bonusPct: Double,
+        termsDays: Int,
+        outcome: String
+    ) {
+        val client = clientsList.value.firstOrNull { it.id == clientId } ?: return
+        val nextRound = client.negotiationHistory.size + 1
+        val touchpoint = NegotiationTouchpoint(
+            roundNumber = nextRound,
+            discountDemandedPct = discountPct,
+            bonusDemandedPct = bonusPct,
+            paymentTermsDemandedDays = termsDays,
+            buyerDemands = buyerDemands,
+            kamCounterOffer = kamCounter,
+            outcomeStatus = outcome
+        )
+        clientRepository.addNegotiationTouchpoint(clientId, touchpoint)
+        viewModelScope.launch {
+            _userMessage.emit(str("Round $nextRound logged to client history!", "Раунд $nextRound зафиксирован в истории переговоров!", appLanguage.value))
+        }
     }
 }
 

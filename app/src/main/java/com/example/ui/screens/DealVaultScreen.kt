@@ -58,6 +58,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableIntStateOf
+import com.example.ui.components.ClientNegotiationCard
+import com.example.ui.components.DealApprovalScoringCard
 import com.example.data.model.PaymentFrequency
 import com.example.data.model.SavedDeal
 import com.example.ui.i18n.tr
@@ -92,6 +99,7 @@ fun DealVaultScreen(
     var showSaveDialog by remember { mutableStateOf(false) }
     var saveTitleInput by remember { mutableStateOf(currentTitle) }
     var saveClientInput by remember { mutableStateOf(currentClient) }
+    var vaultSubTab by remember { mutableIntStateOf(0) } // 0: Deal Approval & Scoring, 1: Client History, 2: Vault & PDF
 
     val dateFmt = remember { SimpleDateFormat("MMM dd, yyyy", Locale.US) }
 
@@ -104,25 +112,72 @@ fun DealVaultScreen(
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
+            val headerTitle = when (vaultSubTab) {
+                0 -> tr("DEAL APPROVAL & SCORING", "СОГЛАСОВАНИЕ И СКОРИНГ СДЕЛКИ")
+                1 -> tr("CLIENT NEGOTIATION HISTORY", "ИСТОРИЯ ПЕРЕГОВОРОВ ПО КЛИЕНТАМ")
+                else -> tr("DEAL VAULT & CLOUD SYNC", "ХРАНИЛИЩЕ СДЕЛОК И ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ")
+            }
+            val headerDesc = when (vaultSubTab) {
+                0 -> tr("Automated Net-Net, margin, cost of deferral, and traffic light risk scoring.", "Автоматический расчет Net-Net, маржи, стоимости отсрочки и светофор рисков.")
+                1 -> tr("Agreed terms, rebates, discounts, previous deals, and negotiation rounds.", "Согласованные условия, бонусы, скидки, предыдущие сделки и раунды переговоров.")
+                else -> tr("Sync contract models across devices and export professional boardroom-ready PDF proposals.", "Синхронизация моделей контрактов между устройствами и экспорт презентабельных PDF-предложений.")
+            }
+
             Text(
-                text = tr("DEAL VAULT & CLOUD SYNC", "ХРАНИЛИЩЕ СДЕЛОК И ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ"),
+                text = headerTitle,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = tr(
-                    "Sync contract models across devices and export professional boardroom-ready PDF proposals.",
-                    "Синхронизация моделей контрактов между устройствами и экспорт презентабельных PDF-предложений."
-                ),
+                text = headerDesc,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Sub-tab Navigation Switcher
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                VaultSubTabButton(
+                    selected = vaultSubTab == 0,
+                    label = tr("Approval & Scoring", "Согласование и Скоринг"),
+                    icon = Icons.Default.Gavel,
+                    onClick = { vaultSubTab = 0 },
+                    modifier = Modifier.weight(1.1f)
+                )
+                VaultSubTabButton(
+                    selected = vaultSubTab == 1,
+                    label = tr("Client History", "История клиентов"),
+                    icon = Icons.Default.Business,
+                    onClick = { vaultSubTab = 1 },
+                    modifier = Modifier.weight(1f)
+                )
+                VaultSubTabButton(
+                    selected = vaultSubTab == 2,
+                    label = tr("Vault & PDF", "Хранилище"),
+                    icon = Icons.Default.PictureAsPdf,
+                    onClick = { vaultSubTab = 2 },
+                    modifier = Modifier.weight(0.85f)
+                )
+            }
         }
 
-        // 1. Cloud Sync & Multi-Device Collaboration Card
-        item {
+        if (vaultSubTab == 0) {
+            item {
+                DealApprovalScoringCard(viewModel = viewModel)
+            }
+        } else if (vaultSubTab == 1) {
+            item {
+                ClientNegotiationCard(viewModel = viewModel)
+            }
+        } else {
+            // 1. Cloud Sync & Multi-Device Collaboration Card
+            item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -547,6 +602,7 @@ fun DealVaultScreen(
         item {
             Spacer(modifier = Modifier.height(24.dp))
         }
+        }
     }
 
     // Save Model Dialog
@@ -591,5 +647,47 @@ fun DealVaultScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun VaultSubTabButton(
+    selected: Boolean,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = if (selected) MaterialTheme.colorScheme.primary else ExecutiveCard,
+        shape = RoundedCornerShape(10.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary else ExecutiveBorder
+        ),
+        modifier = modifier.clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (selected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(15.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                color = if (selected) Color.Black else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                softWrap = false
+            )
+        }
     }
 }
