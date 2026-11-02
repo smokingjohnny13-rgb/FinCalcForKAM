@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Functions
@@ -42,6 +43,8 @@ import com.example.ui.components.FinancialFormulaDialog
 import com.example.util.configureAppCheck
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -159,6 +162,7 @@ fun BigDealAppRoot(
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showAiAuditDialog by remember { mutableStateOf(false) }
     var showFormulaGlossary by remember { mutableStateOf(false) }
+    var showPdfExportMenu by remember { mutableStateOf(false) }
 
     val activeCurrency by viewModel.activeCurrency.collectAsState()
     val tabs = NavigationTab.values()
@@ -395,16 +399,86 @@ fun BigDealAppRoot(
 
                             Spacer(modifier = Modifier.width(2.dp))
 
-                            // Quick PDF Export icon
-                            IconButton(
-                                onClick = { viewModel.exportPdf(context) },
-                                modifier = Modifier.testTag("action_export_pdf")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PictureAsPdf,
-                                    contentDescription = tr("Export PDF Proposal", "Экспорт КП в PDF"),
-                                    tint = EmeraldPrimary
-                                )
+                            // Quick PDF Export menu (Executive Proposal vs LinkedIn Flyer)
+                            Box {
+                                IconButton(
+                                    onClick = { showPdfExportMenu = true },
+                                    modifier = Modifier.testTag("action_export_pdf")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PictureAsPdf,
+                                        contentDescription = tr("Export PDF Documents", "Экспорт документов в PDF"),
+                                        tint = EmeraldPrimary
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showPdfExportMenu,
+                                    onDismissRequest = { showPdfExportMenu = false },
+                                    modifier = Modifier.background(ExecutiveSurface)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PictureAsPdf,
+                                                    contentDescription = null,
+                                                    tint = EmeraldPrimary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Column {
+                                                    Text(
+                                                        text = tr("Executive Proposal (PDF)", "Коммерческое предложение (PDF)"),
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    Text(
+                                                        text = tr("Deal financial model & metrics", "Финансовая модель текущей сделки"),
+                                                        fontSize = 10.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            showPdfExportMenu = false
+                                            viewModel.exportPdf(context)
+                                        }
+                                    )
+
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Campaign,
+                                                    contentDescription = null,
+                                                    tint = ElectricCyan,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Column {
+                                                    Text(
+                                                        text = tr("LinkedIn Product Flyer (PDF)", "Рекламная листовка LinkedIn (PDF)"),
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    Text(
+                                                        text = tr("Killer features & 6 modules overview", "Обзор 6 модулей и киллер-фичи"),
+                                                        fontSize = 10.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            showPdfExportMenu = false
+                                            viewModel.exportProductFlyerPdf(context)
+                                        }
+                                    )
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(

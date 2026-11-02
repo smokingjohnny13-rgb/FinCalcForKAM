@@ -838,6 +838,17 @@ class BigDealViewModel(
         }
     }
 
+    fun exportProductFlyerPdf(context: Context) {
+        viewModelScope.launch {
+            val result = PdfExportService.generateAndShareProductFlyerPdf(context)
+            result.onSuccess {
+                _userMessage.emit(str("LinkedIn Executive Product Flyer generated successfully!", "Рекламная листовка для LinkedIn успешно создана!", appLanguage.value))
+            }.onFailure { e ->
+                _userMessage.emit(str("Error generating flyer: ${e.localizedMessage}", "Ошибка создания листовки: ${e.localizedMessage}", appLanguage.value))
+            }
+        }
+    }
+
     // --- Google Sign-In via Credential Manager ---
     fun signInWithGoogle(activityContext: Context) {
         viewModelScope.launch {

@@ -51,16 +51,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.mutableIntStateOf
 import com.example.ui.components.ClientNegotiationCard
@@ -402,6 +406,104 @@ fun DealVaultScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(tr("Save Model", "Сохранить"), fontSize = 12.sp)
                         }
+                    }
+                }
+            }
+        }
+
+        // 2b. LinkedIn Executive Product Flyer (Marketing & Outreach One-Pager)
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF0F172A),
+                                Color(0xFF1E293B)
+                            )
+                        )
+                    )
+                    .border(1.5.dp, ElectricCyan.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                    .padding(16.dp)
+                    .testTag("linkedin_flyer_card")
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Campaign,
+                                contentDescription = null,
+                                tint = ElectricCyan,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = tr("LINKEDIN PRODUCT FLYER", "РЕКЛАМНАЯ ЛИСТОВКА LINKEDIN"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ElectricCyan,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(ElectricCyan.copy(alpha = 0.15f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = tr("ONE-PAGER PDF", "ПДФ ЛИСТОВКА"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ElectricCyan,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = tr("BigDeal Executive Workstation — Killer Features", "BigDeal: Обзор ключевых модулей и киллер-фич"),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = tr(
+                                "English A4 executive overview detailing 6 modules, CFO ROI metrics, and killer features for outreach on LinkedIn to CFOs, Commercial Directors, and Enterprise KAMs.",
+                                "Презентабельная листовка на английском с описанием 6 модулей, финансовой выгоды и киллер-фич для рассылки финдиректорам и коммерческим лидерам в LinkedIn."
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFCBD5E1)
+                        )
+                    }
+
+                    Button(
+                        onClick = { viewModel.exportProductFlyerPdf(context) },
+                        colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_export_linkedin_flyer")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = tr("Export & Share LinkedIn Flyer (PDF)", "Экспорт листовки для LinkedIn (PDF)"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
                     }
                 }
             }
