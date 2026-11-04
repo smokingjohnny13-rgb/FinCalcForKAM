@@ -47,6 +47,9 @@ import com.example.domain.calculator.KamScenario
 import com.example.domain.calculator.KamCorridorResult
 import com.example.domain.calculator.RetailSlaPenaltyResult
 import com.example.domain.calculator.KamOnePagerSummary
+import com.example.domain.calculator.GiveGetEngine
+import com.example.domain.calculator.GiveConcessionType
+import com.example.domain.calculator.GiveGetResult
 import com.example.data.ai.AiDealRiskAuditor
 import com.example.ui.components.AiAuditUiState
 import com.example.domain.calculator.CommercialAnalystEngine
@@ -430,6 +433,24 @@ class BigDealViewModel(
     )
     val kamOnePagerSummary: StateFlow<KamOnePagerSummary> = _kamOnePagerSummary.asStateFlow()
     val showKamOnePagerDialog = MutableStateFlow(false)
+
+    // 13b. Give-Get Concession Balancing Engine
+    val giveConcessionType = MutableStateFlow(GiveConcessionType.PAYMENT_DEFERRAL)
+    val giveConcessionValue = MutableStateFlow("30")
+    private val _giveGetResult = MutableStateFlow(
+        GiveGetEngine.calculate(
+            sellingPrice = 100.0,
+            cogs = 60.0,
+            baseVolume = 1000,
+            currentDiscountPct = 5.0,
+            currentBonusPct = 5.0,
+            currentPaymentDays = 30,
+            waccRatePct = 18.0,
+            concessionType = GiveConcessionType.PAYMENT_DEFERRAL,
+            concessionValue = 30.0
+        )
+    )
+    val giveGetResult: StateFlow<GiveGetResult> = _giveGetResult.asStateFlow()
 
     // 14. Commercial Analyst: Trade-Off, Basket, Rebate Tiers
     val tradeOffDealAmount = MutableStateFlow("100000")
@@ -1241,6 +1262,7 @@ class BigDealViewModel(
             activeType = kamActiveScenarioType.value
         )
         updateKamOnePager()
+        updateGiveGetCalculation()
     }
 
     fun selectKamScenario(type: KamScenarioType) {
@@ -1297,6 +1319,48 @@ class BigDealViewModel(
         if (show) {
             updateKamOnePager()
         }
+    }
+
+    // --- Give-Get Concession Balancing Engine ---
+    fun setGiveConcessionType(type: GiveConcessionType) {
+        giveConcessionType.value = type
+        when (type) {
+            GiveConcessionType.PAYMENT_DEFERRAL -> giveConcessionValue.value = "30"
+            GiveConcessionType.PRICE_DISCOUNT -> giveConcessionValue.value = "3"
+            GiveConcessionType.RETRO_BONUS -> giveConcessionValue.value = "2"
+            GiveConcessionType.FREIGHT_DELIVERY -> giveConcessionValue.value = "3.5"
+            GiveConcessionType.LISTING_FEE -> giveConcessionValue.value = "3000"
+        }
+        updateGiveGetCalculation()
+    }
+
+    fun setGiveConcessionValue(value: String) {
+        giveConcessionValue.value = value
+        updateGiveGetCalculation()
+    }
+
+    fun updateGiveGetCalculation() {
+        val scenario = _kamCorridorResult.value.activeScenario
+        val price = scenario.shelfPrice
+        val cogs = scenario.cogs
+        val disc = scenario.frontDiscountPct
+        val bonus = scenario.backBonusPct
+        val days = scenario.paymentDays
+        val wacc = hurdleCorporateRate.value.toDoubleOrNull() ?: 18.0
+        val vol = dealApprovalVolumeUnits.value.toIntOrNull() ?: 1000
+        val concessionVal = giveConcessionValue.value.toDoubleOrNull() ?: 30.0
+
+        _giveGetResult.value = GiveGetEngine.calculate(
+            sellingPrice = price,
+            cogs = cogs,
+            baseVolume = vol,
+            currentDiscountPct = disc,
+            currentBonusPct = bonus,
+            currentPaymentDays = days,
+            waccRatePct = wacc,
+            concessionType = giveConcessionType.value,
+            concessionValue = concessionVal
+        )
     }
 
     // --- Commercial Analyst: Trade-Off, Basket, Rebates ---

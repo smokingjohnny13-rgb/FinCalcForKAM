@@ -270,6 +270,10 @@ object KamNegotiationEngine {
             Pair(
                 "SLA & Fill-Rate: 12% underdelivery penalties are budgeted up to 95% fill-rate, requiring strict pallet quantum adherence.",
                 "Штрафы SLA: Штрафы 12% заложены с буфером до 95% Fill-Rate, но требуют соблюдения квантов поставок со стороны РЦ."
+            ),
+            Pair(
+                "Give-Get Rule: Any concession (+days or extra discount) requires compensatory volume lift (+5–15%) or retro-bonus clawback to protect EBITDA.",
+                "Правило Give-Get: Любая уступка (отсрочка или доп. скидка) требует встречного объема (+5–15%) или сокращения ретро-бонусов для защиты EBITDA."
             )
         )
 

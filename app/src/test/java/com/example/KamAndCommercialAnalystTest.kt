@@ -92,4 +92,61 @@ class KamAndCommercialAnalystTest {
         assertEquals(4.0, tier2.appliedRebatePct, 0.01)
         assertEquals(4800.0, tier2.rebateAmount, 0.01)
     }
+
+    @Test
+    fun testGiveGetPaymentDeferralConcession() {
+        // Concession: Buyer asks for +30 days payment deferral
+        val result = com.example.domain.calculator.GiveGetEngine.calculate(
+            sellingPrice = 100.0,
+            cogs = 60.0,
+            baseVolume = 1000,
+            currentDiscountPct = 5.0,
+            currentBonusPct = 5.0,
+            currentPaymentDays = 30,
+            waccRatePct = 18.0,
+            concessionType = com.example.domain.calculator.GiveConcessionType.PAYMENT_DEFERRAL,
+            concessionValue = 30.0
+        )
+
+        assertEquals(1000, result.baseVolume)
+        assertTrue(result.concessionFinancialCost > 1300.0)
+        assertTrue(result.marginErosionPp > 1.0)
+        assertTrue(result.requiredVolumeLiftUnits in 40..55)
+        assertTrue(result.requiredVolumeLiftPct in 4.0..5.5)
+        assertEquals(1000 + result.requiredVolumeLiftUnits, result.newTargetVolumeUnits)
+
+        // 4 Counter-trades generated
+        assertEquals(4, result.counterTrades.size)
+        val primaryTrade = result.counterTrades.first { it.isPrimary }
+        assertEquals("volume_lift", primaryTrade.id)
+
+        // Negotiation scripts
+        assertTrue(result.negotiationScriptEn.contains("volume commitment"))
+        assertTrue(result.negotiationScriptRu.contains("объёма закупки"))
+    }
+
+    @Test
+    fun testGiveGetDiscountAndListingFeeConcessions() {
+        // Concession 1: Extra 3% discount
+        val discResult = com.example.domain.calculator.GiveGetEngine.calculate(
+            sellingPrice = 100.0,
+            cogs = 60.0,
+            baseVolume = 1000,
+            concessionType = com.example.domain.calculator.GiveConcessionType.PRICE_DISCOUNT,
+            concessionValue = 3.0
+        )
+        assertTrue(discResult.concessionFinancialCost > 2000.0)
+        assertTrue(discResult.requiredVolumeLiftPct > 8.0)
+
+        // Concession 2: Listing Fee $5,000 lump sum
+        val feeResult = com.example.domain.calculator.GiveGetEngine.calculate(
+            sellingPrice = 100.0,
+            cogs = 60.0,
+            baseVolume = 1000,
+            concessionType = com.example.domain.calculator.GiveConcessionType.LISTING_FEE,
+            concessionValue = 5000.0
+        )
+        assertEquals(5000.0, feeResult.concessionFinancialCost, 0.01)
+        assertTrue(feeResult.requiredVolumeLiftUnits > 150)
+    }
 }

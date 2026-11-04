@@ -477,8 +477,8 @@ private fun AuditSuccessView(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = tr(
-                                "Calculated via BigDeal offline financial rule engine (deterministic, works without network).",
-                                "Рассчитано локальным финансовым движком BigDeal (детерминированно, работает без интернета)."
+                                "Calculated via NotaBigDeal offline financial rule engine (deterministic, works without network).",
+                                "Рассчитано локальным финансовым движком NotaBigDeal (детерминированно, работает без интернета)."
                             ),
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 12.sp,

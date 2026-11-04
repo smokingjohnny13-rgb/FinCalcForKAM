@@ -234,9 +234,9 @@ fun BigDealAppRoot(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "BD",
+                                        text = "NBD",
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 15.sp,
+                                        fontSize = 11.sp,
                                         color = Color.Black
                                     )
                                 }
@@ -244,7 +244,7 @@ fun BigDealAppRoot(
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = "BigDeal",
+                                            text = "NotaBigDeal",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface

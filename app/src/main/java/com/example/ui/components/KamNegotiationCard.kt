@@ -649,5 +649,11 @@ fun KamNegotiationCard(
                 }
             }
         }
+
+        // --- 3. GIVE-GET CONCESSION BALANCING ENGINE ---
+        GiveGetBalancingCard(
+            viewModel = viewModel,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

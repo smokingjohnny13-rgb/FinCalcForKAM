@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "BigDeal"
+rootProject.name = "NotaBigDeal"
 
 include(":app")

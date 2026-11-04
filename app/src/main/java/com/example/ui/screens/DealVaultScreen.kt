@@ -468,7 +468,7 @@ fun DealVaultScreen(
 
                     Column {
                         Text(
-                            text = tr("BigDeal Executive Workstation — Killer Features", "BigDeal: Обзор ключевых модулей и киллер-фич"),
+                            text = tr("NotaBigDeal Executive Workstation — Killer Features", "NotaBigDeal: Обзор ключевых модулей и киллер-фич"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

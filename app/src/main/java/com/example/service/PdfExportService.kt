@@ -73,7 +73,7 @@ object PdfExportService {
             if (!reportsDir.exists()) reportsDir.mkdirs()
 
             val sanitizedTitle = deal.title.replace("[^a-zA-Z0-9]".toRegex(), "_")
-            val pdfFile = File(reportsDir, "BigDeal_${sanitizedTitle}_${System.currentTimeMillis()}.pdf")
+            val pdfFile = File(reportsDir, "NotaBigDeal_${sanitizedTitle}_${System.currentTimeMillis()}.pdf")
             val outputStream = FileOutputStream(pdfFile)
             pdfDocument.writeTo(outputStream)
             outputStream.flush()
@@ -89,7 +89,7 @@ object PdfExportService {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, contentUri)
-                putExtra(Intent.EXTRA_SUBJECT, "BigDeal Executive Proposal: ${deal.title}")
+                putExtra(Intent.EXTRA_SUBJECT, "NotaBigDeal Executive Proposal: ${deal.title}")
                 putExtra(Intent.EXTRA_TEXT, "Attached is the comprehensive financial deal model and projection report for ${deal.clientName}.")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
@@ -127,7 +127,7 @@ object PdfExportService {
             val reportsDir = File(context.cacheDir, "reports")
             if (!reportsDir.exists()) reportsDir.mkdirs()
 
-            val pdfFile = File(reportsDir, "BigDeal_Executive_Flyer_${System.currentTimeMillis()}.pdf")
+            val pdfFile = File(reportsDir, "NotaBigDeal_Executive_Flyer_${System.currentTimeMillis()}.pdf")
             val outputStream = FileOutputStream(pdfFile)
             pdfDocument.writeTo(outputStream)
             outputStream.flush()
@@ -145,11 +145,11 @@ object PdfExportService {
                 putExtra(Intent.EXTRA_STREAM, contentUri)
                 putExtra(
                     Intent.EXTRA_SUBJECT,
-                    "BigDeal Executive Workstation — Killer Features & B2B Deal Economics (Connect: www.linkedin.com/in/snitkor)"
+                    "NotaBigDeal Executive Workstation — Killer Features & B2B Deal Economics (Connect: www.linkedin.com/in/snitkor)"
                 )
                 putExtra(
                     Intent.EXTRA_TEXT,
-                    "Here is the BigDeal Executive Workstation product overview with Price Waterfall & Analytics UI. Connect on LinkedIn: www.linkedin.com/in/snitkor"
+                    "Here is the NotaBigDeal Executive Workstation product overview with Price Waterfall & Analytics UI. Connect on LinkedIn: www.linkedin.com/in/snitkor"
                 )
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
@@ -183,7 +183,7 @@ object PdfExportService {
         paint.color = Color.WHITE
         paint.textSize = 20f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("BigDeal", 30f, 42f, paint)
+        canvas.drawText("NotaBigDeal", 30f, 42f, paint)
 
         paint.textSize = 10f
         paint.color = Color.rgb(52, 211, 153) // Emerald Light
@@ -367,7 +367,7 @@ object PdfExportService {
         // Footer disclaimer
         paint.textSize = 7f
         paint.color = Color.rgb(148, 163, 184)
-        canvas.drawText("Generated via BigDeal Enterprise Suite. Projections are estimates based on input models.", 30f, 810f, paint)
+        canvas.drawText("Generated via NotaBigDeal Enterprise Suite. Projections are estimates based on input models.", 30f, 810f, paint)
     }
 
     private fun drawProductFlyerContent(
@@ -398,9 +398,9 @@ object PdfExportService {
 
         // Header Titles
         paint.color = Color.WHITE
-        paint.textSize = 16f
+        paint.textSize = 15f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("BIGDEAL EXECUTIVE WORKSTATION", 72f, 32f, paint)
+        canvas.drawText("NOTABIGDEAL EXECUTIVE WORKSTATION", 72f, 32f, paint)
 
         paint.textSize = 8.5f
         paint.color = Color.rgb(52, 211, 153) // Emerald Light
@@ -859,6 +859,6 @@ object PdfExportService {
 
         paint.textSize = 6.8f
         paint.color = Color.rgb(148, 163, 184)
-        canvas.drawText("BigDeal Executive Workstation © 2026 • Contact: www.linkedin.com/in/snitkor • Confidential Executive Brief", 28f, 758f, paint)
+        canvas.drawText("NotaBigDeal Executive Workstation © 2026 • Contact: www.linkedin.com/in/snitkor • Confidential Executive Brief", 28f, 758f, paint)
     }
 }
