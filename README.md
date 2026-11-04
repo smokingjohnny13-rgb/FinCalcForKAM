@@ -1,167 +1,177 @@
-# NotaBigDeal — Мобильный калькулятор и помощник для коммерческих переговоров (Commercial Deal Intelligence Platform)
+# NotaBigDeal — B2B Pricing, Deal Desk & Commercial Negotiation Workstation
 
-> Финансовые расчеты, оценка рисков контракта и подготовка к переговорам с закупщиками прямо со смартфона. Без ноутбука и тяжелых таблиц Excel.
+[![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-green.svg)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](https://kotlinlang.org)
+[![UI](https://img.shields.io/badge/UI-Jetpack%20Compose%20M3-4285F4.svg)](https://developer.android.com/jetpack/compose)
+[![Tests](https://img.shields.io/badge/Tests-42%20Passed%20(100%25)-brightgreen.svg)]()
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-orange.svg)]()
+[![AI Engine](https://img.shields.io/badge/AI-Gemini%203.8%20Flash%20%2B%20Offline-blueviolet.svg)]()
 
----
+[🇬🇧 English](README.md) | [🇷🇺 Читать на русском](README_RU.md)
 
-## Зачем нужен NotaBigDeal
-
-В B2B-продажах и работе с торговыми сетями решение часто принимается прямо за столом переговоров. Когда закупщик просит дополнительную отсрочку на 30 дней, скидку 5% в накладной и ретро-бонус 8%, менеджеру нужно за секунды понять:
-- сколько реальной маржи останется после всех удержаний;
-- сколько денег заморозится в оборотном капитале;
-- на какой объем продаж нужно выйти по промо-акции, чтобы не сработать в убыток.
-
-**NotaBigDeal** переносит ключевую коммерческую математику в телефон: от расчета Net-Net цены до экспресс-аудита рисков перед входом в переговорную.
+> **Stop margin leakage at the negotiation table.** NotaBigDeal is an offline-first, executive-grade financial calculation engine and deal desk platform designed for Key Account Managers (KAMs), Commercial Directors, and CFOs. Structure Net-Net price waterfalls, eliminate uncompensated discounting with the "Give-Get" concession engine, evaluate trade credit deferrals, stress-test FX baskets, and export boardroom-ready PDF proposals directly from your Android device — without laptops or heavy spreadsheets.
 
 ---
 
-## Ключевые возможности
+## Visual Overview
 
-### 1. Водопад цен сети (Price Waterfall & Net-Net)
-Показывает полную цепочку от цены на полке до реального дохода поставщика:
-- Полочная цена (РРЦ) с НДС и без НДС;
-- Маржа ритейлера;
-- Скидка в накладной (фронт-скидка) и инвойс-цена;
-- Ретро-бонусы, маркетинговые выплаты и логистика до РЦ;
-- Итоговая чистая цена поставщика (Net-Net Price) и фактическая маржинальность сделки.
-
-### 2. Маржа и Наценка (Margin vs Markup)
-Помогает не путать наценку на себестоимость с маржой от выручки:
-- Мгновенный пересчет между маржой (%) и наценкой (%);
-- Расчет мультипликатора цены продажи;
-- Интерактивный ползунок и готовые ценовые пресеты для быстрого подбора условий.
-
-### 3. Стоимость отсрочки, пролонгация и кассовый разрыв (Payment Terms & Cash Gap)
-Показывает, сколько на самом деле стоит отсрочка платежа (30, 60, 90 или 120 дней):
-- Скрытая скидка, которую получает клиент за счет отсрочки;
-- Стоимость заморозки оборотного капитала и факторинга;
-- **Анализ пролонгации отсрочки**: расчет дополнительного финансового бремени при переносе срока (например, с 30 до 60 дней) и расчет эффективной ставки (APR) торгового кредита;
-- Оценка выгоды условия «скидка за раннюю оплату» (Cash Discount 2/10 net 30/60);
-- Расчет операционного и финансового цикла (Cash Conversion Cycle).
-
-### 4. Контрактное финансирование, амортизация и пролонгация (Amortization & Prolongation)
-Помогает структурировать графики рассрочек и коммерческого кредита под клиента или проект:
-- Выбор периодичности выплат: еженедельно (52/год), раз в 2 недели (26/год), ежемесячно (12/год), ежеквартально или ежегодно;
-- **Двухступенчатая ставка с грейс-периодом**:
-  - Платежи в льготный период: полный мораторий (0%) или выплата только субсидированных процентов;
-  - Платежи после льготы: равная аннуитетная амортизация оставшегося долга по стандартной рыночной ставке;
-- Быстрые шаблоны в 1 клик: «0% на 3 мес», «0% на 6 мес», «3% на 6 мес»;
-- **Анализ пролонгации кредита (Month-to-Month & Week-to-Week)**: точное математическое сопоставление кассового облегчения регулярного платежа (-47%) с дополнительной переплатой по процентам (+96%);
-- Построчный график амортизации со сведением баланса до копейки;
-- Моделирование мультивалютных кредитов (до 4-х валют) со стоимостью валютного хеджирования.
-
-### 5. Себестоимость импорта (Landed Cost FOB ➔ Склад)
-Экспресс-оценка стоимости товара с учетом доставки и таможни:
-- Перевод фабричной цены FOB в себестоимость на складе через отраслевые коэффициенты ($K$);
-- Профили стран-партнеров (Китай, Турция, ОАЭ, ЕС, Индия, ЕАЭС);
-- Реверсивный режим: расчет допустимой закупочной цены завода под целевой бюджет на складе.
-
-### 6. Промо-акции и порог безубыточности (Promo Break-Even)
-Отвечает на главный вопрос промо-кампаний: *«На сколько процентов должны вырасти штучные продажи при скидке $X\%$, чтобы валовая прибыль компании не уменьшилась?»*
-- Расчет необходимого прироста объема (Volume Lift %);
-- Моделирование сценариев эластичности спроса.
-
-### 7. Движок размена уступок (Give-Get Concession Balancing Engine)
-Защищает маржу компании от односторонних уступок закупщикам на переговорах:
-- **Моделирование требований клиента («The Give»)**:
-  - Дополнительная отсрочка платежа (+дней);
-  - Дополнительная скидка на цену (+%);
-  - Увеличение ретро-бонуса или премии (+%);
-  - Бесплатная доставка / логистика за счет поставщика;
-  - Плата за листинг / маркетинговый вход.
-- **Расчет финансового ущерба**: прямой убыток от уступки в деньгах и срез чистой маржи в п.п.
-- **4 точных встречных условия («The Gets»)** для сохранения плановой EBITDA:
-  1. **Прирост контрактного объема (Volume Lift)**: расчет минимального количества дополнительных штук (+X шт. / +Y%), валовая прибыль от которых полностью окупает уступку;
-  2. **Индексация базовой цены**: процент повышения прайс-листа при фиксированном объеме;
-  3. **Срез ретро-бонусов**: эквивалентное сокращение квартальной маркетинговой премии;
-  4. **Авансирование / ускорение оплаты**: требование 30% предоплаты для устранения кассового разрыва.
-- **Речевой модуль КАМа**: готовый скрипт для переговоров с копированием в буфер в 1 клик.
-
-### 8. Офлайн-справочник формул с подсказками (ⓘ)
-Все формулы встроены прямо в приложение и работают без доступа к сети:
-- Возле каждого ключевого поля ввода есть значок **ⓘ**;
-- Карточка открывает точную формулу, объяснение экономическим языком и практический совет для переговоров;
-- В верхней панели доступен полный алфавитный и тематический каталог формул (**∑**).
-
-### 9. Экспресс-аудит рисков сделки (Gemini 3.8 Flash + Офлайн-движок • 100% Бесплатно)
-Кнопка **«AI Риски»** в верхней панели: за один клик анализирует введенные условия контракта и формулирует **ровно 3 переговорных тезиса перед встречей с клиентом**:
-1. **Маржинальная ловушка**: где закупщик размывает базу или накладывает скрытые скидки;
-2. **Оборотный капитал**: насколько опасна запрашиваемая отсрочка при текущей стоимости денег;
-3. **Размен и контраргумент**: готовая позиция КАМа (на каких условиях можно согласиться, затребовав встречную уступку).
-
-- **100% Бесплатно**: использование модели `gemini-3.8-flash` через Firebase AI Logic не требует платных подписок или активации биллинга.
-- **Офлайн-резерв (0 мс)**: мгновенный локальный математический расчет без сети.
-
-### 10. Согласование сделки и Светофор рисков (Deal Approval & Deal Scoring)
-Автоматизирует процесс проверки параметров контракта перед его подписанием. КАМ задает базовые условия, а система мгновенно рассчитывает 4 ключевых коммерческих показателя:
-1. **Net-Net цена**: чистая выручка за вычетом он-инвойс скидок и офф-инвойс бонусов;
-2. **Маржинальность**: базовая валовая маржа (Gross Margin %), чистая маржа (Net-Net Margin %) и срез маржи в процентных пунктах (Margin Erosion);
-3. **Стоимость отсрочки**: реальные потери оборотного капитала при предоставлении рассрочки на $N$ дней под корпоративную ставку финансирования;
-4. **Риск сделки**: оценка запаса прочности и чистой прибыли после вычета всех финансовых издержек.
-
-**Визуальный Светофор (Deal Scoring):**
-- 🟢 **Прибыльная сделка**: здоровая Net-Net маржа выше порога рентабельности, контролируемая отсрочка. Допускается быстрое авто-утверждение КАМом.
-- 🟡 **Пограничная сделка**: маржинальный доход размыт бонусами или отсрочкой (>45 дней). Требуется обязательное согласование коммерческого директора и встречный размен.
-- 🔴 **Уничтожает маржу**: продажа на грани или ниже себестоимости, стоимость отсрочки полностью съедает прибыль. Блокировка согласования или эскалация генеральному директору.
-
-### 11. История переговоров по клиентам (Client Negotiation History)
-Единый коммерческий профиль контрагента для ведения долгосрочных отношений:
-- **Условия**: зафиксированные платежные условия (отсрочка в днях, кредитный лимит, валюта расчетов);
-- **Бонусы**: согласованные офф-инвойс ретро-бонусы и годовой объемный бонус;
-- **Скидки**: стандартная скидка в накладной и максимальный разрешенный порог;
-- **Предыдущие сделки**: хронологический список завершенных контрактов с датами, суммами и итоговой маржинальностью;
-- **Хронология раундов переговоров**: лог каждого раунда с требованиями закупщика, контр-предложениями КАМа и статусом фиксации условий (In Negotiation / Terms Locked);
-- **Быстрый старт**: кнопка *«Применить условия клиента»* автоматически подставляет согласованные скидки, бонусы и отсрочку в калькулятор новой сделки.
-
-### 12. Экспорт коммерческих документов в PDF
-- **Коммерческое предложение (Executive Proposal)**: генерация аккуратного листа А4 с основными параметрами контракта, графиком платежей и сводкой P&L;
-- **Рекламная листовка для LinkedIn (Product Flyer One-Pager)**: презентабельная англоязычная одностраничная листовка с описанием 6 модулей, UI-скриншотами реального Price Waterfall и 12-месячного таймлайна денежного потока / ROIC для аутрича финдиректорам и коммерческим лидерам;
-- Отправка в мессенджеры или на почту прямо из приложения.
+<p align="center">
+  <img src="app/src/main/assets/screenshots/deal_approval.jpg" width="31%" alt="Deal Approval & Traffic Light Scoring" />
+  <img src="app/src/main/assets/screenshots/analytics_cashflow.jpg" width="31%" alt="Executive Analytics & Cashflow" />
+  <img src="app/src/main/assets/screenshots/cash_gap.jpg" width="31%" alt="Cash Gap & Working Capital Timeline" />
+</p>
 
 ---
 
-## Удобство и визуальный комфорт
+## Why NotaBigDeal?
 
-- **Две контрастные темы на выбор**:
-  - *Obsidian Dark* — глубокий темный интерфейс с мягкой подсветкой для работы при слабом освещении;
-  - *Nordic Light* — спокойный светло-серый фон без слепящей белизны, созданный для комфортного чтения цифр при дневном свете.
-- **Поддержка двух языков**: мгновенное переключение между русским и английским языком интерфейса.
-- **Мультивалютность**: расчеты в рублях, долларах, евро, тенге, юанях, дирхамах и других валютах.
+In B2B contract negotiations with enterprise buyers and retail chains, multi-million dollar decisions are made across the negotiation table. When a procurement officer demands:
+* an extra **+30 days payment deferral**;
+* an additional **5% on-invoice discount**; and
+* an **8% off-invoice retro-rebate**;
 
----
+sales executives typically have seconds to determine:
+1. **Real pocket Net-Net margin** after all layered concessions, rebates, and transport costs;
+2. **Working capital drain** and the real financial cost of carry under corporate WACC;
+3. **Breakeven volume lift** needed on promotions to prevent destroying company EBITDA.
 
-## Технический стек
-
-- **Язык**: Kotlin
-- **Интерфейс**: Jetpack Compose, Material Design 3
-- **Архитектура**: Clean Architecture + MVVM (StateFlow, Coroutines)
-- **Искусственный интеллект**: Firebase AI Logic (Google Gemini 3.8 Flash) с App Check
-- **База данных и облако**: Firebase Firestore, Room (локальный кэш), Firebase Auth
-- **Документы**: Android Native Graphics & PdfDocument
+**NotaBigDeal** brings Wall Street financial discipline to your pocket: from retail waterfall decomposition and "Give-Get" counter-trade mathematics to 0ms offline AI risk audits.
 
 ---
 
-## Быстрый старт
+## Core Features & Financial Engines
 
-### Требования
-- Android Studio Ladybug / Meerkat или новее
-- JDK 17+
-- Android SDK 24+
+### 1. Retail Price Waterfall & Net-Net Engine
+Deconstructs transactions from consumer shelf RSP down to supplier pocket margin:
+- Shelf RSP with VAT & Ex-VAT base;
+- Retailer markup & gross margin deduction;
+- On-invoice front discounts and wholesale invoice price;
+- Off-invoice retro-rebates, slotting fees, and warehouse logistics cost;
+- **Supplier Net-Net Price & True Contribution Margin %**.
 
-### Сборка и запуск
-1. Склонируйте репозиторий:
-   ```bash
-   git clone https://github.com/your-username/notabigdeal.git
-   ```
-2. Откройте проект в Android Studio.
-3. Дождитесь синхронизации Gradle.
-4. Запустите проект на устройстве или эмуляторе:
-   ```bash
-   gradle assembleDebug
-   ```
+### 2. "Give-Get" Concession Balancing Engine (EBITDA Guard)
+Eliminates uncompensated margin giveaways during tough procurement sessions:
+- **Model Buyer Concessions ("The Give")**:
+  - Payment Deferral (+Days);
+  - Extra Price Discount (+%);
+  - Extra Retro-Rebate (+%);
+  - Free Delivery / Logistics Absorption;
+  - Marketing / Slotting Allowance.
+- **Quantify Monetary Drain**: Direct financial cost of the concession and margin erosion in percentage points.
+- **4 Compensatory Counter-Trades ("The Gets") to Keep Deals EBITDA-Neutral**:
+  1. **Contracted Volume Lift**: Minimum units and percentage increase required so incremental gross profit absorbs the concession;
+  2. **Base Price Compensation**: Target price list indexation if volume remains fixed;
+  3. **Rebate Clawback**: Offsetting deduction from quarterly marketing allowances;
+  4. **Payment Acceleration / Prepayment**: Cash prepayment requirement to eliminate working capital freeze.
+- **Actionable KAM Talk Track Script**: Pre-computed negotiation speech module in Russian and English with 1-tap clipboard copy.
 
-### Запуск тестов
-Для проверки математических движков и сценариев:
+### 3. Trade Credit Terms, Prolongation & Cash Gap Engine
+Models the real financial cost of deferred payment terms (30, 60, 90, 120 days):
+- Cost of credit: $\text{Deal Amount} \times \text{WACC} \times \frac{\text{Days}}{365}$;
+- **Trade Credit Prolongation Analyzer**: Incremental working capital drain when terms extend (e.g. 30d $\to$ 60d), and trade credit effective APR;
+- **Cash Discount Arbitrage**: Evaluates prompt payment terms (e.g., 2/10 net 30/60) against delayed payment NPV;
+- **Cash Conversion Cycle (CCC)**: Tracks $DIO + DSO - DPO$ and peak overdraft financing exposure.
+
+### 4. Commercial Financing, Amortization & Multi-Currency Basket
+Structures equipment leasing, client credit, and installment debt:
+- 5 payment frequencies: Weekly (52/yr), Bi-Weekly (26/yr), Monthly (12/yr), Quarterly (4/yr), Annually (1/yr);
+- **Two-Tier Grace Period Amortization**: Subsidized/zero rate during grace + standard annuity repayment post-grace;
+- **Credit Prolongation Analyzer**: Compares month-to-month and week-to-week tenure extensions, detailing periodic cashflow relief (-47%) versus cumulative interest increase (+96%);
+- **Multi-Currency Debt Basket**: Allocates borrowing across up to 4 currencies (USD, EUR, CNY, RUB, etc.) with forward FX hedging cost calculations.
+
+### 5. Commercial Deal Scoring & Traffic Light Risk Corridor (BATNA)
+Pre-flight approval engine providing instant commercial governance:
+- 🟢 **Profitable Deal**: Healthy Net-Net margin exceeding corporate hurdle rates. Eligible for KAM self-approval;
+- 🟡 **Borderline Deal**: Margin compressed by rebates or prolonged deferral (>45 days). Commercial Director review required with mandatory counter-trades;
+- 🔴 **Margin Destroyer**: Below unit cost or financing charge turns deal toxic. Automated sign-off freeze with CFO escalation.
+
+### 6. Landed Cost & Incoterms Modeler (FOB ➔ Warehouse)
+Converts overseas supplier factory pricing into landed domestic cost:
+- Coefficient multipliers ($K$) incorporating freight, customs duties, brokerage fees, and import VAT;
+- Built-in trade profiles for major hubs: China, Turkey, UAE, European Union, India, and EAEU;
+- **Reverse Solver**: Derives maximum allowable FOB purchasing price from a target landed cost budget.
+
+### 7. Promo Break-Even & Elasticity Lift Solver
+Answers the fundamental retail promotion question: *«By what percentage must volume increase under a discount of $d\%$, so company gross profit does not decrease?»*
+- Mathematical breakeven lift: $\text{Lift}\% = \frac{d\%}{\text{Margin}\% - d\%} \times 100\%$;
+- Dynamic feasibility flags preventing sales teams from approving margin-negative promotions.
+
+### 8. Retail SLA Penalty & Fill-Rate Sensitivity Modeler
+Simulates net pocket margin after supermarket logistics deductions:
+- Calculates underdelivery fines based on planned vs actual order Fill-Rate (80%–100%);
+- Models time-slot arrival penalties and pallet quantum non-compliance;
+- Exposes actual "Pocket Margin" versus theoretical contract margin.
+
+### 9. Client Negotiation History & Terms Locker
+Enterprise counterparty database with multi-device cloud synchronization:
+- Tracks agreed discount caps, volume tiers, payment deferrals, and currency settings;
+- Historical contract log and chronological multi-round negotiation ledger;
+- 1-click **"Apply Client Terms"** workflow into active deal calculations.
+
+### 10. Native Vector PDF Proposal & LinkedIn Product Flyer Generator
+Generates publication-quality vector PDF documents on-device without external web services:
+- **Executive Deal Proposal (PDF)**: A4 contract brief with deal structure, pricing waterfall, and repayment schedule;
+- **LinkedIn Product Flyer (PDF)**: High-impact executive one-pager showcasing 6 core modules, UI spotlights, and CFO ROI metrics for LinkedIn outreach.
+
+### 11. Dual-Core AI Deal Risk Express Audit
+1-tap deal audit button on the top toolbar:
+- **Google Gemini 3.8 Flash (Serverless Firebase AI Logic)**: Analyzes deal parameters and synthesizes 3 concise negotiation theses (Margin traps, Working capital risk, Counter-offer strategy);
+- **Deterministic Offline Heuristic Backup (0ms)**: Guaranteed instant operation inside secure meeting rooms or flights with zero internet connectivity;
+- **100% Free**: No recurring API subscription or user billing required.
+
+---
+
+## Architecture & Tech Stack
+
+```
+com.example
+├── data
+│   ├── ai           # AI Deal Risk Auditor (Firebase AI Logic + Offline Heuristics)
+│   ├── model        # Immutable Kotlin Data Models, Enums & Value Objects
+│   └── repository   # AuthRepository & DealRepository (Firestore + Cache)
+├── domain
+│   └── calculator   # Pure Mathematical Engines (Amortization, GiveGet, Waterfall, ROIC)
+├── service          # Android Native PdfExportService (Vector A4 Graphics)
+└── ui
+    ├── components   # Modular Material 3 Cards, Sliders, and Dialogs
+    ├── screens      # Screen Scaffolds (Margin, Financing, Pipeline, Vault)
+    ├── theme        # Executive Midnight & Emerald Palette (Dark/Light)
+    └── viewmodel    # BigDealViewModel (Reactive StateFlow & Coroutines)
+```
+
+- **Runtime & Language**: 100% Kotlin 2.0.21, Android SDK 26+ (Target SDK 36);
+- **UI Framework**: Jetpack Compose with Material Design 3 (M3);
+- **Asynchronous Execution**: Kotlin Coroutines & `StateFlow`;
+- **Cloud & Auth**: Firebase Firestore & Jetpack Credential Manager;
+- **AI Integration**: Firebase AI Logic (`gemini-3.8-flash`) with App Check;
+- **Document Engine**: Android Native Graphics & `PdfDocument`.
+
+---
+
+## Installation & Build
+
+### Prerequisites
+- Android Studio Ladybug / Meerkat or newer;
+- JDK 17+;
+- Android SDK 26+.
+
+### Clone & Build
+```bash
+git clone https://github.com/your-username/notabigdeal.git
+cd notabigdeal
+gradle assembleDebug
+```
+
+### Running Automated Tests
+Run the comprehensive suite of 42 financial and mathematical verification tests:
 ```bash
 gradle :app:testDebugUnitTest
 ```
+
+---
+
+## Author & Contact
+
+Developed for commercial executives, financial analysts, and enterprise Key Account Managers.
+- **LinkedIn Profile**: [www.linkedin.com/in/snitkor](https://www.linkedin.com/in/snitkor)
+- **License**: Proprietary / Enterprise Confidential
