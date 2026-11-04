@@ -468,6 +468,132 @@ class BigDealCalculatorsTest {
         assertTrue(healthyDeal.isOfflineFallback)
         assertTrue(healthyDeal.headline.contains("Balanced"))
     }
+
+    @Test
+    fun testCreditProlongationMonthToMonthAndWeekToWeek() {
+        // Scenario 1: Month-to-month loan prolongation
+        // Principal = 120,000, 12% APR
+        // Original: 12 months -> PMT = ~10,661.85, Interest = ~7,942.20
+        // Prolonged: 24 months -> PMT = ~5,648.82, Interest = ~15,571.68
+        val analysis = AmortizationEngine.analyzeProlongation(
+            principal = 120000.0,
+            originalTenureMonths = 12,
+            prolongedTenureMonths = 24,
+            annualInterestRatePct = 12.0,
+            frequency = PaymentFrequency.MONTHLY
+        )
+
+        assertEquals(12, analysis.originalTenureMonths)
+        assertEquals(24, analysis.prolongedTenureMonths)
+        assertEquals(12, analysis.extensionMonths)
+        assertEquals(10661.85, analysis.originalPeriodicPayment, 0.5)
+        assertEquals(5648.82, analysis.prolongedPeriodicPayment, 0.5)
+
+        // Installment relief: ~5,013.03 / month (47.0% cashflow relief per period)
+        assertTrue(analysis.periodicPaymentRelief > 5000.0)
+        assertTrue(analysis.periodicPaymentReliefPct > 45.0)
+
+        // Interest penalty: prolonged loan accumulates ~7,629.48 extra interest (+96%)
+        assertTrue(analysis.additionalInterestCost > 7500.0)
+        assertTrue(analysis.interestCostIncreasePct > 90.0)
+
+        // Balance sheet reconciliation: Total Repayments == Principal + Total Interest
+        assertEquals(
+            analysis.originalTotalRepayments,
+            analysis.principal + analysis.originalTotalInterest,
+            0.05
+        )
+        assertEquals(
+            analysis.prolongedTotalRepayments,
+            analysis.principal + analysis.prolongedTotalInterest,
+            0.05
+        )
+
+        // Scenario 2: Week-to-week loan prolongation
+        // Principal = 52,000, 10% APR
+        // Original: 12 months (52 weeks)
+        // Prolonged: 24 months (104 weeks)
+        val weeklyAnalysis = AmortizationEngine.analyzeProlongation(
+            principal = 52000.0,
+            originalTenureMonths = 12,
+            prolongedTenureMonths = 24,
+            annualInterestRatePct = 10.0,
+            frequency = PaymentFrequency.WEEKLY
+        )
+
+        assertTrue(weeklyAnalysis.originalPeriodicPayment > 1000.0) // ~1,051.87 / wk
+        assertTrue(weeklyAnalysis.prolongedPeriodicPayment < 600.0)  // ~552.88 / wk
+        assertTrue(weeklyAnalysis.periodicPaymentRelief > 450.0)     // Weekly relief ~498.99 / wk
+        assertTrue(weeklyAnalysis.additionalInterestCost > 2500.0)   // Additional interest
+        assertEquals(
+            weeklyAnalysis.prolongedTotalRepayments,
+            weeklyAnalysis.principal + weeklyAnalysis.prolongedTotalInterest,
+            0.05
+        )
+    }
+
+    @Test
+    fun testTradeCreditTermsProlongation() {
+        // Prolong payment deferral from 30 days to 60 days on $100,000 deal at 18% cost of capital
+        val terms = com.example.domain.calculator.PaymentTermsEngine.analyzeTermsProlongation(
+            dealAmount = 100000.0,
+            originalDays = 30,
+            prolongedDays = 60,
+            annualInterestRatePct = 18.0,
+            cashDiscountPct = 2.0,
+            cashDiscountTermsDays = 10
+        )
+
+        assertEquals(30, terms.originalDays)
+        assertEquals(60, terms.prolongedDays)
+        assertEquals(30, terms.additionalDays)
+
+        // 30 days credit cost = 100,000 * 0.18 * (30/365) = $1,479.45
+        assertEquals(1479.45, terms.originalCostOfCredit, 0.1)
+        // 60 days credit cost = 100,000 * 0.18 * (60/365) = $2,958.90
+        assertEquals(2958.90, terms.prolongedCostOfCredit, 0.1)
+        // Additional working capital drain = $1,479.45
+        assertEquals(1479.45, terms.additionalFinancingCost, 0.1)
+
+        // Trade Credit APR for 2/10 net 60 = (2 / 98) * (365 / 50) = 14.90%
+        assertEquals(14.90, terms.tradeCreditApr, 0.1)
+    }
+
+    @Test
+    fun testAllPaymentFrequenciesScheduleIntegrity() {
+        val frequencies = listOf(
+            PaymentFrequency.WEEKLY,
+            PaymentFrequency.BIWEEKLY,
+            PaymentFrequency.MONTHLY,
+            PaymentFrequency.QUARTERLY,
+            PaymentFrequency.ANNUALLY
+        )
+
+        for (freq in frequencies) {
+            val res = AmortizationEngine.calculate(
+                principal = 60000.0,
+                annualInterestRatePct = 12.0,
+                tenureMonths = 12,
+                frequency = freq
+            )
+
+            // Balance must amortize to zero in the final period
+            assertEquals(
+                "Final balance for frequency $freq must be 0",
+                0.0,
+                res.schedule.last().remainingBalance,
+                0.1
+            )
+
+            // Total payments must match principal + interest
+            assertEquals(
+                "Total payments reconciliation for $freq",
+                res.totalPayments,
+                60000.0 + res.totalInterest,
+                0.05
+            )
+        }
+    }
 }
 
 

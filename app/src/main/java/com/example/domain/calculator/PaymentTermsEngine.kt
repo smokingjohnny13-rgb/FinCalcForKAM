@@ -67,4 +67,56 @@ object PaymentTermsEngine {
             dailyCostOfCapital = r2(dailyCost)
         )
     }
+
+    /**
+     * Financial evaluation of trade credit deferral prolongation (e.g. extending from 30 to 60, 90, or 120 days):
+     * Computes additional working capital cost and APR of trade credit.
+     */
+    fun analyzeTermsProlongation(
+        dealAmount: Double,
+        originalDays: Int = 30,
+        prolongedDays: Int = 60,
+        annualInterestRatePct: Double = 18.0,
+        cashDiscountPct: Double = 2.0,
+        cashDiscountTermsDays: Int = 10
+    ): PaymentTermsProlongation {
+        val orig = calculate(dealAmount, originalDays, annualInterestRatePct, cashDiscountPct)
+        val prolonged = calculate(dealAmount, prolongedDays, annualInterestRatePct, cashDiscountPct)
+
+        val additionalDays = max(0, prolongedDays - originalDays)
+        val additionalFinancingCost = max(0.0, prolonged.costOfCredit - orig.costOfCredit)
+        val effectiveDiscountDelta = prolonged.effectiveDiscountPct - orig.effectiveDiscountPct
+
+        // Annualized Cost of Trade Credit (APR of forgoing early payment discount)
+        // Formula: [Discount% / (100 - Discount%)] * [365 / (ProlongedDays - DiscountDays)]
+        val netDays = max(1, prolongedDays - cashDiscountTermsDays)
+        val discFactor = if (cashDiscountPct < 100.0) cashDiscountPct / (100.0 - cashDiscountPct) else 1.0
+        val tradeCreditApr = discFactor * (365.0 / netDays.toDouble()) * 100.0
+
+        return PaymentTermsProlongation(
+            dealAmount = r2(dealAmount),
+            originalDays = originalDays,
+            prolongedDays = prolongedDays,
+            additionalDays = additionalDays,
+            annualRatePct = r2(annualInterestRatePct),
+            originalCostOfCredit = orig.costOfCredit,
+            prolongedCostOfCredit = prolonged.costOfCredit,
+            additionalFinancingCost = r2(additionalFinancingCost),
+            effectiveDiscountIncreasePts = r2(effectiveDiscountDelta),
+            tradeCreditApr = r2(tradeCreditApr)
+        )
+    }
 }
+
+data class PaymentTermsProlongation(
+    val dealAmount: Double,
+    val originalDays: Int,
+    val prolongedDays: Int,
+    val additionalDays: Int,
+    val annualRatePct: Double,
+    val originalCostOfCredit: Double,
+    val prolongedCostOfCredit: Double,
+    val additionalFinancingCost: Double,
+    val effectiveDiscountIncreasePts: Double,
+    val tradeCreditApr: Double
+)

@@ -2,9 +2,13 @@ package com.example.service
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -113,6 +117,7 @@ object PdfExportService {
 
             drawProductFlyerContent(
                 canvas = canvas,
+                context = context,
                 pageWidth = pageWidth,
                 pageHeight = pageHeight
             )
@@ -140,11 +145,11 @@ object PdfExportService {
                 putExtra(Intent.EXTRA_STREAM, contentUri)
                 putExtra(
                     Intent.EXTRA_SUBJECT,
-                    "BigDeal Executive Workstation — Killer Features & B2B Deal Economics"
+                    "BigDeal Executive Workstation — Killer Features & B2B Deal Economics (Connect: www.linkedin.com/in/snitkor)"
                 )
                 putExtra(
                     Intent.EXTRA_TEXT,
-                    "Here is the BigDeal Executive Workstation product overview for LinkedIn. A mobile deal cockpit engineered for CFOs, Commercial Directors, and Enterprise KAMs to protect margin and eliminate negotiation risks."
+                    "Here is the BigDeal Executive Workstation product overview with Price Waterfall & Analytics UI. Connect on LinkedIn: www.linkedin.com/in/snitkor"
                 )
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
@@ -367,6 +372,7 @@ object PdfExportService {
 
     private fun drawProductFlyerContent(
         canvas: Canvas,
+        context: Context,
         pageWidth: Int,
         pageHeight: Int
     ) {
@@ -374,110 +380,262 @@ object PdfExportService {
 
         // 1. Executive Top Header Banner (Midnight)
         paint.color = Color.rgb(10, 15, 29)
-        canvas.drawRect(0f, 0f, pageWidth.toFloat(), 88f, paint)
+        canvas.drawRect(0f, 0f, pageWidth.toFloat(), 76f, paint)
 
         // Emerald accent line at bottom of header
         paint.color = Color.rgb(16, 185, 129)
-        canvas.drawRect(0f, 85.5f, pageWidth.toFloat(), 88f, paint)
+        canvas.drawRect(0f, 73.5f, pageWidth.toFloat(), 76f, paint)
 
         // BD Icon Badge
-        val logoRect = RectF(28f, 20f, 66f, 58f)
+        val logoRect = RectF(28f, 16f, 62f, 50f)
         paint.color = Color.rgb(16, 185, 129)
-        canvas.drawRoundRect(logoRect, 8f, 8f, paint)
+        canvas.drawRoundRect(logoRect, 7f, 7f, paint)
 
         paint.color = Color.BLACK
-        paint.textSize = 17f
+        paint.textSize = 15f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("BD", 36f, 46f, paint)
+        canvas.drawText("BD", 34f, 39f, paint)
 
         // Header Titles
         paint.color = Color.WHITE
-        paint.textSize = 17f
+        paint.textSize = 16f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("BIGDEAL EXECUTIVE WORKSTATION", 76f, 38f, paint)
+        canvas.drawText("BIGDEAL EXECUTIVE WORKSTATION", 72f, 32f, paint)
 
-        paint.textSize = 9.5f
+        paint.textSize = 8.5f
         paint.color = Color.rgb(52, 211, 153) // Emerald Light
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Turn Complex B2B Deal Economics Into Boardroom Wins in 30 Seconds", 76f, 54f, paint)
+        canvas.drawText("Turn Complex B2B Deal Economics Into Boardroom Wins in 30 Seconds", 72f, 47f, paint)
 
-        // Right side header metadata
-        paint.color = Color.WHITE
-        paint.textSize = 8f
+        // Right side header metadata - ONLY User LinkedIn Profile
+        paint.color = Color.rgb(56, 189, 248) // Electric Cyan
+        paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("Enterprise B2B Architecture", 435f, 32f, paint)
-
-        paint.color = Color.rgb(56, 189, 248) // Sky cyan
-        paint.textSize = 7.5f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Target: CFO | Commercial VP | KAM", 420f, 46f, paint)
+        canvas.drawText("www.linkedin.com/in/snitkor", 415f, 32f, paint)
 
         paint.color = Color.rgb(148, 163, 184)
         paint.textSize = 7.5f
-        canvas.drawText("LinkedIn Edition • Year 2026", 455f, 60f, paint)
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("Target: CFO | Commercial VP | KAM", 415f, 47f, paint)
 
         // 2. Value Proposition Strip
-        val stripRect = RectF(28f, 96f, (pageWidth - 28).toFloat(), 138f)
+        val stripRect = RectF(28f, 84f, (pageWidth - 28).toFloat(), 118f)
         paint.color = Color.rgb(241, 245, 249)
-        canvas.drawRoundRect(stripRect, 8f, 8f, paint)
+        canvas.drawRoundRect(stripRect, 6f, 6f, paint)
 
         paint.color = Color.rgb(203, 213, 225)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1f
-        canvas.drawRoundRect(stripRect, 8f, 8f, paint)
+        paint.strokeWidth = 0.8f
+        canvas.drawRoundRect(stripRect, 6f, 6f, paint)
         paint.style = Paint.Style.FILL
 
         // Column 1
         paint.color = Color.rgb(5, 150, 105)
-        paint.textSize = 9f
+        paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("+3.8% Net Margin Protected", 38f, 112f, paint)
+        canvas.drawText("+3.8% Net Margin Protected", 38f, 98f, paint)
         paint.color = Color.rgb(71, 85, 105)
-        paint.textSize = 7f
+        paint.textSize = 6.8f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Stops hidden erosion from off-invoice rebates & terms", 38f, 126f, paint)
+        canvas.drawText("Stops hidden erosion from off-invoice rebates & terms", 38f, 110f, paint)
 
         // Divider 1
         paint.color = Color.rgb(203, 213, 225)
-        canvas.drawLine(210f, 102f, 210f, 132f, paint)
+        canvas.drawLine(210f, 88f, 210f, 114f, paint)
 
         // Column 2
         paint.color = Color.rgb(8, 145, 178)
-        paint.textSize = 9f
+        paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("30-Sec Negotiation Velocity", 220f, 112f, paint)
+        canvas.drawText("30-Sec Negotiation Velocity", 220f, 98f, paint)
         paint.color = Color.rgb(71, 85, 105)
-        paint.textSize = 7f
+        paint.textSize = 6.8f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Instant corridor pricing & scoring in live meetings", 220f, 126f, paint)
+        canvas.drawText("Instant corridor pricing & scoring in live meetings", 220f, 110f, paint)
 
         // Divider 2
         paint.color = Color.rgb(203, 213, 225)
-        canvas.drawLine(392f, 102f, 392f, 132f, paint)
+        canvas.drawLine(392f, 88f, 392f, 114f, paint)
 
         // Column 3
         paint.color = Color.rgb(217, 119, 6)
-        paint.textSize = 9f
+        paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("0% Excel Broken Formulas", 402f, 112f, paint)
+        canvas.drawText("0% Excel Calculation Errors", 402f, 98f, paint)
         paint.color = Color.rgb(71, 85, 105)
-        paint.textSize = 7f
+        paint.textSize = 6.8f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Algorithmic certainty in boardrooms, flights & talks", 402f, 126f, paint)
+        canvas.drawText("Algorithmic certainty in boardrooms, flights & talks", 402f, 110f, paint)
 
-        // 3. Section Title: 6 Modules
+        // 3. UI SHOWCASE SECTION: Real-Time Price Waterfall & Executive Analytics
         paint.color = Color.rgb(15, 23, 42)
         paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("6 CORE WORKSTATION PILLARS: END-TO-END COMMERCIAL DECISION COCKPIT", 28f, 153f, paint)
+        canvas.drawText("LIVE INTERFACE SPOTLIGHT: REAL-TIME PRICING & EXECUTIVE METRICS", 28f, 131f, paint)
 
-        // 4. Six Feature Cards (2 columns x 3 rows)
+        val uiLeft1 = 28f
+        val uiRight1 = 292f
+        val uiLeft2 = 303f
+        val uiRight2 = 567f
+        val uiTop = 138f
+        val uiBottom = 284f
+
+        // --- Left Screen: PRICE WATERFALL ENGINE UI ---
+        val waterfallBox = RectF(uiLeft1, uiTop, uiRight1, uiBottom)
+        paint.color = Color.rgb(9, 13, 22) // Deep Obsidian
+        canvas.drawRoundRect(waterfallBox, 6f, 6f, paint)
+        paint.color = Color.rgb(16, 185, 129) // Emerald border
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1f
+        canvas.drawRoundRect(waterfallBox, 6f, 6f, paint)
+        paint.style = Paint.Style.FILL
+
+        // UI Top Bar
+        paint.color = Color.rgb(15, 23, 42)
+        canvas.drawRect(uiLeft1, uiTop, uiRight1, uiTop + 20f, paint)
+        paint.color = Color.rgb(16, 185, 129)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("PRICE WATERFALL: RSP TO NET-NET", uiLeft1 + 8f, uiTop + 14f, paint)
+
+        paint.color = Color.rgb(6, 182, 212)
+        paint.textSize = 6.5f
+        canvas.drawText("LIVE SOLVER", uiRight1 - 46f, uiTop + 14f, paint)
+
+        // Waterfall Steps
+        val waterfallSteps = listOf(
+            Triple("1. Shelf RSP (Полка)", "$100.00", Color.rgb(56, 189, 248)),
+            Triple("2. Base Ex-VAT (20%)", "$83.33", Color.rgb(226, 232, 240)),
+            Triple("3. Retailer Margin (25%)", "-$20.83", Color.rgb(248, 113, 113)),
+            Triple("4. Front Discount (5% on-inv)", "-$4.17", Color.rgb(251, 146, 60)),
+            Triple("5. Off-Invoice Rebates (8%)", "-$6.67", Color.rgb(244, 63, 94)),
+            Triple("6. Logistics & Distribution", "-$3.46", Color.rgb(203, 213, 225))
+        )
+
+        var stepY = uiTop + 33f
+        paint.textSize = 6.8f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        for ((stepLabel, stepVal, stepColor) in waterfallSteps) {
+            paint.color = Color.rgb(148, 163, 184)
+            canvas.drawText(stepLabel, uiLeft1 + 8f, stepY, paint)
+            paint.color = stepColor
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(stepVal, uiRight1 - 44f, stepY, paint)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            stepY += 11.5f
+        }
+
+        // Net-Net Result Box
+        val netNetBox = RectF(uiLeft1 + 6f, uiBottom - 38f, uiRight1 - 6f, uiBottom - 18f)
+        paint.color = Color.rgb(6, 78, 59) // Dark Emerald Pill
+        canvas.drawRoundRect(netNetBox, 4f, 4f, paint)
+        paint.color = Color.rgb(52, 211, 153)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("🟢 NET-NET PRICE: $48.20", netNetBox.left + 8f, netNetBox.top + 13f, paint)
+        canvas.drawText("Margin: 37.1%", netNetBox.right - 58f, netNetBox.top + 13f, paint)
+
+        // Sub-caption
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 5.8f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("★ Reveals true net revenue after retailer deductions", uiLeft1 + 8f, uiBottom - 7f, paint)
+
+        // --- Right Screen: EXECUTIVE ANALYTICS SCREENSHOT / TIMELINE ---
+        val analyticsBox = RectF(uiLeft2, uiTop, uiRight2, uiBottom)
+        paint.color = Color.rgb(9, 13, 22) // Deep Obsidian
+        canvas.drawRoundRect(analyticsBox, 6f, 6f, paint)
+        paint.color = Color.rgb(6, 182, 212) // Cyan border
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1f
+        canvas.drawRoundRect(analyticsBox, 6f, 6f, paint)
+        paint.style = Paint.Style.FILL
+
+        // UI Top Bar
+        paint.color = Color.rgb(15, 23, 42)
+        canvas.drawRect(uiLeft2, uiTop, uiRight2, uiTop + 20f, paint)
+        paint.color = Color.rgb(6, 182, 212)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("12-MONTH CASHFLOW TIMELINE", uiLeft2 + 8f, uiTop + 14f, paint)
+
+        // Payback Pill
+        val paybackPill = RectF(uiRight2 - 76f, uiTop + 4f, uiRight2 - 6f, uiTop + 17f)
+        paint.color = Color.rgb(6, 78, 59)
+        canvas.drawRoundRect(paybackPill, 3f, 3f, paint)
+        paint.color = Color.rgb(52, 211, 153)
+        paint.textSize = 6.2f
+        canvas.drawText("Payback M2.3 🎯", paybackPill.left + 4f, paybackPill.bottom - 3.5f, paint)
+
+        // Load & Draw Actual Screenshot if available, or crisp vector grid
+        val analyticsBmp = runCatching {
+            context.assets.open("screenshots/analytics_cashflow.jpg").use { stream ->
+                val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
+                BitmapFactory.decodeStream(stream, null, opts)
+            }
+        }.getOrNull()
+
+        if (analyticsBmp != null) {
+            canvas.save()
+            val imgDestRect = RectF(uiLeft2 + 6f, uiTop + 24f, uiRight2 - 6f, uiBottom - 26f)
+            val clipPath = Path().apply {
+                addRoundRect(imgDestRect, 4f, 4f, Path.Direction.CW)
+            }
+            canvas.clipPath(clipPath)
+            // Crop middle section of the screenshot where the cashflow grid and cards are
+            val srcTop = (analyticsBmp.height * 0.38f).toInt()
+            val srcBottom = (analyticsBmp.height * 0.82f).toInt()
+            val srcRect = Rect(0, srcTop, analyticsBmp.width, srcBottom)
+            canvas.drawBitmap(analyticsBmp, srcRect, imgDestRect, paint)
+            canvas.restore()
+        } else {
+            // High-fidelity vector simulation of the 12-month tiles
+            val tileWidth = 76f
+            val tileHeight = 22f
+            val tiles = listOf(
+                Pair("M1", "-$55,625"), Pair("M2", "-$12,422"), Pair("M3", "+$29,639"),
+                Pair("M4", "+$70,585"), Pair("M5", "+$110,446"), Pair("M6", "+$149,247")
+            )
+            for (idx in tiles.indices) {
+                val col = idx % 3
+                val r = idx / 3
+                val tx = uiLeft2 + 8f + (col * (tileWidth + 6f))
+                val ty = uiTop + 26f + (r * (tileHeight + 6f))
+                val tRect = RectF(tx, ty, tx + tileWidth, ty + tileHeight)
+                val isNegative = tiles[idx].second.startsWith("-")
+                paint.color = if (isNegative) Color.rgb(69, 10, 10) else Color.rgb(6, 78, 59)
+                canvas.drawRoundRect(tRect, 3f, 3f, paint)
+                paint.color = Color.rgb(148, 163, 184)
+                paint.textSize = 5.5f
+                canvas.drawText(tiles[idx].first, tx + 4f, ty + 9f, paint)
+                paint.color = if (isNegative) Color.rgb(248, 113, 113) else Color.rgb(52, 211, 153)
+                paint.textSize = 6.2f
+                paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                canvas.drawText(tiles[idx].second, tx + 4f, ty + 18f, paint)
+            }
+        }
+
+        // Bottom KPI banner on right screen
+        val kpiBox = RectF(uiLeft2 + 6f, uiBottom - 22f, uiRight2 - 6f, uiBottom - 6f)
+        paint.color = Color.rgb(15, 23, 42)
+        canvas.drawRoundRect(kpiBox, 3f, 3f, paint)
+        paint.color = Color.rgb(56, 189, 248)
+        paint.textSize = 6.2f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("ROIC: 28.4% (Hurdle: 20.0% 🟢 PASS)  |  CCC: 45 Days", kpiBox.left + 6f, kpiBox.top + 11f, paint)
+
+        // 4. Section Title: 6 Modules
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("6 CORE WORKSTATION PILLARS: COMMERCIAL DECISION COCKPIT", 28f, 298f, paint)
+
+        // 5. Six Feature Cards (2 columns x 3 rows)
         val col1Left = 28f
         val col1Right = 292f
         val col2Left = 303f
         val col2Right = 567f
-        val cardWidth = 264f
-        val cardHeight = 124f
+        val cardHeight = 78f
 
         data class ModuleCardData(
             val title: String,
@@ -494,9 +652,9 @@ object PdfExportService {
                 badge = "DEBT & FX",
                 bullets = listOf(
                     "• Multi-currency loan baskets (USD, EUR, CNY, RUB) & FX hedge blending.",
-                    "• Grace period debt service, balloon payments & effective interest rates."
+                    "• Grace period debt service, balloon payments & effective rates."
                 ),
-                killerFeature = "Killer Feature: Instant effective debt modeling without broken Excel macros during client negotiations.",
+                killerFeature = "Killer Feature: Instant effective debt modeling without broken Excel macros.",
                 badgeBgColor = Color.rgb(209, 250, 229),
                 badgeTextColor = Color.rgb(5, 150, 105)
             ),
@@ -507,7 +665,7 @@ object PdfExportService {
                     "• FOB to warehouse solver: freight, tariffs, duties, port fees, import VAT.",
                     "• Country trade profiles & cargo risk presets for precision costing."
                 ),
-                killerFeature = "Killer Feature: 'Reverse Landed Solver' computes exact max supplier purchase price to lock target margin.",
+                killerFeature = "Killer Feature: 'Reverse Landed Solver' computes exact max supplier purchase price.",
                 badgeBgColor = Color.rgb(224, 242, 254),
                 badgeTextColor = Color.rgb(2, 132, 199)
             ),
@@ -518,7 +676,7 @@ object PdfExportService {
                     "• Margin vs. Markup conversion, on-invoice discounts, off-invoice retro rebates.",
                     "• Promo volume elasticity break-even & retail slotting fee sensitivity."
                 ),
-                killerFeature = "Killer Feature: True Net-Net pricing waterfall unmasks illusory gross profit and prevents margin bleeding.",
+                killerFeature = "Killer Feature: Net-Net waterfall exposes hidden margin bleed before signing.",
                 badgeBgColor = Color.rgb(254, 243, 199),
                 badgeTextColor = Color.rgb(180, 83, 9)
             ),
@@ -529,7 +687,7 @@ object PdfExportService {
                     "• Enterprise B2B pipeline conversion velocity from Leads to Won.",
                     "• ARPU, CAC, churn sensitivity & 12-month cumulative cashflow cohorts."
                 ),
-                killerFeature = "Killer Feature: Automatic LTV:CAC health score and exact break-even payback month trajectory.",
+                killerFeature = "Killer Feature: Automatic LTV:CAC diagnosis & exact break-even month trajectory.",
                 badgeBgColor = Color.rgb(237, 233, 254),
                 badgeTextColor = Color.rgb(109, 40, 217)
             ),
@@ -540,7 +698,7 @@ object PdfExportService {
                     "• Cash Conversion Cycle (CCC): supplier DPO, customer DSO, inventory DIO.",
                     "• Bank overdraft peak funding cost & currency devaluation stress tester."
                 ),
-                killerFeature = "Killer Feature: Hurdle rate (ROIC) guardrail alerts when extended terms destroy shareholder value.",
+                killerFeature = "Killer Feature: Hurdle rate (ROIC) guardrail alerts when terms destroy shareholder value.",
                 badgeBgColor = Color.rgb(254, 226, 226),
                 badgeTextColor = Color.rgb(185, 28, 28)
             ),
@@ -551,13 +709,13 @@ object PdfExportService {
                     "• 🟢/🟡/🔴 Traffic light deal scoring with cost-of-deferral penalties.",
                     "• Full client negotiation logs, past agreed terms memory & cloud sync."
                 ),
-                killerFeature = "Killer Feature: One-touch boardroom-ready A4 PDF export and multi-device cloud sync via Google Sign-In.",
+                killerFeature = "Killer Feature: One-touch A4 PDF export & multi-device cloud sync via Google ID.",
                 badgeBgColor = Color.rgb(220, 252, 231),
                 badgeTextColor = Color.rgb(21, 128, 61)
             )
         )
 
-        val rowYPositions = listOf(158f, 292f, 426f)
+        val rowYPositions = listOf(306f, 390f, 474f)
 
         for (index in moduleCards.indices) {
             val card = moduleCards[index]
@@ -571,145 +729,136 @@ object PdfExportService {
             // Background card
             val rect = RectF(cardLeft, cardTop, cardRight, cardBottom)
             paint.color = Color.rgb(255, 255, 255)
-            canvas.drawRoundRect(rect, 6f, 6f, paint)
+            canvas.drawRoundRect(rect, 5f, 5f, paint)
 
             // Border
             paint.color = Color.rgb(226, 232, 240)
             paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 1f
-            canvas.drawRoundRect(rect, 6f, 6f, paint)
+            paint.strokeWidth = 0.8f
+            canvas.drawRoundRect(rect, 5f, 5f, paint)
             paint.style = Paint.Style.FILL
 
             // Card Title
             paint.color = Color.rgb(15, 23, 42)
-            paint.textSize = 8.5f
+            paint.textSize = 7.5f
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            canvas.drawText(card.title, cardLeft + 8f, cardTop + 14f, paint)
+            canvas.drawText(card.title, cardLeft + 6f, cardTop + 11f, paint)
 
             // Badge pill
-            val badgeWidth = paint.measureText(card.badge) + 8f
-            val badgeRect = RectF(cardRight - badgeWidth - 8f, cardTop + 4f, cardRight - 8f, cardTop + 17f)
+            val badgeWidth = paint.measureText(card.badge) + 6f
+            val badgeRect = RectF(cardRight - badgeWidth - 6f, cardTop + 3f, cardRight - 6f, cardTop + 14f)
             paint.color = card.badgeBgColor
-            canvas.drawRoundRect(badgeRect, 3f, 3f, paint)
+            canvas.drawRoundRect(badgeRect, 2.5f, 2.5f, paint)
             paint.color = card.badgeTextColor
-            paint.textSize = 6.5f
+            paint.textSize = 5.8f
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            canvas.drawText(card.badge, badgeRect.left + 4f, badgeRect.bottom - 3.5f, paint)
+            canvas.drawText(card.badge, badgeRect.left + 3f, badgeRect.bottom - 3f, paint)
 
             // Divider inside card
             paint.color = Color.rgb(241, 245, 249)
-            canvas.drawLine(cardLeft + 8f, cardTop + 22f, cardRight - 8f, cardTop + 22f, paint)
+            canvas.drawLine(cardLeft + 6f, cardTop + 18f, cardRight - 6f, cardTop + 18f, paint)
 
             // Bullets
             paint.color = Color.rgb(51, 65, 85)
-            paint.textSize = 7f
+            paint.textSize = 6.4f
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            var bulletY = cardTop + 33f
+            var bulletY = cardTop + 28f
             for (bullet in card.bullets) {
-                canvas.drawText(bullet, cardLeft + 8f, bulletY, paint)
-                bulletY += 10.5f
+                canvas.drawText(bullet, cardLeft + 6f, bulletY, paint)
+                bulletY += 9f
             }
 
-            // Killer Feature Box
-            val killerBox = RectF(cardLeft + 6f, cardTop + 65f, cardRight - 6f, cardBottom - 6f)
+            // Killer Feature Highlight Strip
+            val killerBox = RectF(cardLeft + 5f, cardBottom - 26f, cardRight - 5f, cardBottom - 4f)
             paint.color = Color.rgb(248, 250, 252)
-            canvas.drawRoundRect(killerBox, 4f, 4f, paint)
+            canvas.drawRoundRect(killerBox, 3f, 3f, paint)
             paint.color = Color.rgb(226, 232, 240)
             paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 0.8f
-            canvas.drawRoundRect(killerBox, 4f, 4f, paint)
+            paint.strokeWidth = 0.6f
+            canvas.drawRoundRect(killerBox, 3f, 3f, paint)
             paint.style = Paint.Style.FILL
 
-            // Highlight bar on left of killer feature box
+            // Highlight bar
             paint.color = card.badgeTextColor
-            canvas.drawRoundRect(RectF(killerBox.left, killerBox.top, killerBox.left + 3f, killerBox.bottom), 2f, 2f, paint)
+            canvas.drawRoundRect(RectF(killerBox.left, killerBox.top, killerBox.left + 2.5f, killerBox.bottom), 1.5f, 1.5f, paint)
 
-            // Killer feature text (wrap in two lines)
+            // Killer feature text
             paint.color = Color.rgb(15, 23, 42)
-            paint.textSize = 6.8f
+            paint.textSize = 6f
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            val parts = card.killerFeature.split(":")
-            val prefix = parts.getOrNull(0) ?: "Killer Feature"
-            val text = parts.getOrNull(1)?.trim() ?: ""
-            canvas.drawText("★ $prefix:", killerBox.left + 8f, killerBox.top + 14f, paint)
-
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            paint.color = Color.rgb(51, 65, 85)
-            if (text.length > 55) {
-                val cut = text.lastIndexOf(' ', 52).coerceAtLeast(30)
-                canvas.drawText(text.substring(0, cut), killerBox.left + 8f, killerBox.top + 27f, paint)
-                canvas.drawText(text.substring(cut).trim(), killerBox.left + 8f, killerBox.top + 39f, paint)
-            } else {
-                canvas.drawText(text, killerBox.left + 8f, killerBox.top + 27f, paint)
-            }
+            canvas.drawText("★ ${card.killerFeature}", killerBox.left + 6f, killerBox.top + 13f, paint)
         }
 
-        // 5. Enterprise Architecture Strip
-        val archRect = RectF(28f, 560f, (pageWidth - 28).toFloat(), 642f)
+        // 6. Enterprise Architecture Strip
+        val archRect = RectF(28f, 560f, (pageWidth - 28).toFloat(), 620f)
         paint.color = Color.rgb(248, 250, 252)
-        canvas.drawRoundRect(archRect, 6f, 6f, paint)
+        canvas.drawRoundRect(archRect, 5f, 5f, paint)
         paint.color = Color.rgb(203, 213, 225)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1f
-        canvas.drawRoundRect(archRect, 6f, 6f, paint)
+        paint.strokeWidth = 0.8f
+        canvas.drawRoundRect(archRect, 5f, 5f, paint)
         paint.style = Paint.Style.FILL
 
         paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 8.5f
+        paint.textSize = 7.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("INSTITUTIONAL-GRADE ARCHITECTURE & GOVERNANCE", 38f, 575f, paint)
+        canvas.drawText("INSTITUTIONAL-GRADE ARCHITECTURE & GOVERNANCE", 36f, 573f, paint)
 
-        paint.textSize = 7f
+        paint.textSize = 6.4f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.rgb(51, 65, 85)
 
-        canvas.drawText("• Offline-First: 100% operational on flights & remote sites without internet.", 38f, 592f, paint)
-        canvas.drawText("• Multi-Device Cloud Sync: Instant synchronization across phone & tablet via Google ID.", 38f, 606f, paint)
-        canvas.drawText("• Multi-Currency Precision: Live conversions across USD, EUR, GBP, JPY, CNY, RUB.", 38f, 620f, paint)
+        canvas.drawText("• Offline-First: 100% operational on flights & remote sites without internet.", 36f, 587f, paint)
+        canvas.drawText("• Multi-Device Cloud Sync: Instant synchronization across phone & tablet via Google ID.", 36f, 599f, paint)
+        canvas.drawText("• Multi-Currency Precision: Live conversions across USD, EUR, GBP, JPY, CNY, RUB.", 36f, 611f, paint)
 
-        canvas.drawText("• Boardroom PDF Engine: 1-click vector A4 proposal generation.", 315f, 592f, paint)
-        canvas.drawText("• Zero-Trust Privacy: Local-first data sovereignty; no third-party telemetry.", 315f, 606f, paint)
-        canvas.drawText("• KAM Workflow: Aligns commercial sales teams with CFO financial guardrails.", 315f, 620f, paint)
+        canvas.drawText("• Boardroom PDF Engine: 1-click vector A4 proposal generation.", 315f, 587f, paint)
+        canvas.drawText("• Zero-Trust Privacy: Local-first data sovereignty; no third-party telemetry.", 315f, 599f, paint)
+        canvas.drawText("• KAM Workflow: Aligns commercial sales teams with CFO financial guardrails.", 315f, 611f, paint)
 
-        // 6. LinkedIn Campaign Call to Action Block
-        val ctaRect = RectF(28f, 652f, (pageWidth - 28).toFloat(), 762f)
+        // 7. LinkedIn Campaign Call to Action Block - ONLY User LinkedIn Profile
+        val ctaRect = RectF(28f, 628f, (pageWidth - 28).toFloat(), 732f)
         paint.color = Color.rgb(15, 23, 42) // Executive Midnight
-        canvas.drawRoundRect(ctaRect, 8f, 8f, paint)
+        canvas.drawRoundRect(ctaRect, 7f, 7f, paint)
 
         paint.color = Color.rgb(16, 185, 129) // Emerald border
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1.5f
-        canvas.drawRoundRect(ctaRect, 8f, 8f, paint)
+        paint.strokeWidth = 1.2f
+        canvas.drawRoundRect(ctaRect, 7f, 7f, paint)
         paint.style = Paint.Style.FILL
 
         paint.color = Color.rgb(52, 211, 153)
-        paint.textSize = 12f
+        paint.textSize = 10.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("CONNECT ON LINKEDIN & ACCELERATE ENTERPRISE DEAL VELOCITY", 40f, 674f, paint)
+        canvas.drawText("CONNECT DIRECTLY ON LINKEDIN FOR AN EXECUTIVE WALKTHROUGH", 40f, 649f, paint)
 
         paint.color = Color.rgb(226, 232, 240)
-        paint.textSize = 8f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Engineered for Chief Financial Officers, Commercial Directors, and Key Account Executives.", 40f, 692f, paint)
-        canvas.drawText("Stop margin leakage, model multi-tier discounts, and eliminate calculation errors during high-stakes B2B negotiations.", 40f, 706f, paint)
-
-        // Contact highlights
-        paint.color = Color.rgb(56, 189, 248)
-        paint.textSize = 8.5f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("LinkedIn: linkedin.com/company/bigdeal-workstation   |   Email: enterprise@bigdeal.app", 40f, 728f, paint)
-
-        paint.color = Color.rgb(148, 163, 184)
         paint.textSize = 7.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("Available on Google Play & Enterprise MDM • Request a Private Executive Demo & Custom Deployment", 40f, 744f, paint)
+        canvas.drawText("Designed for Chief Financial Officers, Commercial Directors, and Key Account Executives.", 40f, 664f, paint)
+        canvas.drawText("Stop margin leakage, model multi-tier discounts, and eliminate calculation errors during high-stakes B2B negotiations.", 40f, 676f, paint)
 
-        // 7. Footer
-        paint.color = Color.rgb(203, 213, 225)
-        canvas.drawLine(28f, 775f, (pageWidth - 28).toFloat(), 775f, paint)
+        // Highlighted Contact Pill - ONLY www.linkedin.com/in/snitkor
+        val linkPill = RectF(40f, 686f, 320f, 712f)
+        paint.color = Color.rgb(6, 182, 212) // Electric Cyan pill
+        canvas.drawRoundRect(linkPill, 4f, 4f, paint)
 
-        paint.textSize = 7f
+        paint.color = Color.BLACK
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("🔗 www.linkedin.com/in/snitkor", 50f, 703f, paint)
+
         paint.color = Color.rgb(148, 163, 184)
-        canvas.drawText("BigDeal Executive Workstation © 2026 • Confidential & Proprietary Product Showcase • LinkedIn Distribution", 28f, 792f, paint)
+        paint.textSize = 7f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("Personal LinkedIn Profile • Open for Commercial Inquiries & Partnerships", 40f, 724f, paint)
+
+        // 8. Footer
+        paint.color = Color.rgb(203, 213, 225)
+        canvas.drawLine(28f, 744f, (pageWidth - 28).toFloat(), 744f, paint)
+
+        paint.textSize = 6.8f
+        paint.color = Color.rgb(148, 163, 184)
+        canvas.drawText("BigDeal Executive Workstation © 2026 • Contact: www.linkedin.com/in/snitkor • Confidential Executive Brief", 28f, 758f, paint)
     }
 }

@@ -40,12 +40,12 @@ object AmortizationEngine {
         }
 
         val years = tenureMonths / 12.0
-        val totalPeriods = max(1, (years * frequency.periodsPerYear).toInt())
+        val totalPeriods = max(1, kotlin.math.round(years * frequency.periodsPerYear).toInt())
 
         val isGraceActive = hasGracePeriod && graceTenureMonths > 0
         val graceYears = graceTenureMonths / 12.0
         val calculatedGracePeriods = if (isGraceActive) {
-            max(1, (graceYears * frequency.periodsPerYear).toInt()).coerceAtMost(totalPeriods - 1)
+            max(1, kotlin.math.round(graceYears * frequency.periodsPerYear).toInt()).coerceAtMost(totalPeriods - 1)
         } else {
             0
         }
@@ -94,7 +94,7 @@ object AmortizationEngine {
                 }
             }
 
-            val totalPayments = (periodicPayment * totalPeriods)
+            val totalPayments = netPrincipal + accumulatedInterest
 
             return AmortizationSummary(
                 periodicPayment = roundTwoDecimals(periodicPayment),
@@ -194,4 +194,80 @@ object AmortizationEngine {
     private fun roundTwoDecimals(value: Double): Double {
         return round(value * 100.0) / 100.0
     }
+
+    /**
+     * Financial & mathematical evaluation of Credit Prolongation / Restructuring:
+     * Compares original tenure vs prolonged tenure (month-to-month, week-to-week, etc.)
+     * Measures installment cashflow relief vs cumulative additional interest burden.
+     */
+    fun analyzeProlongation(
+        principal: Double,
+        downPayment: Double = 0.0,
+        originalTenureMonths: Int,
+        prolongedTenureMonths: Int,
+        annualInterestRatePct: Double,
+        prolongedInterestRatePct: Double = annualInterestRatePct,
+        frequency: PaymentFrequency = PaymentFrequency.MONTHLY
+    ): CreditProlongationAnalysis {
+        val orig = calculate(
+            principal = principal,
+            annualInterestRatePct = annualInterestRatePct,
+            tenureMonths = originalTenureMonths,
+            downPayment = downPayment,
+            frequency = frequency
+        )
+        val prolonged = calculate(
+            principal = principal,
+            annualInterestRatePct = prolongedInterestRatePct,
+            tenureMonths = prolongedTenureMonths,
+            downPayment = downPayment,
+            frequency = frequency
+        )
+
+        val paymentRelief = max(0.0, orig.periodicPayment - prolonged.periodicPayment)
+        val paymentReliefPct = if (orig.periodicPayment > 0.0) (paymentRelief / orig.periodicPayment) * 100.0 else 0.0
+
+        val extraInterest = max(0.0, prolonged.totalInterest - orig.totalInterest)
+        val interestIncreasePct = if (orig.totalInterest > 0.0) (extraInterest / orig.totalInterest) * 100.0 else 0.0
+
+        return CreditProlongationAnalysis(
+            originalTenureMonths = max(1, originalTenureMonths),
+            prolongedTenureMonths = max(1, prolongedTenureMonths),
+            extensionMonths = max(0, prolongedTenureMonths - originalTenureMonths),
+            frequency = frequency,
+            principal = roundTwoDecimals(max(0.0, principal - downPayment)),
+            annualRatePct = roundTwoDecimals(annualInterestRatePct),
+            prolongedRatePct = roundTwoDecimals(prolongedInterestRatePct),
+            originalPeriodicPayment = orig.periodicPayment,
+            prolongedPeriodicPayment = prolonged.periodicPayment,
+            periodicPaymentRelief = roundTwoDecimals(paymentRelief),
+            periodicPaymentReliefPct = roundTwoDecimals(paymentReliefPct),
+            originalTotalInterest = orig.totalInterest,
+            prolongedTotalInterest = prolonged.totalInterest,
+            additionalInterestCost = roundTwoDecimals(extraInterest),
+            interestCostIncreasePct = roundTwoDecimals(interestIncreasePct),
+            originalTotalRepayments = orig.totalPayments,
+            prolongedTotalRepayments = prolonged.totalPayments
+        )
+    }
 }
+
+data class CreditProlongationAnalysis(
+    val originalTenureMonths: Int,
+    val prolongedTenureMonths: Int,
+    val extensionMonths: Int,
+    val frequency: PaymentFrequency,
+    val principal: Double,
+    val annualRatePct: Double,
+    val prolongedRatePct: Double,
+    val originalPeriodicPayment: Double,
+    val prolongedPeriodicPayment: Double,
+    val periodicPaymentRelief: Double,
+    val periodicPaymentReliefPct: Double,
+    val originalTotalInterest: Double,
+    val prolongedTotalInterest: Double,
+    val additionalInterestCost: Double,
+    val interestCostIncreasePct: Double,
+    val originalTotalRepayments: Double,
+    val prolongedTotalRepayments: Double
+)
