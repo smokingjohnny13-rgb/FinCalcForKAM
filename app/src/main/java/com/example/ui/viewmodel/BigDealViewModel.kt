@@ -858,11 +858,12 @@ class BigDealViewModel(
 
     fun exportPdf(context: Context) {
         viewModelScope.launch {
+            val currentDealValue = (dealApprovalSellingPrice.value.toDoubleOrNull() ?: 100.0) * (dealApprovalVolumeUnits.value.toIntOrNull() ?: 1000)
             val deal = SavedDeal(
                 title = dealTitle.value,
                 clientName = clientName.value,
-                currencyCode = selectedCurrency.value,
-                dealValue = principalAmount.value.toDoubleOrNull() ?: 120000.0,
+                currencyCode = activeCurrency.value.code,
+                dealValue = if (currentDealValue > 0.0) currentDealValue else (principalAmount.value.toDoubleOrNull() ?: 120000.0),
                 interestRatePct = annualInterestRate.value.toDoubleOrNull() ?: 6.5,
                 tenureMonths = tenureMonths.value.toIntOrNull() ?: 24,
                 frequency = paymentFrequency.value,
@@ -883,7 +884,12 @@ class BigDealViewModel(
                 pnl = _pnlModel.value,
                 ltv = _ltvMetrics.value,
                 margin = _marginState.value,
-                landedCost = _landedCostResult.value
+                landedCost = _landedCostResult.value,
+                dealScoring = _dealScoringResult.value,
+                dealStatus = dealApprovalStatus.value,
+                giveGet = giveGetResult.value,
+                tornado = tornadoResult.value,
+                waterfall = waterfallResult.value
             )
 
             result.onSuccess {

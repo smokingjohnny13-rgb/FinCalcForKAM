@@ -20,6 +20,12 @@ import com.example.data.model.LandedCostResult
 import com.example.data.model.MarginMarkupState
 import com.example.data.model.PnlModel
 import com.example.data.model.SavedDeal
+import com.example.data.model.DealApprovalStatus
+import com.example.data.model.DealScoringLevel
+import com.example.data.model.DealScoringResult
+import com.example.domain.calculator.GiveGetResult
+import com.example.domain.calculator.TornadoAnalysisResult
+import com.example.domain.calculator.PriceWaterfallResult
 import com.example.domain.calculator.LtvCalculator
 import java.io.File
 import java.io.FileOutputStream
@@ -37,37 +43,67 @@ object PdfExportService {
         pnl: PnlModel,
         ltv: LtvMetrics,
         margin: MarginMarkupState,
-        landedCost: LandedCostResult? = null
+        landedCost: LandedCostResult? = null,
+        dealScoring: DealScoringResult? = null,
+        dealStatus: DealApprovalStatus? = null,
+        giveGet: GiveGetResult? = null,
+        tornado: TornadoAnalysisResult? = null,
+        waterfall: PriceWaterfallResult? = null
     ): Result<Uri> {
         return runCatching {
             val pdfDocument = PdfDocument()
             val pageWidth = 595 // Standard A4 width in points
             val pageHeight = 842 // Standard A4 height in points
-            val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
-            val page = pdfDocument.startPage(pageInfo)
-            val canvas = page.canvas
 
             val currencyFmt = NumberFormat.getCurrencyInstance(Locale.US).apply {
-                currency = java.util.Currency.getInstance(deal.currencyCode)
+                currency = try {
+                    java.util.Currency.getInstance(deal.currencyCode)
+                } catch (e: Exception) {
+                    java.util.Currency.getInstance("USD")
+                }
             }
             val percentFmt = NumberFormat.getNumberInstance(Locale.US).apply {
                 maximumFractionDigits = 1
                 minimumFractionDigits = 1
             }
 
-            drawPdfContent(
-                canvas = canvas,
+            // --- PAGE 1: Commercial Deal Desk, Scoring, Give-Get & Tornado Analysis ---
+            val pageInfo1 = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create()
+            val page1 = pdfDocument.startPage(pageInfo1)
+            drawPageOneCommercialBrief(
+                canvas = page1.canvas,
+                deal = deal,
+                margin = margin,
+                pnl = pnl,
+                dealScoring = dealScoring,
+                dealStatus = dealStatus,
+                giveGet = giveGet,
+                tornado = tornado,
+                waterfall = waterfall,
+                landedCost = landedCost,
+                currencyFmt = currencyFmt,
+                percentFmt = percentFmt,
+                pageWidth = pageWidth,
+                pageHeight = pageHeight
+            )
+            pdfDocument.finishPage(page1)
+
+            // --- PAGE 2: Financial Underwriting, Amortization Schedule & P&L Statement ---
+            val pageInfo2 = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 2).create()
+            val page2 = pdfDocument.startPage(pageInfo2)
+            drawPageTwoFinancialProjections(
+                canvas = page2.canvas,
                 deal = deal,
                 amortization = amortization,
                 pnl = pnl,
                 ltv = ltv,
-                margin = margin,
+                landedCost = landedCost,
                 currencyFmt = currencyFmt,
                 percentFmt = percentFmt,
-                pageWidth = pageWidth
+                pageWidth = pageWidth,
+                pageHeight = pageHeight
             )
-
-            pdfDocument.finishPage(page)
+            pdfDocument.finishPage(page2)
 
             val reportsDir = File(context.cacheDir, "reports")
             if (!reportsDir.exists()) reportsDir.mkdirs()
@@ -89,8 +125,11 @@ object PdfExportService {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, contentUri)
-                putExtra(Intent.EXTRA_SUBJECT, "NotaBigDeal Executive Proposal: ${deal.title}")
-                putExtra(Intent.EXTRA_TEXT, "Attached is the comprehensive financial deal model and projection report for ${deal.clientName}.")
+                putExtra(Intent.EXTRA_SUBJECT, "NotaBigDeal Executive Proposal: ${deal.title} (${deal.clientName})")
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    "Attached is the complete 2-page commercial deal proposal and financial underwriting model for ${deal.clientName} (connect: www.linkedin.com/in/snitkor)."
+                )
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
@@ -162,213 +201,652 @@ object PdfExportService {
         }
     }
 
-    private fun drawPdfContent(
+    private fun drawWrappedText(
+        canvas: Canvas,
+        text: String,
+        x: Float,
+        startY: Float,
+        maxWidth: Float,
+        lineHeight: Float,
+        paint: Paint,
+        maxLines: Int = 3
+    ): Float {
+        val words = text.split(" ")
+        var currentLine = ""
+        var y = startY
+        var linesCount = 0
+
+        for (word in words) {
+            val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
+            val width = paint.measureText(testLine)
+            if (width > maxWidth && currentLine.isNotEmpty()) {
+                canvas.drawText(currentLine, x, y, paint)
+                y += lineHeight
+                linesCount++
+                if (linesCount >= maxLines - 1) {
+                    currentLine = "$word..."
+                    break
+                } else {
+                    currentLine = word
+                }
+            } else {
+                currentLine = testLine
+            }
+        }
+        if (currentLine.isNotEmpty()) {
+            canvas.drawText(currentLine, x, y, paint)
+            y += lineHeight
+        }
+        return y
+    }
+
+    private fun drawPageOneCommercialBrief(
+        canvas: Canvas,
+        deal: SavedDeal,
+        margin: MarginMarkupState,
+        pnl: PnlModel,
+        dealScoring: DealScoringResult?,
+        dealStatus: DealApprovalStatus?,
+        giveGet: GiveGetResult?,
+        tornado: TornadoAnalysisResult?,
+        waterfall: PriceWaterfallResult?,
+        landedCost: LandedCostResult?,
+        currencyFmt: NumberFormat,
+        percentFmt: NumberFormat,
+        pageWidth: Int,
+        pageHeight: Int
+    ) {
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val leftX = 28f
+        val rightX = (pageWidth - 28).toFloat()
+        val contentWidth = rightX - leftX
+
+        // 1. Top Header Banner
+        paint.color = Color.rgb(11, 19, 43) // Deep Midnight
+        canvas.drawRect(0f, 0f, pageWidth.toFloat(), 68f, paint)
+
+        paint.color = Color.rgb(16, 185, 129) // Emerald accent line
+        canvas.drawRect(0f, 66f, pageWidth.toFloat(), 68f, paint)
+
+        // Title & Subtitle
+        paint.color = Color.WHITE
+        paint.textSize = 17f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("NotaBigDeal", leftX, 32f, paint)
+
+        paint.textSize = 8.5f
+        paint.color = Color.rgb(52, 211, 153)
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("B2B COMMERCIAL DEAL DESK & EXECUTIVE APPROVAL BRIEF", leftX, 48f, paint)
+
+        val dateStr = SimpleDateFormat("MMM dd, yyyy", Locale.US).format(Date(deal.updatedAt))
+        paint.color = Color.rgb(148, 163, 184)
+        paint.textSize = 8.5f
+        canvas.drawText("Ref: #NBD-${deal.id.take(8).uppercase()}", (pageWidth - 170).toFloat(), 32f, paint)
+        canvas.drawText("Date: $dateStr  |  Confidential", (pageWidth - 170).toFloat(), 48f, paint)
+
+        // 2. Deal Title & Client Metadata Strip
+        var currentY = 88f
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 13f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText(deal.title, leftX, currentY, paint)
+
+        currentY += 15f
+        paint.textSize = 9.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.color = Color.rgb(71, 85, 105)
+        val statusLabel = dealStatus?.labelEn ?: "Draft"
+        canvas.drawText("Client Account: ${deal.clientName}   |   Currency: ${deal.currencyCode}   |   Status: $statusLabel", leftX, currentY, paint)
+
+        // 3. 4-Pillar Executive Summary Cards
+        currentY += 14f
+        val cardWidth = (contentWidth - 36f) / 4f
+        val cardHeight = 44f
+        val cardGap = 12f
+
+        val netPriceDisplay = dealScoring?.netNetPrice ?: (if (deal.dealValue > 0 && deal.tenureMonths > 0) deal.dealValue / deal.tenureMonths else 100.0)
+        val netMarginDisplay = dealScoring?.netNetMarginPct ?: deal.marginPct
+
+        val pillars = listOf(
+            Triple("CONTRACT VALUE", currencyFmt.format(deal.dealValue), Color.rgb(16, 185, 129)),
+            Triple("NET-NET UNIT PRICE", currencyFmt.format(netPriceDisplay), Color.rgb(6, 182, 212)),
+            Triple("NET-NET MARGIN", "${percentFmt.format(netMarginDisplay)}%", Color.rgb(245, 158, 11)),
+            Triple("PROJECTED ROI", "${percentFmt.format(pnl.roiPct)}%", Color.rgb(16, 185, 129))
+        )
+
+        for ((index, item) in pillars.withIndex()) {
+            val left = leftX + index * (cardWidth + cardGap)
+            val rect = RectF(left, currentY, left + cardWidth, currentY + cardHeight)
+            paint.color = Color.rgb(241, 245, 249)
+            canvas.drawRoundRect(rect, 5f, 5f, paint)
+
+            paint.color = Color.rgb(100, 116, 139)
+            paint.textSize = 7f
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(item.first, left + 8f, currentY + 14f, paint)
+
+            paint.color = item.third
+            paint.textSize = 11f
+            canvas.drawText(item.second, left + 8f, currentY + 32f, paint)
+        }
+
+        currentY += cardHeight + 14f
+
+        // --- SECTION 1: COMMERCIAL DEAL APPROVAL & RISK SCORING ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("1. COMMERCIAL DEAL DESK & TRAFFIC LIGHT RISK SCORING", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val scoringScore = dealScoring?.riskScore ?: 86
+        val scoringLevel = dealScoring?.scoringLevel ?: DealScoringLevel.PROFITABLE
+        val levelColor = when (scoringLevel) {
+            DealScoringLevel.PROFITABLE -> Color.rgb(16, 185, 129)
+            DealScoringLevel.BORDERLINE -> Color.rgb(245, 158, 11)
+            DealScoringLevel.MARGIN_DESTROYER -> Color.rgb(239, 68, 68)
+        }
+
+        // Deal Score Badge
+        val scoreBox = RectF(leftX, currentY, leftX + 130f, currentY + 28f)
+        paint.color = Color.rgb(241, 245, 249)
+        canvas.drawRoundRect(scoreBox, 4f, 4f, paint)
+        paint.color = levelColor
+        paint.textSize = 9f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("${scoringLevel.emoji} ${scoringLevel.titleEn}", leftX + 8f, currentY + 13f, paint)
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(71, 85, 105)
+        canvas.drawText("Score: $scoringScore/100 • $statusLabel", leftX + 8f, currentY + 23f, paint)
+
+        // Metrics Grid (Next to badge)
+        val metricStartX = leftX + 140f
+        val mWidth = (contentWidth - 140f) / 3f
+
+        // Metric 1: Gross vs Net-Net
+        val grossP = dealScoring?.sellingPrice ?: 100.0
+        val netP = dealScoring?.netNetPrice ?: 87.40
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 7f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("PRICE REALIZATION", metricStartX, currentY + 9f, paint)
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8.5f
+        canvas.drawText("${currencyFmt.format(netP)} (Gross: ${currencyFmt.format(grossP)})", metricStartX, currentY + 22f, paint)
+
+        // Metric 2: Margin & Erosion
+        val grossM = dealScoring?.grossMarginPct ?: 45.0
+        val netM = dealScoring?.netNetMarginPct ?: 37.1
+        val erosion = dealScoring?.marginErosionPts ?: 7.9
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 7f
+        canvas.drawText("MARGIN & EROSION", metricStartX + mWidth, currentY + 9f, paint)
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8.5f
+        canvas.drawText("${percentFmt.format(netM)}% (-${percentFmt.format(erosion)} p.p.)", metricStartX + mWidth, currentY + 22f, paint)
+
+        // Metric 3: Terms & Capital Cost
+        val termsDays = dealScoring?.paymentTermsDays ?: 30
+        val costTerms = dealScoring?.costOfDeferralAmount ?: 800.0
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 7f
+        canvas.drawText("PAYMENT TERMS & COST", metricStartX + mWidth * 2f, currentY + 9f, paint)
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8.5f
+        canvas.drawText("$termsDays Days (-${currencyFmt.format(costTerms)})", metricStartX + mWidth * 2f, currentY + 22f, paint)
+
+        currentY += 34f
+        // Playbook Box
+        val playbookBox = RectF(leftX, currentY, rightX, currentY + 26f)
+        paint.color = Color.rgb(248, 250, 252)
+        canvas.drawRoundRect(playbookBox, 4f, 4f, paint)
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("ACTIONABLE PLAYBOOK FOR KAM:", leftX + 8f, currentY + 11f, paint)
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.color = Color.rgb(51, 65, 85)
+        val guidanceText = dealScoring?.actionableGuidanceEn ?: "Green corridor: KAM can approve the deal independently. Recommended to fix quarterly contract volumes."
+        drawWrappedText(canvas, guidanceText, leftX + 8f, currentY + 21f, contentWidth - 16f, 10f, paint, maxLines = 1)
+
+        currentY += 36f
+
+        // --- SECTION 2: "GIVE-GET" CONCESSION BALANCING (EBITDA GUARD) ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("2. \"GIVE-GET\" CONCESSION BALANCING (EBITDA NEUTRALITY)", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val giveBoxWidth = (contentWidth - 12f) / 2f
+
+        // Left Box: The Give (Buyer Concession)
+        val giveBox = RectF(leftX, currentY, leftX + giveBoxWidth, currentY + 44f)
+        paint.color = Color.rgb(254, 242, 242)
+        canvas.drawRoundRect(giveBox, 4f, 4f, paint)
+
+        paint.color = Color.rgb(220, 38, 38)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("THE GIVE (BUYER CONCESSION)", leftX + 8f, currentY + 12f, paint)
+
+        val concName = giveGet?.concessionType?.labelEn ?: "Payment Deferral (+30 Days)"
+        val concDrain = giveGet?.concessionFinancialCost ?: 2400.0
+        val concErosion = giveGet?.marginErosionPp ?: 1.6
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8.5f
+        canvas.drawText(concName, leftX + 8f, currentY + 25f, paint)
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(185, 28, 28)
+        canvas.drawText("Financial Drain: -${currencyFmt.format(concDrain)} (Margin: -${percentFmt.format(concErosion)} p.p.)", leftX + 8f, currentY + 37f, paint)
+
+        // Right Box: The Gets (Compensatory Counter-Trades)
+        val getBox = RectF(leftX + giveBoxWidth + 12f, currentY, rightX, currentY + 44f)
+        paint.color = Color.rgb(240, 253, 244)
+        canvas.drawRoundRect(getBox, 4f, 4f, paint)
+
+        paint.color = Color.rgb(22, 163, 74)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("MANDATORY COUNTER-TRADES (THE GETS)", leftX + giveBoxWidth + 20f, currentY + 12f, paint)
+
+        val volLiftUnits = giveGet?.requiredVolumeLiftUnits ?: 68
+        val volLiftPct = giveGet?.requiredVolumeLiftPct ?: 6.8
+        val priceComp = giveGet?.requiredPriceCompensationPct ?: 2.4
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 8.5f
+        canvas.drawText("Volume Lift: +$volLiftUnits units (+${percentFmt.format(volLiftPct)}%)", leftX + giveBoxWidth + 20f, currentY + 25f, paint)
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(21, 128, 61)
+        canvas.drawText("Price Compensation: +${percentFmt.format(priceComp)}% or 30% Prepayment Deposit", leftX + giveBoxWidth + 20f, currentY + 37f, paint)
+
+        currentY += 50f
+        // Talk Track Script
+        val scriptBox = RectF(leftX, currentY, rightX, currentY + 24f)
+        paint.color = Color.rgb(248, 250, 252)
+        canvas.drawRoundRect(scriptBox, 4f, 4f, paint)
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 7f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("KAM NEGOTIATION SCRIPT:", leftX + 8f, currentY + 10f, paint)
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.color = Color.rgb(51, 65, 85)
+        val scriptText = giveGet?.negotiationScriptEn ?: "We can accommodate your concession provided contract volume expands to protect margin."
+        drawWrappedText(canvas, scriptText, leftX + 8f, currentY + 19f, contentWidth - 16f, 9f, paint, maxLines = 1)
+
+        currentY += 34f
+
+        // --- SECTION 3: TORNADO SENSITIVITY & PROFIT LEVERAGE (P4) ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("3. TORNADO SENSITIVITY & PROFIT LEVERAGE (McKINSEY / DuPONT)", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val domLever = tornado?.dominantFactor?.nameEn ?: "Selling Price (P)"
+        val domMult = tornado?.dominantFactor?.leverageMultiplier ?: 2.5
+        val pVsV = tornado?.priceVsVolumeRatio ?: 2.1
+        val deltaP = tornado?.deltaPct?.toInt() ?: 5
+
+        // Dominant Callout Strip
+        val domBox = RectF(leftX, currentY, rightX, currentY + 20f)
+        paint.color = Color.rgb(254, 243, 199) // Light amber
+        canvas.drawRoundRect(domBox, 4f, 4f, paint)
+        paint.color = Color.rgb(180, 83, 9)
+        paint.textSize = 8f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("PRIMARY PROFIT LEVER: $domLever (${domMult}x Leverage)  |  Price is ${pVsV}x more sensitive than Volume", leftX + 8f, currentY + 13f, paint)
+
+        currentY += 26f
+        // Sensitivity Table Header
+        paint.color = Color.rgb(241, 245, 249)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 14f, paint)
+        paint.color = Color.rgb(100, 116, 139)
+        paint.textSize = 7f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("FACTOR", leftX + 6f, currentY + 10f, paint)
+        canvas.drawText("BASELINE", leftX + 160f, currentY + 10f, paint)
+        canvas.drawText("EBITDA SHIFT (±$deltaP%)", leftX + 270f, currentY + 10f, paint)
+        canvas.drawText("% EBITDA", leftX + 410f, currentY + 10f, paint)
+        canvas.drawText("LEVERAGE", leftX + 480f, currentY + 10f, paint)
+
+        currentY += 15f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.textSize = 8f
+
+        val factorsToDraw = tornado?.factors?.take(4) ?: emptyList()
+        if (factorsToDraw.isNotEmpty()) {
+            for (f in factorsToDraw) {
+                paint.color = Color.rgb(15, 23, 42)
+                canvas.drawText("#${f.rank} ${f.nameEn}", leftX + 6f, currentY + 9f, paint)
+                canvas.drawText(currencyFmt.format(f.baselineValue), leftX + 160f, currentY + 9f, paint)
+                canvas.drawText("±${currencyFmt.format(f.ebitdaImpactDollar)}", leftX + 270f, currentY + 9f, paint)
+                canvas.drawText("±${percentFmt.format(f.ebitdaImpactPct)}%", leftX + 410f, currentY + 9f, paint)
+                canvas.drawText("${f.leverageMultiplier}x", leftX + 480f, currentY + 9f, paint)
+                currentY += 12f
+            }
+        } else {
+            // Default demonstration rows
+            val defaultFactors = listOf(
+                Tuple5("Selling Price (P)", currencyFmt.format(150000.0), "±${currencyFmt.format(7500.0)}", "±10.7%", "2.1x"),
+                Tuple5("Sales Volume (Q)", currencyFmt.format(105000.0), "±${currencyFmt.format(5250.0)}", "±7.5%", "1.5x"),
+                Tuple5("Direct Costs (COGS)", currencyFmt.format(45000.0), "±${currencyFmt.format(2250.0)}", "±3.2%", "0.6x"),
+                Tuple5("Operating Expenses", currencyFmt.format(35000.0), "±${currencyFmt.format(1750.0)}", "±2.5%", "0.5x")
+            )
+            for (df in defaultFactors) {
+                paint.color = Color.rgb(15, 23, 42)
+                canvas.drawText(df.a, leftX + 6f, currentY + 9f, paint)
+                canvas.drawText(df.b, leftX + 160f, currentY + 9f, paint)
+                canvas.drawText(df.c, leftX + 270f, currentY + 9f, paint)
+                canvas.drawText(df.d, leftX + 410f, currentY + 9f, paint)
+                canvas.drawText(df.e, leftX + 480f, currentY + 9f, paint)
+                currentY += 12f
+            }
+        }
+
+        currentY += 16f
+
+        // --- SECTION 4: RETAIL PRICE WATERFALL (NET-NET DECOMPOSITION) ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("4. RETAIL PRICE WATERFALL (RSP TO SUPPLIER NET-NET)", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val wRsp = waterfall?.shelfRspWithVat ?: 100.0
+        val wExVat = waterfall?.priceExVat ?: 83.33
+        val wRetMargin = waterfall?.retailerMarginAmount ?: 25.0
+        val wInvoice = waterfall?.invoicePrice ?: 55.41
+        val wBonus = waterfall?.backBonusAmount ?: 4.43
+        val wLogistics = waterfall?.logisticsCostPerUnit ?: 3.50
+        val wNetNet = waterfall?.netNetPrice ?: 47.48
+        val wNetMargin = waterfall?.supplierMarginPct ?: 47.3
+
+        // 6-step waterfall mini horizontal chain
+        val stepW = (contentWidth - 25f) / 6f
+        val steps = listOf(
+            Pair("Shelf RSP", currencyFmt.format(wRsp)),
+            Pair("Ex-VAT Base", currencyFmt.format(wExVat)),
+            Pair("Retail Margin", "-${currencyFmt.format(wRetMargin)}"),
+            Pair("Wholesale Inv.", currencyFmt.format(wInvoice)),
+            Pair("Rebates & Log.", "-${currencyFmt.format(wBonus + wLogistics)}"),
+            Pair("Net-Net Realiz.", currencyFmt.format(wNetNet))
+        )
+
+        for ((idx, step) in steps.withIndex()) {
+            val stepLeft = leftX + idx * (stepW + 5f)
+            val stepBox = RectF(stepLeft, currentY, stepLeft + stepW, currentY + 34f)
+            paint.color = if (idx == 5) Color.rgb(236, 253, 245) else Color.rgb(248, 250, 252)
+            canvas.drawRoundRect(stepBox, 4f, 4f, paint)
+
+            paint.color = Color.rgb(100, 116, 139)
+            paint.textSize = 6.5f
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(step.first, stepLeft + 4f, currentY + 12f, paint)
+
+            paint.color = if (idx == 5) Color.rgb(5, 150, 105) else Color.rgb(15, 23, 42)
+            paint.textSize = 8.5f
+            canvas.drawText(step.second, stepLeft + 4f, currentY + 26f, paint)
+        }
+
+        currentY += 46f
+        paint.color = Color.rgb(71, 85, 105)
+        paint.textSize = 7.5f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("Supplier Net-Net Realization: ${currencyFmt.format(wNetNet)} per unit (Supplier Margin: ${percentFmt.format(wNetMargin)}%) after all layered deductions.", leftX, currentY, paint)
+
+        // Footer Page 1
+        paint.color = Color.rgb(203, 213, 225)
+        canvas.drawRect(leftX, 805f, rightX, 806f, paint)
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(148, 163, 184)
+        canvas.drawText("Page 1 of 2  •  Commercial Deal Desk Brief  •  NotaBigDeal Enterprise Suite", leftX, 820f, paint)
+        canvas.drawText("Executive Confidential", (pageWidth - 130).toFloat(), 820f, paint)
+    }
+
+    private fun drawPageTwoFinancialProjections(
         canvas: Canvas,
         deal: SavedDeal,
         amortization: AmortizationSummary,
         pnl: PnlModel,
         ltv: LtvMetrics,
-        margin: MarginMarkupState,
+        landedCost: LandedCostResult?,
         currencyFmt: NumberFormat,
         percentFmt: NumberFormat,
-        pageWidth: Int
+        pageWidth: Int,
+        pageHeight: Int
     ) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val leftX = 28f
+        val rightX = (pageWidth - 28).toFloat()
+        val contentWidth = rightX - leftX
 
-        // 1. Top Header Banner
-        paint.color = Color.rgb(11, 19, 43) // Executive Midnight
-        canvas.drawRect(0f, 0f, pageWidth.toFloat(), 90f, paint)
+        // 1. Top Header Banner (Page 2)
+        paint.color = Color.rgb(11, 19, 43)
+        canvas.drawRect(0f, 0f, pageWidth.toFloat(), 68f, paint)
 
-        // Header Title
+        paint.color = Color.rgb(6, 182, 212) // Cyan accent line for Page 2
+        canvas.drawRect(0f, 66f, pageWidth.toFloat(), 68f, paint)
+
         paint.color = Color.WHITE
-        paint.textSize = 20f
+        paint.textSize = 17f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("NotaBigDeal", 30f, 42f, paint)
+        canvas.drawText("NotaBigDeal", leftX, 32f, paint)
 
-        paint.textSize = 10f
-        paint.color = Color.rgb(52, 211, 153) // Emerald Light
+        paint.textSize = 8.5f
+        paint.color = Color.rgb(56, 189, 248)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        canvas.drawText("EXECUTIVE DEAL PROPOSAL & FINANCIAL MODEL", 30f, 60f, paint)
+        canvas.drawText("FINANCIAL UNDERWRITING, AMORTIZATION & P&L STATEMENT", leftX, 48f, paint)
 
-        val dateStr = SimpleDateFormat("MMM dd, yyyy", Locale.US).format(Date(deal.updatedAt))
         paint.color = Color.rgb(148, 163, 184)
-        paint.textSize = 9f
-        canvas.drawText("Generated: $dateStr", (pageWidth - 140).toFloat(), 42f, paint)
-        canvas.drawText("Status: Executive Confidential", (pageWidth - 140).toFloat(), 60f, paint)
+        paint.textSize = 8.5f
+        canvas.drawText("Account: ${deal.clientName}", (pageWidth - 170).toFloat(), 32f, paint)
+        canvas.drawText("Currency: ${deal.currencyCode}", (pageWidth - 170).toFloat(), 48f, paint)
 
-        // 2. Client & Proposal Info Section
-        var currentY = 115f
+        // --- SECTION 5: FINANCING TERMS & REPAYMENT SCHEDULE ---
+        var currentY = 88f
         paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 14f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText(deal.title, 30f, currentY, paint)
-
-        currentY += 16f
         paint.textSize = 10f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        paint.color = Color.rgb(71, 85, 105)
-        canvas.drawText("Client Account: ${deal.clientName}   |   Base Currency: ${deal.currencyCode}", 30f, currentY, paint)
-
-        // 3. 4-Pillar Executive Summary Cards (Row of 4 Cards)
-        currentY += 20f
-        val cardWidth = 125f
-        val cardHeight = 52f
-        val cardGap = 12f
-        val startX = 30f
-
-        val pillars = listOf(
-            Triple("CONTRACT VALUE", currencyFmt.format(deal.dealValue), Color.rgb(16, 185, 129)),
-            Triple("${amortization.frequency.displayName.uppercase()} PAYMENT", currencyFmt.format(amortization.periodicPayment), Color.rgb(6, 182, 212)),
-            Triple("GROSS MARGIN", "${percentFmt.format(margin.marginPct)}%", Color.rgb(245, 158, 11)),
-            Triple("PROJECTED ROI", "${percentFmt.format(pnl.roiPct)}%", Color.rgb(16, 185, 129))
-        )
-
-        for ((index, item) in pillars.withIndex()) {
-            val left = startX + index * (cardWidth + cardGap)
-            val rect = RectF(left, currentY, left + cardWidth, currentY + cardHeight)
-            paint.color = Color.rgb(241, 245, 249)
-            canvas.drawRoundRect(rect, 6f, 6f, paint)
-
-            paint.color = Color.rgb(100, 116, 139)
-            paint.textSize = 7f
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            canvas.drawText(item.first, left + 8f, currentY + 16f, paint)
-
-            paint.color = item.third
-            paint.textSize = 12f
-            canvas.drawText(item.second, left + 8f, currentY + 36f, paint)
-        }
-
-        // 4. Section: Financing & Credit Schedule Overview
-        currentY += cardHeight + 25f
-        paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 11f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("1. FINANCING & AMORTIZATION TERMS", 30f, currentY, paint)
+        canvas.drawText("5. FINANCING TERMS & REPAYMENT SCHEDULE", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
 
         currentY += 12f
-        paint.color = Color.rgb(226, 232, 240)
-        canvas.drawRect(30f, currentY, (pageWidth - 30).toFloat(), currentY + 1f, paint)
-
-        currentY += 15f
         paint.color = Color.rgb(71, 85, 105)
-        paint.textSize = 9f
+        paint.textSize = 8.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        val termText = if (amortization.hasGracePeriod) {
-            "Principal: ${currencyFmt.format(deal.dealValue)} | Grace: ${amortization.gracePeriodsCount} per. @ ${amortization.graceInterestRatePct}% | Post-Grace: ${amortization.postGraceInterestRatePct}% APR (${amortization.frequency.displayName})"
-        } else {
-            "Principal: ${currencyFmt.format(deal.dealValue)}   |   Annual Rate: ${deal.interestRatePct}%   |   Tenure: ${deal.tenureMonths} Months (${amortization.frequency.displayName})"
-        }
-        val totalCostText = "Total Financing Cost: ${currencyFmt.format(amortization.totalPayments)} (Interest: ${currencyFmt.format(amortization.totalInterest)})"
-        canvas.drawText(termText, 30f, currentY, paint)
-        currentY += 13f
-        canvas.drawText(totalCostText, 30f, currentY, paint)
 
-        // Mini Table Header
-        currentY += 15f
-        paint.color = Color.rgb(248, 250, 252)
-        canvas.drawRect(30f, currentY - 10f, (pageWidth - 30).toFloat(), currentY + 12f, paint)
+        val termText = if (amortization.hasGracePeriod) {
+            "Principal: ${currencyFmt.format(deal.dealValue)}  |  Grace: ${amortization.gracePeriodsCount} per. @ ${amortization.graceInterestRatePct}%  |  Post-Grace: ${amortization.postGraceInterestRatePct}% APR (${amortization.frequency.displayName})"
+        } else {
+            "Principal: ${currencyFmt.format(deal.dealValue)}  |  Rate: ${deal.interestRatePct}% APR  |  Tenure: ${deal.tenureMonths} Months (${amortization.frequency.displayName})"
+        }
+        val costText = "Periodic Installment: ${currencyFmt.format(amortization.periodicPayment)}  |  Total Payments: ${currencyFmt.format(amortization.totalPayments)} (Total Interest: ${currencyFmt.format(amortization.totalInterest)})"
+        canvas.drawText(termText, leftX, currentY, paint)
+        currentY += 11f
+        canvas.drawText(costText, leftX, currentY, paint)
+
+        // Amortization Table Header
+        currentY += 14f
+        paint.color = Color.rgb(241, 245, 249)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 14f, paint)
         paint.color = Color.rgb(100, 116, 139)
-        paint.textSize = 8f
+        paint.textSize = 7f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("PERIOD", 35f, currentY + 4f, paint)
-        canvas.drawText("INSTALLMENT", 120f, currentY + 4f, paint)
-        canvas.drawText("PRINCIPAL", 230f, currentY + 4f, paint)
-        canvas.drawText("INTEREST", 340f, currentY + 4f, paint)
-        canvas.drawText("BALANCE", 450f, currentY + 4f, paint)
+        canvas.drawText("PERIOD", leftX + 8f, currentY + 10f, paint)
+        canvas.drawText("INSTALLMENT", leftX + 110f, currentY + 10f, paint)
+        canvas.drawText("PRINCIPAL", leftX + 220f, currentY + 10f, paint)
+        canvas.drawText("INTEREST", leftX + 330f, currentY + 10f, paint)
+        canvas.drawText("REMAINING BALANCE", leftX + 440f, currentY + 10f, paint)
 
         currentY += 16f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        val sampleRows = amortization.schedule.take(4)
-        for (row in sampleRows) {
-            paint.color = if (row.isGracePeriod) Color.rgb(217, 119, 6) else Color.rgb(30, 41, 59)
-            val periodLabel = if (row.isGracePeriod) "#${row.period} (G)" else "#${row.period}"
-            canvas.drawText(periodLabel, 35f, currentY, paint)
-            canvas.drawText(currencyFmt.format(row.payment), 120f, currentY, paint)
-            canvas.drawText(currencyFmt.format(row.principal), 230f, currentY, paint)
-            canvas.drawText(currencyFmt.format(row.interest), 340f, currentY, paint)
-            canvas.drawText(currencyFmt.format(row.remainingBalance), 450f, currentY, paint)
-            currentY += 12f
-        }
-
-        // 5. Section: PnL & Profitability Model
-        currentY += 15f
-        paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 11f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("2. CONTRACT P&L AND PROFITABILITY", 30f, currentY, paint)
-
-        currentY += 10f
-        paint.color = Color.rgb(226, 232, 240)
-        canvas.drawRect(30f, currentY, (pageWidth - 30).toFloat(), currentY + 1f, paint)
-
-        currentY += 15f
-        paint.textSize = 9f
-        val pnlRows = listOf(
-            "Gross Contract Revenue" to currencyFmt.format(pnl.grossRevenue),
-            "Cost of Goods & Delivery (COGS)" to "(${currencyFmt.format(pnl.cogs)})",
-            "Gross Profit (Margin: ${percentFmt.format(pnl.grossMarginPct)}%)" to currencyFmt.format(pnl.grossProfit),
-            "Operating Expenses (OPEX)" to "(${currencyFmt.format(pnl.operatingExpenses)})",
-            "Operating EBITDA (EBITDA Margin: ${percentFmt.format(pnl.ebitdaMarginPct)}%)" to currencyFmt.format(pnl.ebitda),
-            "Estimated Net Profit After Tax" to currencyFmt.format(pnl.netProfit),
-            "Initial Implementation Investment" to currencyFmt.format(pnl.initialInvestment),
-            "Payback Period" to "${pnl.paybackMonths} Months"
-        )
-
-        for ((label, value) in pnlRows) {
-            paint.color = Color.rgb(51, 65, 85)
-            canvas.drawText(label, 30f, currentY, paint)
-            paint.color = Color.rgb(15, 23, 42)
-            canvas.drawText(value, (pageWidth - 140).toFloat(), currentY, paint)
-            currentY += 12f
-        }
-
-        // 6. Section: Account Unit Economics (LTV & Churn)
-        currentY += 10f
-        paint.color = Color.rgb(15, 23, 42)
-        paint.textSize = 11f
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("3. SAAS ACCOUNT ECONOMICS & LTV", 30f, currentY, paint)
-
-        currentY += 10f
-        paint.color = Color.rgb(226, 232, 240)
-        canvas.drawRect(30f, currentY, (pageWidth - 30).toFloat(), currentY + 1f, paint)
-
-        currentY += 15f
-        paint.textSize = 9f
-        val econRows = listOf(
-            "Average Revenue Per Account (ARPU)" to currencyFmt.format(ltv.arpu),
-            "Annualized Churn Rate" to "${percentFmt.format(ltv.churnRatePct)}%",
-            "Calculated Customer Lifetime Value (LTV)" to currencyFmt.format(ltv.ltv),
-            "Customer Acquisition Cost (CAC)" to currencyFmt.format(ltv.cac),
-            "LTV : CAC Health Benchmark" to "${percentFmt.format(ltv.ltvCacRatio)}x (${LtvCalculator.getLtvCacHealthLabel(ltv.ltvCacRatio).first})",
-            "CAC Recovery Horizon" to "${percentFmt.format(ltv.monthsToRecoverCac)} Months"
-        )
-
-        for ((label, value) in econRows) {
-            paint.color = Color.rgb(51, 65, 85)
-            canvas.drawText(label, 30f, currentY, paint)
-            paint.color = Color.rgb(15, 23, 42)
-            canvas.drawText(value, (pageWidth - 140).toFloat(), currentY, paint)
-            currentY += 12f
-        }
-
-        // 7. Signature Approval Block
-        currentY = 760f
-        paint.color = Color.rgb(148, 163, 184)
-        canvas.drawRect(30f, currentY, 240f, currentY + 1f, paint)
-        canvas.drawRect(320f, currentY, 530f, currentY + 1f, paint)
-
         paint.textSize = 8f
-        paint.color = Color.rgb(100, 116, 139)
-        canvas.drawText("Prepared by: BDM / Account Executive", 30f, currentY + 12f, paint)
-        canvas.drawText("Client Sign-Off & Approval", 320f, currentY + 12f, paint)
+        val rowsToDraw = amortization.schedule.take(7)
+        for (row in rowsToDraw) {
+            paint.color = if (row.isGracePeriod) Color.rgb(217, 119, 6) else Color.rgb(30, 41, 59)
+            val periodLabel = if (row.isGracePeriod) "#${row.period} (Grace)" else "#${row.period}"
+            canvas.drawText(periodLabel, leftX + 8f, currentY + 8f, paint)
+            canvas.drawText(currencyFmt.format(row.payment), leftX + 110f, currentY + 8f, paint)
+            canvas.drawText(currencyFmt.format(row.principal), leftX + 220f, currentY + 8f, paint)
+            canvas.drawText(currencyFmt.format(row.interest), leftX + 330f, currentY + 8f, paint)
+            canvas.drawText(currencyFmt.format(row.remainingBalance), leftX + 440f, currentY + 8f, paint)
+            currentY += 11f
+        }
 
-        // Footer disclaimer
-        paint.textSize = 7f
+        currentY += 14f
+
+        // --- SECTION 6: CONTRACT P&L AND PROFITABILITY STATEMENT ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("6. CONTRACT P&L AND PROFITABILITY STATEMENT", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val pnlRows = listOf(
+            Pair("Gross Contract Revenue", currencyFmt.format(pnl.grossRevenue)) to Pair("Operating EBITDA", "${currencyFmt.format(pnl.ebitda)} (${percentFmt.format(pnl.ebitdaMarginPct)}%)"),
+            Pair("Direct Delivery / COGS", "-${currencyFmt.format(pnl.cogs)}") to Pair("Estimated Corporate Tax (20%)", "-${currencyFmt.format(if (pnl.ebitda > 0) pnl.ebitda * 0.20 else 0.0)}"),
+            Pair("Gross Profit", "${currencyFmt.format(pnl.grossProfit)} (${percentFmt.format(pnl.grossMarginPct)}%)") to Pair("Net Contract Profit", "${currencyFmt.format(pnl.netProfit)} (${percentFmt.format(pnl.netMarginPct)}%)"),
+            Pair("Sales & Delivery OPEX", "-${currencyFmt.format(pnl.operatingExpenses)}") to Pair("Initial Implementation Investment", currencyFmt.format(pnl.initialInvestment)),
+            Pair("Break-Even Sales Volume", "${pnl.breakEvenUnits.toInt()} units (${currencyFmt.format(pnl.breakEvenRevenue)})") to Pair("Capital Payback Horizon", "${pnl.paybackMonths} Months")
+        )
+
+        for ((col1, col2) in pnlRows) {
+            paint.color = Color.rgb(71, 85, 105)
+            paint.textSize = 7.5f
+            canvas.drawText(col1.first, leftX, currentY + 9f, paint)
+            paint.color = Color.rgb(15, 23, 42)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(col1.second, leftX + 160f, currentY + 9f, paint)
+
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            paint.color = Color.rgb(71, 85, 105)
+            canvas.drawText(col2.first, leftX + 280f, currentY + 9f, paint)
+            paint.color = Color.rgb(15, 23, 42)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(col2.second, leftX + 440f, currentY + 9f, paint)
+
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            currentY += 12f
+        }
+
+        currentY += 14f
+
+        // --- SECTION 7: SAAS ACCOUNT ECONOMICS & LTV ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("7. ACCOUNT UNIT ECONOMICS & LTV:CAC BENCHMARK", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        val ltvRows = listOf(
+            Pair("Average Revenue Per Account (ARPU)", currencyFmt.format(ltv.arpu)) to Pair("Customer Acquisition Cost (CAC)", currencyFmt.format(ltv.cac)),
+            Pair("Annualized Account Churn Rate", "${percentFmt.format(ltv.churnRatePct)}%") to Pair("LTV : CAC Health Benchmark", "${percentFmt.format(ltv.ltvCacRatio)}x (${LtvCalculator.getLtvCacHealthLabel(ltv.ltvCacRatio).first})"),
+            Pair("Customer Lifetime Value (LTV)", currencyFmt.format(ltv.ltv)) to Pair("CAC Recovery Horizon", "${percentFmt.format(ltv.monthsToRecoverCac)} Months")
+        )
+
+        for ((col1, col2) in ltvRows) {
+            paint.color = Color.rgb(71, 85, 105)
+            paint.textSize = 7.5f
+            canvas.drawText(col1.first, leftX, currentY + 9f, paint)
+            paint.color = Color.rgb(15, 23, 42)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(col1.second, leftX + 160f, currentY + 9f, paint)
+
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            paint.color = Color.rgb(71, 85, 105)
+            canvas.drawText(col2.first, leftX + 280f, currentY + 9f, paint)
+            paint.color = Color.rgb(15, 23, 42)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            canvas.drawText(col2.second, leftX + 440f, currentY + 9f, paint)
+
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            currentY += 12f
+        }
+
+        currentY += 14f
+
+        // --- SECTION 8: IMPORT LANDED COST ANALYSIS (FOB TO WAREHOUSE) ---
+        paint.color = Color.rgb(15, 23, 42)
+        paint.textSize = 10f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("8. IMPORT LANDED COST ANALYSIS (FOB ➔ WAREHOUSE)", leftX, currentY, paint)
+
+        currentY += 6f
+        paint.color = Color.rgb(226, 232, 240)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 12f
+        paint.textSize = 8f
+        val fobPrice = landedCost?.fobPrice ?: (deal.dealValue * 0.45)
+        val lMultiplier = landedCost?.coefficient ?: 1.48
+        val landedPrice = landedCost?.landedCost ?: (fobPrice * lMultiplier)
+        val profileName = "Global Trade FOB Profile"
+
+        val lcText = "Trade Profile: $profileName  |  FOB Factory Price: ${currencyFmt.format(fobPrice)}  |  Multiplier (K): ${String.format(Locale.US, "%.2f", lMultiplier)}x  |  Warehouse Landed Cost: ${currencyFmt.format(landedPrice)}"
+        paint.color = Color.rgb(51, 65, 85)
+        canvas.drawText(lcText, leftX, currentY + 8f, paint)
+
+        // --- SECTION 9: EXECUTIVE SIGNATURE & APPROVAL BLOCK ---
+        currentY = 725f
+        paint.color = Color.rgb(203, 213, 225)
+        canvas.drawRect(leftX, currentY, rightX, currentY + 1f, paint)
+
+        currentY += 28f
+        val sigWidth = 150f
+        val sig1X = leftX
+        val sig2X = leftX + 195f
+        val sig3X = leftX + 390f
+
         paint.color = Color.rgb(148, 163, 184)
-        canvas.drawText("Generated via NotaBigDeal Enterprise Suite. Projections are estimates based on input models.", 30f, 810f, paint)
+        canvas.drawLine(sig1X, currentY, sig1X + sigWidth, currentY, paint)
+        canvas.drawLine(sig2X, currentY, sig2X + sigWidth, currentY, paint)
+        canvas.drawLine(sig3X, currentY, sig3X + sigWidth, currentY, paint)
+
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(71, 85, 105)
+        canvas.drawText("Prepared by: Key Account Manager", sig1X, currentY + 12f, paint)
+        canvas.drawText("Commercial Director / CFO Approval", sig2X, currentY + 12f, paint)
+        canvas.drawText("Client Authorized Sign-Off", sig3X, currentY + 12f, paint)
+
+        // Footer Page 2
+        paint.color = Color.rgb(203, 213, 225)
+        canvas.drawRect(leftX, 805f, rightX, 806f, paint)
+        paint.textSize = 7.5f
+        paint.color = Color.rgb(148, 163, 184)
+        canvas.drawText("Page 2 of 2  •  Financial Underwriting & Projections  •  Connect on LinkedIn: www.linkedin.com/in/snitkor", leftX, 820f, paint)
+        canvas.drawText("Executive Confidential", (pageWidth - 130).toFloat(), 820f, paint)
     }
+
+    private data class Tuple5(val a: String, val b: String, val c: String, val d: String, val e: String)
 
     private fun drawProductFlyerContent(
         canvas: Canvas,

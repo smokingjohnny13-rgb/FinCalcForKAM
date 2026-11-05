@@ -688,6 +688,45 @@ class BigDealCalculatorsTest {
         // Downside = -15000 - 2500 = -17500
         assertEquals(-17500.0, price.downsideEbitda, 0.01)
     }
+
+    @Test
+    fun testDealDeskPdfExportModelLinkage() {
+        // Verify cross-module mathematical consistency for PDF Boardroom Export
+        val sellingPrice = 2500.0
+        val volumeUnits = 50.0
+        val computedDealValue = sellingPrice * volumeUnits
+        assertEquals(125000.0, computedDealValue, 0.01)
+
+        val costPerUnit = 1500.0
+        val marginState = MarginMarkupSolver.fromCostAndPrice(costPerUnit, sellingPrice)
+        assertEquals(40.0, marginState.marginPct, 0.01)
+        assertEquals(66.67, marginState.markupPct, 0.01)
+
+        val pnl = PnlRoiEngine.calculate(
+            revenue = computedDealValue,
+            cogs = costPerUnit * volumeUnits,
+            opex = 15000.0,
+            initialInvestment = 20000.0,
+            fixedCosts = 10000.0,
+            pricePerUnit = sellingPrice,
+            variableCostPerUnit = costPerUnit,
+            dealDurationMonths = 12.0
+        )
+        // Gross Profit 50,000, OPEX 15,000 -> Operating Profit / EBITDA 35,000
+        assertEquals(35000.0, pnl.ebitda, 0.01)
+        assertEquals(50000.0, pnl.grossProfit, 0.01)
+
+        val tornado = TornadoSensitivityEngine.calculate(
+            revenue = computedDealValue,
+            cogs = costPerUnit * volumeUnits,
+            opex = 15000.0,
+            deltaPct = 5.0,
+            discountPct = 5.0
+        )
+        // Price lever should be dominant
+        assertEquals(SensitivityFactorType.PRICE, tornado.dominantFactor?.factorType)
+        assertEquals(6250.0, tornado.dominantFactor?.ebitdaImpactDollar ?: 0.0, 0.01)
+    }
 }
 
 
