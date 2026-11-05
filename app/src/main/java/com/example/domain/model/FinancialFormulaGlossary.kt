@@ -169,6 +169,20 @@ object FinancialFormulaGlossary {
             kamTipRu = "Предлагайте 3-6 месяцев грейс-периода клиентам с временным дефицитом ликвидности вместо прямой скидки: вы защищаете контрактную цену, давая клиенту передышку на запуск проекта.",
             warningEn = "Ensure your internal cost of money during grace is factored into the post-grace interest margin.",
             warningRu = "Убедитесь, что отсрочка по телу кредита не приведет к кассовому разрыву вашей компании."
+        ),
+        FormulaItem(
+            id = "tornado_leverage",
+            category = FormulaCategory.PRICING_MARGIN,
+            titleEn = "Tornado Profit Leverage (McKinsey)",
+            titleRu = "Рычаг чувствительности прибыли (Tornado)",
+            formulaLatexEn = "Price Leverage = Revenue / EBITDA\nVolume Leverage = Gross Profit / EBITDA\nCOGS Leverage = COGS / EBITDA",
+            formulaLatexRu = "Рычаг цены = Выручка / EBITDA\nРычаг объема = Валовая прибыль / EBITDA\nРычаг себестоимости = Себестоимость / EBITDA",
+            definitionEn = "DuPont & McKinsey profit sensitivity framework measuring the percentage shift in EBITDA resulting from a 1% independent variation in price, volume, direct costs, or operating expenses.",
+            definitionRu = "Модель чувствительности прибыли McKinsey/DuPont, определяющая процентное изменение EBITDA при изменении цены, объема, себестоимости или накладных расходов на 1%.",
+            kamTipEn = "Price is typically 2x to 4x more sensitive than Volume. Never trade a price discount for an equal percentage in volume: a 5% price drop usually requires a 15-25% volume surge to maintain EBITDA.",
+            kamTipRu = "Рычаг цены почти всегда в 2-4 раза сильнее рычага объема. Никогда не соглашайтесь на скидку 5% ради роста объема на те же 5%: для сохранения EBITDA объем должен вырасти на 15-25%!",
+            warningEn = "Discounts hit 100% of the top line, while extra volume only brings unit gross contribution margin.",
+            warningRu = "Скидка срезает 100% чистой маржи с каждого рубля, тогда как дополнительный объем приносит лишь валовую маржу за вычетом себестоимости."
         )
     )
 

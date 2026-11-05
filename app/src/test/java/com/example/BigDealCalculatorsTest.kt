@@ -7,6 +7,8 @@ import com.example.domain.calculator.FunnelCalculator
 import com.example.domain.calculator.LtvCalculator
 import com.example.domain.calculator.MarginMarkupSolver
 import com.example.domain.calculator.PnlRoiEngine
+import com.example.domain.calculator.TornadoSensitivityEngine
+import com.example.domain.calculator.SensitivityFactorType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -593,6 +595,98 @@ class BigDealCalculatorsTest {
                 0.05
             )
         }
+    }
+
+    @Test
+    fun testTornadoSensitivityCalculationStandard() {
+        // Revenue = 100,000, COGS = 30,000, OPEX = 20,000, Gross Profit = 70,000, EBITDA = 50,000
+        val result = TornadoSensitivityEngine.calculate(
+            revenue = 100000.0,
+            cogs = 30000.0,
+            opex = 20000.0,
+            deltaPct = 5.0,
+            discountPct = 5.0
+        )
+
+        assertEquals(100000.0, result.baseRevenue, 0.01)
+        assertEquals(30000.0, result.baseCogs, 0.01)
+        assertEquals(20000.0, result.baseOpex, 0.01)
+        assertEquals(50000.0, result.baseEbitda, 0.01)
+        assertEquals(5.0, result.deltaPct, 0.01)
+
+        // Factor checks
+        val priceFactor = result.factors.first { it.factorType == SensitivityFactorType.PRICE }
+        assertEquals(5000.0, priceFactor.ebitdaImpactDollar, 0.01)
+        assertEquals(10.0, priceFactor.ebitdaImpactPct, 0.01) // 5000 / 50000 = 10%
+        assertEquals(2.0, priceFactor.leverageMultiplier, 0.01) // 10% / 5% = 2.0x
+        assertEquals(55000.0, priceFactor.upsideEbitda, 0.01)
+        assertEquals(45000.0, priceFactor.downsideEbitda, 0.01)
+        assertEquals(1, priceFactor.rank) // Price must be #1 dominant factor
+
+        val volumeFactor = result.factors.first { it.factorType == SensitivityFactorType.VOLUME }
+        assertEquals(3500.0, volumeFactor.ebitdaImpactDollar, 0.01) // 70k * 0.05
+        assertEquals(7.0, volumeFactor.ebitdaImpactPct, 0.01)
+        assertEquals(1.4, volumeFactor.leverageMultiplier, 0.01)
+        assertEquals(2, volumeFactor.rank)
+
+        val cogsFactor = result.factors.first { it.factorType == SensitivityFactorType.COGS }
+        assertEquals(1500.0, cogsFactor.ebitdaImpactDollar, 0.01) // 30k * 0.05
+        assertEquals(3.0, cogsFactor.ebitdaImpactPct, 0.01)
+        assertEquals(0.6, cogsFactor.leverageMultiplier, 0.01)
+        assertEquals(3, cogsFactor.rank)
+
+        val opexFactor = result.factors.first { it.factorType == SensitivityFactorType.OPEX }
+        assertEquals(1000.0, opexFactor.ebitdaImpactDollar, 0.01) // 20k * 0.05
+        assertEquals(2.0, opexFactor.ebitdaImpactPct, 0.01)
+        assertEquals(0.4, opexFactor.leverageMultiplier, 0.01)
+        assertEquals(4, opexFactor.rank)
+
+        // Price vs Volume ratio = 5000 / 3500 = 1.43
+        assertEquals(1.43, result.priceVsVolumeRatio, 0.01)
+        assertEquals(SensitivityFactorType.PRICE, result.dominantFactor?.factorType)
+    }
+
+    @Test
+    fun testTornadoSensitivityToggle10Percent() {
+        val result = TornadoSensitivityEngine.calculate(
+            revenue = 100000.0,
+            cogs = 30000.0,
+            opex = 20000.0,
+            deltaPct = 10.0,
+            discountPct = 5.0
+        )
+
+        val priceFactor = result.factors.first { it.factorType == SensitivityFactorType.PRICE }
+        assertEquals(10000.0, priceFactor.ebitdaImpactDollar, 0.01)
+        assertEquals(20.0, priceFactor.ebitdaImpactPct, 0.01)
+        assertEquals(2.0, priceFactor.leverageMultiplier, 0.01)
+
+        val volumeFactor = result.factors.first { it.factorType == SensitivityFactorType.VOLUME }
+        assertEquals(7000.0, volumeFactor.ebitdaImpactDollar, 0.01)
+    }
+
+    @Test
+    fun testTornadoSensitivityEdgeCases() {
+        // Zero Revenue
+        val zeroResult = TornadoSensitivityEngine.calculate(0.0, 0.0, 0.0, deltaPct = 5.0)
+        assertEquals(0.0, zeroResult.baseEbitda, 0.01)
+        assertTrue(zeroResult.factors.all { it.ebitdaImpactDollar == 0.0 })
+
+        // Negative EBITDA (Operating Deficit)
+        val lossResult = TornadoSensitivityEngine.calculate(
+            revenue = 50000.0,
+            cogs = 40000.0,
+            opex = 25000.0,
+            deltaPct = 5.0
+        )
+        // Base EBITDA = 10k - 25k = -15,000
+        assertEquals(-15000.0, lossResult.baseEbitda, 0.01)
+        val price = lossResult.factors.first { it.factorType == SensitivityFactorType.PRICE }
+        assertEquals(2500.0, price.ebitdaImpactDollar, 0.01)
+        // Upside = -15000 + 2500 = -12500
+        assertEquals(-12500.0, price.upsideEbitda, 0.01)
+        // Downside = -15000 - 2500 = -17500
+        assertEquals(-17500.0, price.downsideEbitda, 0.01)
     }
 }
 

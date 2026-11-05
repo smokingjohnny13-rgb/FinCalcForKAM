@@ -63,6 +63,8 @@ import com.example.data.model.DealScoringLevel
 import com.example.data.model.DealScoringResult
 import com.example.data.model.NegotiationTouchpoint
 import com.example.data.repository.ClientNegotiationRepository
+import com.example.domain.calculator.TornadoSensitivityEngine
+import com.example.domain.calculator.TornadoAnalysisResult
 import com.example.domain.calculator.DealScoringEngine
 import kotlinx.coroutines.flow.combine
 import com.example.service.PdfExportService
@@ -217,6 +219,19 @@ class BigDealViewModel(
         )
     )
     val pnlModel: StateFlow<PnlModel> = _pnlModel.asStateFlow()
+
+    // 5b. Tornado Sensitivity Analysis (McKinsey / DuPont Profit Leverage)
+    val tornadoDeltaPct = MutableStateFlow(5.0)
+    private val _tornadoResult = MutableStateFlow(
+        TornadoSensitivityEngine.calculate(
+            revenue = 150000.0,
+            cogs = 45000.0,
+            opex = 35000.0,
+            deltaPct = 5.0,
+            discountPct = 5.0
+        )
+    )
+    val tornadoResult: StateFlow<TornadoAnalysisResult> = _tornadoResult.asStateFlow()
 
     // Global Multi-Currency & Language Support
     val appLanguage = MutableStateFlow(com.example.ui.i18n.AppLanguage.EN)
@@ -747,6 +762,26 @@ class BigDealViewModel(
             pricePerUnit = pUnit,
             variableCostPerUnit = cUnit,
             dealDurationMonths = dur
+        )
+        updateTornadoCalculations()
+    }
+
+    fun setTornadoDeltaPct(pct: Double) {
+        tornadoDeltaPct.value = pct
+        updateTornadoCalculations()
+    }
+
+    fun updateTornadoCalculations() {
+        val rev = pnlRevenue.value.toDoubleOrNull() ?: 0.0
+        val cogs = pnlCogs.value.toDoubleOrNull() ?: 0.0
+        val opex = pnlOpex.value.toDoubleOrNull() ?: 0.0
+        val discount = dealApprovalDiscountPct.value.toDoubleOrNull() ?: 5.0
+        _tornadoResult.value = TornadoSensitivityEngine.calculate(
+            revenue = rev,
+            cogs = cogs,
+            opex = opex,
+            deltaPct = tornadoDeltaPct.value,
+            discountPct = discount
         )
     }
 

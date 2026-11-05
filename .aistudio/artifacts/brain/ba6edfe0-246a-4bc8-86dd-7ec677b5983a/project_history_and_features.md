@@ -420,13 +420,34 @@ app/src/main/java/com/example/
     - Добавлено пустое состояние (Empty State) с кнопкой быстрого создания, если список клиентов пуст.
     - Репозиторий `ClientNegotiationRepository` и `BigDealViewModel` покрыты юнит-тестами на добавление, обновление и удаление клиентов.
 
+#### Этап 16. Анализ чувствительности прибыли и рычагов маржи (Tornado Sensitivity Chart P4)
+50. **Математическая модель чувствительности прибыли (`TornadoSensitivityEngine.kt`):**
+    - Реализована детерминированная модель DuPont / McKinsey для оценки чувствительности EBITDA к 5 ключевым факторам:
+      1. Цена продажи ($P$): $\Delta \text{EBITDA} = \text{Revenue} \times \delta$;
+      2. Объем продаж ($Q$): $\Delta \text{EBITDA} = \text{Gross Profit} \times \delta$;
+      3. Прямая себестоимость ($COGS$): $\Delta \text{EBITDA} = \text{COGS} \times \delta$;
+      4. Накладные расходы ($OPEX$): $\Delta \text{EBITDA} = \text{OPEX} \times \delta$;
+      5. Скидки и ретро-бонусы ($D$): сдвиг в фонде коммерческих уступок.
+    - Динамический переключатель шага чувствительности: $\pm 5\%$ и $\pm 10\%$.
+    - Расчет операционного мультипликатора чувствительности (% изменения EBITDA на 1% сдвига фактора).
+    - Расчет соотношения чувствительности цены к объему (Price vs Volume ratio, например, $2.1\text{x}$).
+    - Защита от деления на ноль при околонулевой и отрицательной EBITDA.
+51. **Интерактивный компонент Tornado (`TornadoSensitivityCard.kt`):**
+    - Двусторонняя диаграмма со шкалой от худшего к лучшему сценарию;
+    - Центрированная линия отсчета от базовой EBITDA;
+    - Золотой бейдж ключевого рычага сделки (Primary Lever) и выпадающий переговорный плейбук КАМа;
+    - Интеграция в экран `AnalyticsPnlScreen.kt` сразу под отчетом P&L.
+52. **Формульный глоссарий и верификация:**
+    - Формула добавлена в `FinancialFormulaGlossary.kt` (`tornado_leverage`);
+    - Покрытие 3 новыми модульными тестами в `BigDealCalculatorsTest.kt`: общее число тестов выросло до 45 (100% Passed).
+
 ---
 
 ### 5. Руководство по проверке и тестированию
 - Запуск тестов: `gradle :app:testDebugUnitTest`
+  - `BigDealCalculatorsTest` — тесты LTV/CAC, амортизации, водопада цен, кассового разрыва, FX стресс-теста, ROIC, локального аудита рисков и **Tornado чувствительности (`testTornadoSensitivityCalculationStandard`, `testTornadoSensitivityToggle10Percent`, `testTornadoSensitivityEdgeCases`)**;
   - `DealApprovalAndScoringTest` — тесты светофора (🟢/🟡/🔴), автоматического расчета 4 показателей (Net-Net, маржа, отсрочка, риск) и профилей клиентов;
-  - `KamAndCommercialAnalystTest` — тесты коридора BATNA, штрафов SLA, trade-off и корзины SKU;
-  - `BigDealCalculatorsTest` — тесты LTV/CAC, амортизации (включая грейс-период), водопада цен, кассового разрыва, FX стресс-теста, ROIC и локального аудита рисков (`testLocalFinancialDealRiskAuditor`);
+  - `KamAndCommercialAnalystTest` — тесты коридора BATNA, штрафов SLA, trade-off, Give-Get и корзины SKU;
   - `MarginVsMarkupTest` — тесты взаимосвязи маржи и наценки;
   - `LandedCostCalculatorTest` — тесты прямого и реверсивного расчета FOB и профилей стран.
 - Проверка компиляции: `compile_applet`.

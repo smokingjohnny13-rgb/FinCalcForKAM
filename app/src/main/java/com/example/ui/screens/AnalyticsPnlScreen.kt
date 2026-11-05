@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.components.FinancialInputField
 import com.example.ui.components.MetricCard
 import com.example.ui.components.RoiPnlModeler
+import com.example.ui.components.TornadoSensitivityCard
 import com.example.ui.i18n.tr
 import com.example.ui.theme.ElectricCyan
 import com.example.ui.theme.EmeraldPrimary
@@ -69,6 +70,7 @@ fun AnalyticsPnlScreen(
     val unitPrice by viewModel.unitPrice.collectAsState()
     val unitCost by viewModel.unitCost.collectAsState()
     val pnl by viewModel.pnlModel.collectAsState()
+    val tornadoResult by viewModel.tornadoResult.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -208,6 +210,18 @@ fun AnalyticsPnlScreen(
                     PnlRowItem("${tr("Net Contract Profit", "Чистая прибыль контракта")} (${pnl.netMarginPct}%)", viewModel.formatCurrency(pnl.netProfit), isBold = true, valueColor = if (pnl.netProfit >= 0) EmeraldPrimary else MaterialTheme.colorScheme.error)
                 }
             }
+        }
+
+        // 3b. Tornado Profit Leverage & Sensitivity Analysis (McKinsey / DuPont)
+        item {
+            TornadoSensitivityCard(
+                tornadoResult = tornadoResult,
+                currencySymbol = currencySym,
+                onSelectDeltaPct = { pct ->
+                    viewModel.setTornadoDeltaPct(pct)
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // 4. PnL & Investment Input Modeler

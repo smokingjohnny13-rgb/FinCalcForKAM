@@ -3,7 +3,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-green.svg)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-purple.svg)](https://kotlinlang.org)
 [![UI](https://img.shields.io/badge/UI-Jetpack%20Compose%20M3-4285F4.svg)](https://developer.android.com/jetpack/compose)
-[![Tests](https://img.shields.io/badge/Tests-42%20Passed%20(100%25)-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-45%20Passed%20(100%25)-brightgreen.svg)]()
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20MVVM-orange.svg)]()
 [![AI Engine](https://img.shields.io/badge/AI-Gemini%203.8%20Flash%20%2B%20Offline-blueviolet.svg)]()
 
@@ -79,7 +79,14 @@ Structures equipment leasing, client credit, and installment debt:
 - **Credit Prolongation Analyzer**: Compares month-to-month and week-to-week tenure extensions, detailing periodic cashflow relief (-47%) versus cumulative interest increase (+96%);
 - **Multi-Currency Debt Basket**: Allocates borrowing across up to 4 currencies (USD, EUR, CNY, RUB, etc.) with forward FX hedging cost calculations.
 
-### 5. Commercial Deal Scoring & Traffic Light Risk Corridor (BATNA)
+### 5. Tornado Sensitivity & Profit Leverage Engine (McKinsey / DuPont)
+Evaluates EBITDA vulnerability to independent shifts ($\pm 5\%$ and $\pm 10\%$) in key contract drivers:
+- **DuPont Profit Leverage Multipliers**: Quantifies percentage change in EBITDA for every 1% shift in Selling Price, Volume, Direct COGS, OPEX, and Rebates;
+- **Interactive Bilateral Tornado Chart**: Sorts levers by financial impact, showing upside/downside ranges visually;
+- **Price vs Volume Sensitivity Ratio**: Proves mathematically why defending shelf price is typically $1.5\text{x}$–$3.5\text{x}$ more powerful than chasing volume concessions;
+- **KAM Negotiation Playbook**: Generates tactical negotiation rules for each commercial lever.
+
+### 6. Commercial Deal Scoring & Traffic Light Risk Corridor (BATNA)
 Pre-flight approval engine providing instant commercial governance:
 - 🟢 **Profitable Deal**: Healthy Net-Net margin exceeding corporate hurdle rates. Eligible for KAM self-approval;
 - 🟡 **Borderline Deal**: Margin compressed by rebates or prolonged deferral (>45 days). Commercial Director review required with mandatory counter-trades;
