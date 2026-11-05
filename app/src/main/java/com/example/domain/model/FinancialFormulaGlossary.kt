@@ -183,6 +183,20 @@ object FinancialFormulaGlossary {
             kamTipRu = "Рычаг цены почти всегда в 2-4 раза сильнее рычага объема. Никогда не соглашайтесь на скидку 5% ради роста объема на те же 5%: для сохранения EBITDA объем должен вырасти на 15-25%!",
             warningEn = "Discounts hit 100% of the top line, while extra volume only brings unit gross contribution margin.",
             warningRu = "Скидка срезает 100% чистой маржи с каждого рубля, тогда как дополнительный объем приносит лишь валовую маржу за вычетом себестоимости."
+        ),
+        FormulaItem(
+            id = "ccc_factoring_arbitrage",
+            category = FormulaCategory.TERMS_FINANCING,
+            titleEn = "Working Capital, CCC & Factoring Arbitrage",
+            titleRu = "Оборотный капитал, CCC и арбитраж факторинга",
+            formulaLatexEn = "CCC = DSO + DIO - DPO\nNWC = AR + Inv - AP\nFactoring Cost = (Invoice × Fee%) + (Advance × Rate% × DSO/365)",
+            formulaLatexRu = "CCC = DSO + DIO - DPO\nNWC = ДЗ + Запасы - КЗ\nСтоимость факторинга = (Инвойс × Комиссия%) + (Аванс × Ставка% × DSO/365)",
+            definitionEn = "Cash Conversion Cycle measures the days cash is tied up in working capital. Factoring unlocks 80-90% immediate cash flow from receivables at an explicit financing fee vs general bank overdraft.",
+            definitionRu = "Финансовый цикл CCC показывает дни заморозки денег в оборотном капитале. Факторинг позволяет получить 80-90% денег сразу под комиссию и ставку, заменяя банковский овердрафт.",
+            kamTipEn = "If a retail chain forces 90-day payment terms, factor the invoice immediately and add a +2.5% Price Uplift to protect your net margin from working capital erosion.",
+            kamTipRu = "Если сеть продавливает отсрочку 90 дней, отдайте инвойс на факторинг и заложите к базовой цене компенсационную наценку (Price Uplift) в размере затрат на факторинг.",
+            warningEn = "Ensure the factor's recourse rules and fee structure don't exceed your gross margin threshold.",
+            warningRu = "Проверяйте условия регресса фактора и годовую ставку APR: при отсрочке 90+ дней факторинг может съесть до трети чистой маржи контракта."
         )
     )
 

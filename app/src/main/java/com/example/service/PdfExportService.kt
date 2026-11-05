@@ -27,6 +27,7 @@ import com.example.domain.calculator.GiveGetResult
 import com.example.domain.calculator.TornadoAnalysisResult
 import com.example.domain.calculator.PriceWaterfallResult
 import com.example.domain.calculator.LtvCalculator
+import com.example.domain.calculator.CashGapResult
 import java.io.File
 import java.io.FileOutputStream
 import java.text.NumberFormat
@@ -48,7 +49,8 @@ object PdfExportService {
         dealStatus: DealApprovalStatus? = null,
         giveGet: GiveGetResult? = null,
         tornado: TornadoAnalysisResult? = null,
-        waterfall: PriceWaterfallResult? = null
+        waterfall: PriceWaterfallResult? = null,
+        cashGap: CashGapResult? = null
     ): Result<Uri> {
         return runCatching {
             val pdfDocument = PdfDocument()
@@ -98,6 +100,7 @@ object PdfExportService {
                 pnl = pnl,
                 ltv = ltv,
                 landedCost = landedCost,
+                cashGap = cashGap,
                 currencyFmt = currencyFmt,
                 percentFmt = percentFmt,
                 pageWidth = pageWidth,
@@ -628,6 +631,7 @@ object PdfExportService {
         pnl: PnlModel,
         ltv: LtvMetrics,
         landedCost: LandedCostResult?,
+        cashGap: CashGapResult?,
         currencyFmt: NumberFormat,
         percentFmt: NumberFormat,
         pageWidth: Int,
@@ -702,7 +706,7 @@ object PdfExportService {
         currentY += 16f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.textSize = 8f
-        val rowsToDraw = amortization.schedule.take(7)
+        val rowsToDraw = amortization.schedule.take(6)
         for (row in rowsToDraw) {
             paint.color = if (row.isGracePeriod) Color.rgb(217, 119, 6) else Color.rgb(30, 41, 59)
             val periodLabel = if (row.isGracePeriod) "#${row.period} (Grace)" else "#${row.period}"
@@ -711,10 +715,25 @@ object PdfExportService {
             canvas.drawText(currencyFmt.format(row.principal), leftX + 220f, currentY + 8f, paint)
             canvas.drawText(currencyFmt.format(row.interest), leftX + 330f, currentY + 8f, paint)
             canvas.drawText(currencyFmt.format(row.remainingBalance), leftX + 440f, currentY + 8f, paint)
-            currentY += 11f
+            currentY += 10.5f
         }
 
-        currentY += 14f
+        if (cashGap != null) {
+            paint.color = Color.rgb(241, 245, 249)
+            canvas.drawRect(leftX, currentY, rightX, currentY + 15f, paint)
+            paint.textSize = 7f
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            paint.color = Color.rgb(30, 41, 59)
+            val nwcSummary = "Working Capital (NWC): ${currencyFmt.format(cashGap.netWorkingCapital)}  |  CCC: ${cashGap.cashConversionCycleDays}d (DSO ${cashGap.customerPayDays}d + DIO ${cashGap.inventoryDays}d - DPO ${cashGap.supplierPayDays}d)"
+            val factSummary = "Factoring Advance (${cashGap.factoringAdvancePct.toInt()}%): ${currencyFmt.format(cashGap.factoringAdvanceAmount)}  |  Total Cost: ${currencyFmt.format(cashGap.factoringTotalCost)} (APR ${cashGap.factoringAprPct}%) vs Overdraft ${currencyFmt.format(cashGap.overdraftCost)}"
+            canvas.drawText(nwcSummary, leftX + 6f, currentY + 6.5f, paint)
+            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+            paint.color = if (cashGap.isFactoringCheaper) Color.rgb(16, 185, 129) else Color.rgb(2, 132, 199)
+            canvas.drawText(factSummary, leftX + 6f, currentY + 13f, paint)
+            currentY += 17f
+        } else {
+            currentY += 10f
+        }
 
         // --- SECTION 6: CONTRACT P&L AND PROFITABILITY STATEMENT ---
         paint.color = Color.rgb(15, 23, 42)

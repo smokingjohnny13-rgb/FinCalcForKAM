@@ -727,6 +727,59 @@ class BigDealCalculatorsTest {
         assertEquals(SensitivityFactorType.PRICE, tornado.dominantFactor?.factorType)
         assertEquals(6250.0, tornado.dominantFactor?.ebitdaImpactDollar ?: 0.0, 0.01)
     }
+
+    @Test
+    fun testNetWorkingCapitalAndFactoringArbitrage() {
+        val result = com.example.domain.calculator.CashGapEngine.calculate(
+            dealRevenue = 100000.0,
+            cogsTotal = 70000.0,
+            prepaidPct = 20.0,
+            supplierPayDays = 30,
+            customerPayDays = 60,
+            inventoryDays = 15,
+            overdraftRatePct = 22.0,
+            factoringAdvancePct = 85.0,
+            factoringFeePct = 1.5,
+            factoringInterestRatePct = 20.0
+        )
+
+        // CCC = 15 + 60 - 30 = 45 days
+        assertEquals(45, result.cashConversionCycleDays)
+
+        // AR = 100,000 * 60 / 365 = 16,438.36
+        assertEquals(16438.36, result.accountsReceivable, 0.1)
+        // Inv = 70,000 * 15 / 365 = 2,876.71
+        assertEquals(2876.71, result.inventoryValue, 0.1)
+        // AP = 70,000 * 30 / 365 = 5,753.42
+        assertEquals(5753.42, result.accountsPayable, 0.1)
+        // NWC = 16438.36 + 2876.71 - 5753.42 = 13,561.64
+        assertEquals(13561.64, result.netWorkingCapital, 0.2)
+
+        // Factoring:
+        // Advance 85% of 100,000 = 85,000.0
+        assertEquals(85000.0, result.factoringAdvanceAmount, 0.1)
+        // Fee 1.5% of 100,000 = 1,500.0
+        assertEquals(1500.0, result.factoringServiceFee, 0.1)
+        // Interest = 85,000 * 0.20 * (60 / 365) = 2,794.52
+        assertEquals(2794.52, result.factoringInterestCost, 0.1)
+        // Total Cost = 1,500 + 2,794.52 = 4,294.52
+        assertEquals(4294.52, result.factoringTotalCost, 0.1)
+        // Price Uplift = 4.29%
+        assertEquals(4.29, result.factoringRequiredPriceUpliftPct, 0.05)
+    }
+
+    @Test
+    fun testFactoringZeroRevenueAndEdgeCases() {
+        val zeroRes = com.example.domain.calculator.CashGapEngine.calculate(
+            dealRevenue = 0.0,
+            cogsTotal = 0.0,
+            customerPayDays = 0
+        )
+        assertEquals(0.0, zeroRes.netWorkingCapital, 0.01)
+        assertEquals(0.0, zeroRes.factoringAdvanceAmount, 0.01)
+        assertEquals(0.0, zeroRes.factoringTotalCost, 0.01)
+        assertEquals(0.0, zeroRes.factoringAprPct, 0.01)
+    }
 }
 
 

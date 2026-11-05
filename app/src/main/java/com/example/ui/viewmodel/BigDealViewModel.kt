@@ -371,6 +371,9 @@ class BigDealViewModel(
     val cashGapCustomerDays = MutableStateFlow("60")
     val cashGapInventoryDays = MutableStateFlow("15")
     val cashGapOverdraftRate = MutableStateFlow("22")
+    val cashGapFactoringAdvancePct = MutableStateFlow("85")
+    val cashGapFactoringFeePct = MutableStateFlow("1.5")
+    val cashGapFactoringRatePct = MutableStateFlow("20")
 
     private val _cashGapResult = MutableStateFlow(
         CashGapEngine.calculate(
@@ -889,7 +892,8 @@ class BigDealViewModel(
                 dealStatus = dealApprovalStatus.value,
                 giveGet = giveGetResult.value,
                 tornado = tornadoResult.value,
-                waterfall = waterfallResult.value
+                waterfall = waterfallResult.value,
+                cashGap = _cashGapResult.value
             )
 
             result.onSuccess {
@@ -1203,6 +1207,9 @@ class BigDealViewModel(
         val dso = cashGapCustomerDays.value.toIntOrNull() ?: 60
         val dio = cashGapInventoryDays.value.toIntOrNull() ?: 15
         val rate = cashGapOverdraftRate.value.toDoubleOrNull() ?: 22.0
+        val advPct = cashGapFactoringAdvancePct.value.toDoubleOrNull() ?: 85.0
+        val feePct = cashGapFactoringFeePct.value.toDoubleOrNull() ?: 1.5
+        val factRate = cashGapFactoringRatePct.value.toDoubleOrNull() ?: 20.0
 
         _cashGapResult.value = CashGapEngine.calculate(
             dealRevenue = rev,
@@ -1211,7 +1218,10 @@ class BigDealViewModel(
             supplierPayDays = dpo,
             customerPayDays = dso,
             inventoryDays = dio,
-            overdraftRatePct = rate
+            overdraftRatePct = rate,
+            factoringAdvancePct = advPct,
+            factoringFeePct = feePct,
+            factoringInterestRatePct = factRate
         )
     }
 

@@ -19,14 +19,32 @@ data class CashGapResult(
     val nominalProfit: Double,
     val nominalMarginPct: Double,
     val cashAdjustedProfit: Double,
-    val cashAdjustedMarginPct: Double
+    val cashAdjustedMarginPct: Double,
+    // P2: Working Capital (NWC) & Factoring Arbitrage
+    val accountsReceivable: Double = 0.0,
+    val inventoryValue: Double = 0.0,
+    val accountsPayable: Double = 0.0,
+    val netWorkingCapital: Double = 0.0,
+    val factoringAdvancePct: Double = 85.0,
+    val factoringFeePct: Double = 1.5,
+    val factoringInterestRatePct: Double = 20.0,
+    val factoringAdvanceAmount: Double = 0.0,
+    val factoringServiceFee: Double = 0.0,
+    val factoringInterestCost: Double = 0.0,
+    val factoringTotalCost: Double = 0.0,
+    val factoringAprPct: Double = 0.0,
+    val factoringNetImmediateCash: Double = 0.0,
+    val factoringRequiredPriceUpliftPct: Double = 0.0,
+    val factoringVsOverdraftSavings: Double = 0.0,
+    val isFactoringCheaper: Boolean = false
 )
 
 object CashGapEngine {
     private fun r2(value: Double): Double = round(value * 100.0) / 100.0
 
     /**
-     * Models Cash Conversion Cycle (CCC), peak cash gap deficit, and overdraft financing costs.
+     * Models Cash Conversion Cycle (CCC), Net Working Capital (NWC),
+     * overdraft bridge financing, and invoice factoring arbitrage.
      */
     fun calculate(
         dealRevenue: Double = 100000.0,
@@ -35,7 +53,10 @@ object CashGapEngine {
         supplierPayDays: Int = 30,
         customerPayDays: Int = 60,
         inventoryDays: Int = 15,
-        overdraftRatePct: Double = 22.0
+        overdraftRatePct: Double = 22.0,
+        factoringAdvancePct: Double = 85.0,
+        factoringFeePct: Double = 1.5,
+        factoringInterestRatePct: Double = 20.0
     ): CashGapResult {
         val safeRev = max(0.0, dealRevenue)
         val safeCogs = max(0.0, cogsTotal)
@@ -64,6 +85,32 @@ object CashGapEngine {
         val cashAdjProfit = nominalProfit - totalOverdraftCost
         val cashAdjMarginPct = if (safeRev > 0) (cashAdjProfit / safeRev) * 100.0 else 0.0
 
+        // --- P2: Net Working Capital (NWC) Breakdown ---
+        val ar = safeRev * (safeDso.toDouble() / 365.0)
+        val inv = safeCogs * (safeDio.toDouble() / 365.0)
+        val ap = safeCogs * (safeDpo.toDouble() / 365.0)
+        val nwc = max(0.0, ar + inv - ap)
+
+        // --- P2: Factoring of Accounts Receivable ---
+        val safeAdvPct = factoringAdvancePct.coerceIn(50.0, 100.0)
+        val safeFeePct = max(0.0, factoringFeePct)
+        val safeFactRate = max(0.0, factoringInterestRatePct) / 100.0
+
+        val advanceAmount = safeRev * (safeAdvPct / 100.0)
+        val serviceFee = safeRev * (safeFeePct / 100.0)
+        val factoringInterest = advanceAmount * safeFactRate * (safeDso.toDouble() / 365.0)
+        val totalFactCost = serviceFee + factoringInterest
+
+        val factApr = if (safeDso > 0 && safeRev > 0) {
+            (totalFactCost / safeRev) * (365.0 / safeDso.toDouble()) * 100.0
+        } else {
+            0.0
+        }
+        val netImmediateCash = max(0.0, advanceAmount - totalFactCost)
+        val priceUplift = if (safeRev > 0) (totalFactCost / safeRev) * 100.0 else 0.0
+        val savingsVsOverdraft = totalOverdraftCost - totalFactCost
+        val isFactoringCheaper = totalFactCost < totalOverdraftCost
+
         return CashGapResult(
             dealRevenue = r2(safeRev),
             cogsTotal = r2(safeCogs),
@@ -80,7 +127,23 @@ object CashGapEngine {
             nominalProfit = r2(nominalProfit),
             nominalMarginPct = r2(nominalMarginPct),
             cashAdjustedProfit = r2(cashAdjProfit),
-            cashAdjustedMarginPct = r2(cashAdjMarginPct)
+            cashAdjustedMarginPct = r2(cashAdjMarginPct),
+            accountsReceivable = r2(ar),
+            inventoryValue = r2(inv),
+            accountsPayable = r2(ap),
+            netWorkingCapital = r2(nwc),
+            factoringAdvancePct = r2(safeAdvPct),
+            factoringFeePct = r2(safeFeePct),
+            factoringInterestRatePct = r2(factoringInterestRatePct),
+            factoringAdvanceAmount = r2(advanceAmount),
+            factoringServiceFee = r2(serviceFee),
+            factoringInterestCost = r2(factoringInterest),
+            factoringTotalCost = r2(totalFactCost),
+            factoringAprPct = r2(factApr),
+            factoringNetImmediateCash = r2(netImmediateCash),
+            factoringRequiredPriceUpliftPct = r2(priceUplift),
+            factoringVsOverdraftSavings = r2(savingsVsOverdraft),
+            isFactoringCheaper = isFactoringCheaper
         )
     }
 }

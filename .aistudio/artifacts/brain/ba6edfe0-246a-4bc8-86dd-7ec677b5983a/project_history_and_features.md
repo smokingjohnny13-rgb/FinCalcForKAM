@@ -441,11 +441,34 @@ app/src/main/java/com/example/
     - Формула добавлена в `FinancialFormulaGlossary.kt` (`tornado_leverage`);
     - Покрытие 3 новыми модульными тестами в `BigDealCalculatorsTest.kt`: общее число тестов выросло до 45 (100% Passed).
 
+#### Этап 17. Чистый оборотный капитал (NWC) и арбитраж факторинга (P2)
+53. **Математическая модель NWC и факторинга (`CashGapEngine.kt`):**
+    - Расчёт компонентов чистого оборотного капитала:
+      - Дебиторская задолженность ($AR = \text{Revenue} \times \frac{DSO}{365}$);
+      - Запасы в пути и на складе ($Inv = \text{COGS} \times \frac{DIO}{365}$);
+      - Кредиторская задолженность ($AP = \text{COGS} \times \frac{DPO}{365}$);
+      - Итоговая потребность в оборотном капитале ($NWC = AR + Inv - AP$).
+    - Моделирование факторинга дебиторской задолженности (Invoice Factoring):
+      - Авансовый платёж фактора (Advance Rate %, пресеты 80%, 85%, 90%);
+      - Агентская комиссия за факторинг (Service Fee %);
+      - Процентная ставка за период финансирования (Interest Rate % APR);
+      - Итоговая стоимость факторинга, эффективная годовая ставка APR % и чистые деньги сразу на день 0;
+      - Необходимая компенсационная наценка к цене сделки (Required Price Uplift, %);
+      - Финансовый арбитраж: автоматическое сопоставление затрат факторинга со стоимостью банковского овердрафта и выбор наиболее выгодной стратегии.
+54. **Интерфейс подвкладок в `CashGapTimelineCard.kt`:**
+    - Сегментированный переключатель: `[1. CCC Timeline]` vs `[2. NWC & Factoring (P2)]`;
+    - Карточки компонентов NWC, селекторы параметров факторинга, бейдж победной стратегии («Факторинг выгоднее» / «Овердрафт выгоднее»);
+    - Расчёт компенсационной наценки для переговоров с закупщиками.
+55. **Интеграция в PDF и тесты:**
+    - Раздел 5 в PDF-экспорте отображает NWC, цикл CCC и сравнение затрат факторинга с овердрафтом;
+    - Формула зарегистрирована в `FinancialFormulaGlossary.kt` (`ccc_factoring_arbitrage`);
+    - Покрыто тестами `testNetWorkingCapitalAndFactoringArbitrage` и `testFactoringZeroRevenueAndEdgeCases` (48 тестов, 100% Passed).
+
 ---
 
 ### 5. Руководство по проверке и тестированию
 - Запуск тестов: `gradle :app:testDebugUnitTest`
-  - `BigDealCalculatorsTest` — тесты LTV/CAC, амортизации, водопада цен, кассового разрыва, FX стресс-теста, ROIC, локального аудита рисков и **Tornado чувствительности (`testTornadoSensitivityCalculationStandard`, `testTornadoSensitivityToggle10Percent`, `testTornadoSensitivityEdgeCases`)**;
+  - `BigDealCalculatorsTest` — тесты LTV/CAC, амортизации, водопада цен, кассового разрыва, FX стресс-теста, ROIC, локального аудита рисков, **Tornado чувствительности** и **чистого оборотного капитала с факторингом (P2)**;
   - `DealApprovalAndScoringTest` — тесты светофора (🟢/🟡/🔴), автоматического расчета 4 показателей (Net-Net, маржа, отсрочка, риск) и профилей клиентов;
   - `KamAndCommercialAnalystTest` — тесты коридора BATNA, штрафов SLA, trade-off, Give-Get и корзины SKU;
   - `MarginVsMarkupTest` — тесты взаимосвязи маржи и наценки;

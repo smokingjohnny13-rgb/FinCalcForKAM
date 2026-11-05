@@ -25,8 +25,10 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PriceCheck
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,8 +63,9 @@ import com.example.ui.theme.GoldAccent
 import com.example.ui.viewmodel.BigDealViewModel
 
 /**
- * Models the Cash Conversion Cycle (CCC), working capital peak deficit,
- * cashflow timeline across supplier/customer terms, and overdraft bridge cost.
+ * Models the Cash Conversion Cycle (CCC), Net Working Capital (NWC),
+ * cashflow timeline across supplier/customer terms, overdraft bridge cost,
+ * and invoice factoring arbitrage (P2).
  */
 @Composable
 fun CashGapTimelineCard(
@@ -79,10 +82,16 @@ fun CashGapTimelineCard(
     val customerDaysInput by viewModel.cashGapCustomerDays.collectAsState()
     val inventoryDaysInput by viewModel.cashGapInventoryDays.collectAsState()
     val overdraftRateInput by viewModel.cashGapOverdraftRate.collectAsState()
+
+    val factoringAdvanceInput by viewModel.cashGapFactoringAdvancePct.collectAsState()
+    val factoringFeeInput by viewModel.cashGapFactoringFeePct.collectAsState()
+    val factoringRateInput by viewModel.cashGapFactoringRatePct.collectAsState()
+
     val result by viewModel.cashGapResult.collectAsState()
 
-    var showTimelineDetails by remember { mutableStateOf(true) }
+    var selectedSubTab by remember { mutableStateOf(0) } // 0: CCC Timeline, 1: NWC & Factoring
     val prepaidPresets = listOf(10, 20, 30, 50)
+    val factoringAdvancePresets = listOf(80, 85, 90)
 
     Box(
         modifier = modifier
@@ -99,7 +108,10 @@ fun CashGapTimelineCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -117,7 +129,7 @@ fun CashGapTimelineCard(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = tr("CASH GAP & WORKING CAPITAL PEAK", "КАССОВЫЙ РАЗРЫВ И ПИК КАПИТАЛА"),
+                            text = tr("WORKING CAPITAL & CASH GAP", "ОБОРОТНЫЙ КАПИТАЛ И КАССОВЫЙ РАЗРЫВ"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = GoldAccent,
@@ -125,8 +137,8 @@ fun CashGapTimelineCard(
                         )
                         Text(
                             text = tr(
-                                "Cash conversion cycle & bank overdraft cost",
-                                "Цикл конверсии денег и стоимость овердрафта"
+                                "CCC cycle, overdraft cost & factoring arbitrage",
+                                "Цикл CCC, овердрафт и арбитраж факторинга"
                             ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -275,160 +287,467 @@ fun CashGapTimelineCard(
                 }
             }
 
-            // Timeline Visualizer
-            Box(
+            // Sub-mode Segmented Tabs: 0 - CCC Timeline, 1 - NWC & Factoring Arbitrage (P2)
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(ExecutiveCard)
-                    .padding(12.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(ExecutiveSurfaceVariant)
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (selectedSubTab == 0) EmeraldPrimary else Color.Transparent)
+                        .clickable { selectedSubTab = 0 }
+                        .padding(vertical = 8.dp)
+                        .testTag("tab_ccc_timeline"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tr("1. CCC Timeline", "1. Таймлайн CCC"),
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedSubTab == 0) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (selectedSubTab == 1) ElectricCyan else Color.Transparent)
+                        .clickable { selectedSubTab = 1 }
+                        .padding(vertical = 8.dp)
+                        .testTag("tab_factoring_arbitrage"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tr("2. NWC & Factoring (P2)", "2. Факторинг и NWC (P2)"),
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedSubTab == 1) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (selectedSubTab == 0) {
+                // --- MODE 0: TIMELINE & CCC VISUALIZER ---
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ExecutiveCard)
+                        .padding(12.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = tr("CASH FLOW TIMELINE & CCC", "ТАЙМЛАЙН ДЕНЕГ И ЦИКЛ CCC"),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ElectricCyan,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "CCC = ${result.cashConversionCycleDays} ${tr("days", "дн.")}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (result.cashConversionCycleDays > 30) Color(0xFFFF7043) else EmeraldPrimary,
+                                softWrap = false
+                            )
+                        }
+
+                        HorizontalDivider(color = ExecutiveBorder, thickness = 0.5.dp)
+
+                        // Step 1: Day 0
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("1", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = "${tr("Day", "День")} 0: ${tr("Prepayments & Logistics", "Аванс, логистика, пошлины")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = tr("Immediate cash outlays", "Выбытие живых денег на старте"),
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "-${viewModel.formatCurrency(result.prepaymentsDayZero)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF5252),
+                                softWrap = false,
+                                maxLines = 1
+                            )
+                        }
+
+                        // Step 2: Day DPO (Supplier balance)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("2", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = "${tr("Day", "День")} ${result.supplierPayDays}: ${tr("Supplier Balance (DPO)", "Оплата поставщику (DPO)")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = tr("Peak working capital deficit reached", "Достигнут пик кассового разрыва"),
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "-${viewModel.formatCurrency(result.supplierBalance)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF5252),
+                                softWrap = false,
+                                maxLines = 1
+                            )
+                        }
+
+                        // Step 3: Day DIO + DSO (Customer Inflow)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(EmeraldPrimary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = "${tr("Day", "День")} ${result.totalCashGapDays}: ${tr("Customer Inflow (DSO)", "Поступление от клиента (DSO)")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = tr("Cash gap closed, profit realized", "Разрыв закрыт, прибыль зафиксирована"),
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "+${viewModel.formatCurrency(result.dealRevenue)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = EmeraldPrimary,
+                                softWrap = false,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            } else {
+                // --- MODE 1: P2 WORKING CAPITAL (NWC) & FACTORING ARBITRAGE ---
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // NWC 4-Pillar Grid
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(ExecutiveCard)
+                            .padding(12.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = tr("NET WORKING CAPITAL (NWC)", "ЧИСТЫЙ ОБОРОТНЫЙ КАПИТАЛ (NWC)"),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricCyan
+                                )
+                                Text(
+                                    text = "NWC = ${viewModel.formatCurrency(result.netWorkingCapital)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = GoldAccent
+                                )
+                            }
+
+                            HorizontalDivider(color = ExecutiveBorder, thickness = 0.5.dp)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // AR
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(ExecutiveSurfaceVariant)
+                                        .padding(8.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "+AR (${result.customerPayDays}d DSO)",
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = viewModel.formatCurrency(result.accountsReceivable),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                // Inventory
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(ExecutiveSurfaceVariant)
+                                        .padding(8.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "+Inv (${result.inventoryDays}d DIO)",
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = viewModel.formatCurrency(result.inventoryValue),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                // AP
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(ExecutiveSurfaceVariant)
+                                        .padding(8.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "-AP (${result.supplierPayDays}d DPO)",
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "-${viewModel.formatCurrency(result.accountsPayable)}",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFFF5252)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Factoring Inputs
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = tr("CASH FLOW TIMELINE & CCC", "ТАЙМЛАЙН ДЕНЕГ И ЦИКЛ CCC"),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = ElectricCyan,
-                            modifier = Modifier.weight(1f, fill = false)
+                        FinancialInputField(
+                            label = tr("Advance Rate (%)", "Аванс фактора (%)"),
+                            value = factoringAdvanceInput,
+                            onValueChange = {
+                                viewModel.cashGapFactoringAdvancePct.value = it
+                                viewModel.updateCashGapCalculations()
+                            },
+                            suffix = "%",
+                            modifier = Modifier.weight(1f),
+                            testTag = "input_factoring_advance"
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "CCC = ${result.cashConversionCycleDays} ${tr("days", "дн.")}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (result.cashConversionCycleDays > 30) Color(0xFFFF7043) else EmeraldPrimary,
-                            softWrap = false
+                        FinancialInputField(
+                            label = tr("Service Fee (%)", "Комиссия (%)"),
+                            value = factoringFeeInput,
+                            onValueChange = {
+                                viewModel.cashGapFactoringFeePct.value = it
+                                viewModel.updateCashGapCalculations()
+                            },
+                            suffix = "%",
+                            modifier = Modifier.weight(1f),
+                            testTag = "input_factoring_fee"
+                        )
+                        FinancialInputField(
+                            label = tr("Factor APR (%)", "Ставка фактора (%)"),
+                            value = factoringRateInput,
+                            onValueChange = {
+                                viewModel.cashGapFactoringRatePct.value = it
+                                viewModel.updateCashGapCalculations()
+                            },
+                            suffix = "%",
+                            modifier = Modifier.weight(1f),
+                            testTag = "input_factoring_rate"
                         )
                     }
 
-                    HorizontalDivider(color = ExecutiveBorder, thickness = 0.5.dp)
-
-                    // Step 1: Day 0
+                    // Factoring Advance Presets
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("1", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                        }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                text = "${tr("Day", "День")} 0: ${tr("Prepayments & Logistics", "Аванс, логистика, пошлины")}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = tr("Immediate cash outlays", "Выбытие живых денег на старте"),
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        factoringAdvancePresets.forEach { adv ->
+                            val isSelected = factoringAdvanceInput == adv.toString()
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    viewModel.cashGapFactoringAdvancePct.value = adv.toString()
+                                    viewModel.updateCashGapCalculations()
+                                },
+                                label = { Text("$adv% Advance", fontSize = 11.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = ElectricCyan.copy(alpha = 0.2f),
+                                    selectedLabelColor = ElectricCyan
+                                ),
+                                modifier = Modifier.testTag("chip_fact_adv_$adv")
                             )
                         }
-                        Text(
-                            text = "-${viewModel.formatCurrency(result.prepaymentsDayZero)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252),
-                            softWrap = false,
-                            maxLines = 1
-                        )
                     }
 
-                    // Step 2: Day DPO (Supplier balance)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    // Factoring vs Overdraft Arbitrage Verdict Box
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (result.isFactoringCheaper) EmeraldPrimary.copy(alpha = 0.12f) else ElectricCyan.copy(alpha = 0.12f))
+                            .border(1.dp, if (result.isFactoringCheaper) EmeraldPrimary else ElectricCyan, RoundedCornerShape(12.dp))
+                            .padding(12.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFFF5252).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("2", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF5252))
-                        }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                text = "${tr("Day", "День")} ${result.supplierPayDays}: ${tr("Supplier Balance (DPO)", "Оплата поставщику (DPO)")}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = tr("Peak working capital deficit reached", "Достигнут пик кассового разрыва"),
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Text(
-                            text = "-${viewModel.formatCurrency(result.supplierBalance)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF5252),
-                            softWrap = false,
-                            maxLines = 1
-                        )
-                    }
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.SwapHoriz,
+                                        contentDescription = null,
+                                        tint = if (result.isFactoringCheaper) EmeraldPrimary else ElectricCyan,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = tr("ARBITRAGE STRATEGY VERDICT", "ВЕРДИКТ ФИНАНСОВОГО АРБИТРАЖА"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (result.isFactoringCheaper) EmeraldPrimary else ElectricCyan
+                                    )
+                                }
+                                Text(
+                                    text = if (result.isFactoringCheaper) tr("FACTORING WINS", "ФАКТОРИНГ ВЫГОДНЕЕ") else tr("OVERDRAFT WINS", "ОВЕРДРАФТ ВЫГОДНЕЕ"),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = if (result.isFactoringCheaper) EmeraldPrimary else ElectricCyan
+                                )
+                            }
 
-                    // Step 3: Day DIO + DSO (Customer Inflow)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(EmeraldPrimary.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("3", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
-                        }
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
                             Text(
-                                text = "${tr("Day", "День")} ${result.totalCashGapDays}: ${tr("Customer Inflow (DSO)", "Поступление от клиента (DSO)")}",
+                                text = if (result.isFactoringCheaper) {
+                                    tr(
+                                        "Factoring saves ${viewModel.formatCurrency(result.factoringVsOverdraftSavings)} vs Bank Overdraft! Instant cash inflow on Day 0 with no collateral tie-up.",
+                                        "Факторинг экономит ${viewModel.formatCurrency(result.factoringVsOverdraftSavings)} по сравнению с овердрафтом! Деньги на счете сразу на день 0 без залога."
+                                    )
+                                } else {
+                                    tr(
+                                        "Bank Overdraft is cheaper by ${viewModel.formatCurrency(-result.factoringVsOverdraftSavings)}. Use factoring when credit lines are exhausted or non-recourse is required.",
+                                        "Банковский овердрафт дешевле на ${viewModel.formatCurrency(-result.factoringVsOverdraftSavings)}. Факторинг выбирайте при исчерпании кредитных лимитов или для защиты от неплатежа сети."
+                                    )
+                                },
                                 style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text = tr("Cash gap closed, profit realized", "Разрыв закрыт, прибыль зафиксирована"),
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+
+                            HorizontalDivider(color = ExecutiveBorder.copy(alpha = 0.5f), thickness = 0.5.dp)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = tr("Total Factoring Cost", "Итого затраты факторинга"),
+                                        fontSize = 9.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${viewModel.formatCurrency(result.factoringTotalCost)} (APR ${result.factoringAprPct}%)",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = tr("Required Price Uplift", "Компенсационная наценка"),
+                                        fontSize = 9.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "+${result.factoringRequiredPriceUpliftPct}% ${tr("to price", "к цене")}",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = GoldAccent
+                                    )
+                                }
+                            }
                         }
-                        Text(
-                            text = "+${viewModel.formatCurrency(result.dealRevenue)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = EmeraldPrimary,
-                            softWrap = false,
-                            maxLines = 1
-                        )
                     }
                 }
             }
@@ -450,7 +769,7 @@ fun CashGapTimelineCard(
                     testTag = "input_cash_gap_revenue"
                 )
                 FinancialInputField(
-                    label = tr("Direct COGS", "Прямая себестоимость"),
+                    label = tr("COGS / Direct Costs", "Себестоимость / COGS"),
                     value = cogsInput,
                     onValueChange = {
                         viewModel.cashGapCogs.value = it
@@ -462,47 +781,47 @@ fun CashGapTimelineCard(
                 )
             }
 
-            // Days Terms: DPO vs DSO vs DIO
+            // Days Inputs: DPO, DSO, DIO
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 FinancialInputField(
-                    label = tr("Supplier (DPO)", "Поставщик (DPO)"),
+                    label = tr("Supplier Terms (DPO)", "Поставщик (DPO)"),
                     value = supplierDaysInput,
                     onValueChange = {
                         viewModel.cashGapSupplierDays.value = it
                         viewModel.updateCashGapCalculations()
                     },
-                    suffix = tr("d", "д"),
+                    suffix = tr("days", "дн."),
                     modifier = Modifier.weight(1f),
                     testTag = "input_cash_gap_dpo"
                 )
                 FinancialInputField(
-                    label = tr("Customer (DSO)", "Клиент (DSO)"),
+                    label = tr("Customer Terms (DSO)", "Клиент (DSO)"),
                     value = customerDaysInput,
                     onValueChange = {
                         viewModel.cashGapCustomerDays.value = it
                         viewModel.updateCashGapCalculations()
                     },
-                    suffix = tr("d", "д"),
+                    suffix = tr("days", "дн."),
                     modifier = Modifier.weight(1f),
                     testTag = "input_cash_gap_dso"
                 )
                 FinancialInputField(
-                    label = tr("Warehouse (DIO)", "Склад (DIO)"),
+                    label = tr("Inventory Days (DIO)", "Склад (DIO)"),
                     value = inventoryDaysInput,
                     onValueChange = {
                         viewModel.cashGapInventoryDays.value = it
                         viewModel.updateCashGapCalculations()
                     },
-                    suffix = tr("d", "д"),
+                    suffix = tr("days", "дн."),
                     modifier = Modifier.weight(1f),
                     testTag = "input_cash_gap_dio"
                 )
             }
 
-            // Overdraft Rate & Prepayment %
+            // Overdraft Rate & Day 0 Prepayment %
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
