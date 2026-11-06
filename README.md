@@ -17,9 +17,10 @@
 ## Visual Overview
 
 <p align="center">
-  <img src="app/src/main/assets/screenshots/deal_approval.jpg" width="31%" alt="Deal Approval & Traffic Light Scoring Desk" />
-  <img src="app/src/main/assets/screenshots/analytics_cashflow.jpg" width="31%" alt="Executive Analytics, P&L Statement and Cashflow" />
-  <img src="app/src/main/assets/screenshots/cash_gap.jpg" width="31%" alt="Cash Gap, NWC & Factoring Arbitrage Timeline" />
+  <img src="app/src/main/assets/screenshots/deal_approval.jpg" width="24%" alt="Deal Approval & Traffic Light Scoring Desk" />
+  <img src="app/src/main/assets/screenshots/price_waterfall.jpg" width="24%" alt="Retail Price Waterfall & Net-Net Pocket Margin" />
+  <img src="app/src/main/assets/screenshots/analytics_cashflow.jpg" width="24%" alt="12-Month ROI & P&L Cashflow Trajectory" />
+  <img src="app/src/main/assets/screenshots/executive_one_pager.jpg" width="24%" alt="Executive One-Pager KAM Negotiation Limits & BATNA" />
 </p>
 
 ---

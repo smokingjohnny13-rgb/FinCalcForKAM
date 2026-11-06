@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.calculator.KamScenarioType
@@ -520,12 +521,18 @@ fun KamNegotiationCard(
                             text = "${tr("Expected Fill-Rate", "Ожидаемый Fill-Rate")}: ${fillRateInput}%",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = if ((fillRateInput.toDoubleOrNull() ?: 95.0) >= 95.0) EmeraldPrimary else GoldAccent
+                            color = if ((fillRateInput.toDoubleOrNull() ?: 95.0) >= 95.0) EmeraldPrimary else GoldAccent,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${tr("SLA Penalty Rate", "Штраф за недопоставку")}: ${penaltyRateInput}%",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 
@@ -571,7 +578,7 @@ fun KamNegotiationCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(ExecutiveCard)
                         .border(1.dp, ExecutiveBorder, RoundedCornerShape(12.dp))
-                        .padding(12.dp)
+                        .padding(14.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
@@ -579,12 +586,15 @@ fun KamNegotiationCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1.1f)) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = tr("POCKET MARGIN (ACTUAL CASH PROFIT)", "КАРМАННАЯ МАРЖА (ПОСЛЕ ШТРАФОВ)"),
+                                    text = tr("POCKET MARGIN", "КАРМАННАЯ МАРЖА"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 9.sp
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = "${slaResult.pocketMarginPct}%",
@@ -595,25 +605,29 @@ fun KamNegotiationCard(
                                     maxLines = 1
                                 )
                                 Text(
-                                    text = "${tr("Pocket Profit", "Чистыми в кассу")}: ${viewModel.formatCurrency(slaResult.pocketNetProfit)}",
+                                    text = "${tr("Net Cash", "В кассу")}: ${viewModel.formatCurrency(slaResult.pocketNetProfit)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold,
                                     softWrap = false,
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column(
-                                modifier = Modifier.weight(0.9f),
+                                modifier = Modifier.weight(1f),
                                 horizontalAlignment = Alignment.End
                             ) {
                                 Text(
-                                    text = tr("TOTAL RETAIL SLA PENALTIES", "ШТРАФЫ СЕТИ ЗА НЕДОПОСТАВКУ"),
+                                    text = tr("SLA PENALTIES", "ШТРАФЫ СЕТИ (SLA)"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 9.sp,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.End
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = "-${viewModel.formatCurrency(slaResult.totalPenaltyAmount)}",
@@ -625,7 +639,7 @@ fun KamNegotiationCard(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.End
                                 )
                                 Text(
-                                    text = "${tr("Margin Erosion", "Эрозия маржи")}: -${slaResult.marginErosionPp} п.п.",
+                                    text = "${tr("Margin Erosion", "Эрозия")}: -${slaResult.marginErosionPp} п.п.",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.error,
                                     softWrap = false,

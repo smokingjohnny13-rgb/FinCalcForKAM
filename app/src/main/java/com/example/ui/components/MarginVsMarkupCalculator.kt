@@ -336,13 +336,19 @@ fun MarginVsMarkupCalculator(
                             text = "${tr("Desired Gross Margin", "Желаемая маржа")}: ${numberFmt.format(marginValue)}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${tr("Multiplier", "Коэффициент")}: ${numberFmt.format(currentMultiplier)}x",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 
@@ -394,13 +400,19 @@ fun MarginVsMarkupCalculator(
                             text = "${tr("Applied Markup", "Применяемая наценка")}: ${numberFmt.format(markupValue)}%",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${tr("Multiplier", "Коэффициент")}: ${numberFmt.format(currentMultiplier)}x",
                             style = MaterialTheme.typography.bodySmall,
                             color = ElectricCyan,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            softWrap = false,
+                            maxLines = 1
                         )
                     }
 

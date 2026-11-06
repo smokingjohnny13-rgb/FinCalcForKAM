@@ -147,7 +147,10 @@ fun RoiPnlModeler(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.TrendingUp,
                         contentDescription = null,
@@ -155,12 +158,14 @@ fun RoiPnlModeler(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
                             text = tr("12-MONTH ROI & P&L FORECASTER", "ПРОГНОЗ ROI И P&L НА 12 МЕСЯЦЕВ"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = tr(
@@ -169,10 +174,14 @@ fun RoiPnlModeler(
                             ),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 10.sp
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Box(
                     modifier = Modifier
@@ -184,7 +193,9 @@ fun RoiPnlModeler(
                         text = "LTV:CAC ${numberFmt.format(ltvCacRatio)}x",
                         style = MaterialTheme.typography.labelSmall,
                         color = healthColor,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
             }

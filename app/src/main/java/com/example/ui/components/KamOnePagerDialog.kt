@@ -96,7 +96,10 @@ fun KamOnePagerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -112,21 +115,27 @@ fun KamOnePagerDialog(
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
                             Text(
                                 text = tr("EXECUTIVE ONE-PAGER", "ШПАРГАЛКА ПЕРЕГОВОРЩИКА"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = tr("Instant negotiation limits for KAM", "Предельные границы сделки для КАМа"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = EmeraldPrimary,
-                                fontSize = 10.sp
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     IconButton(
                         onClick = onDismissRequest,
@@ -202,33 +211,48 @@ fun KamOnePagerDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = tr("POCKET MARGIN (POST SLA PENALTIES)", "КАРМАННАЯ МАРЖА (ПОСЛЕ ШТРАФОВ SLA)"),
+                                text = tr("POCKET MARGIN (POST-SLA)", "КАРМАННАЯ МАРЖА (POST-SLA)"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 9.sp
+                                fontSize = 9.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "${summary.pocketMarginWithSlaPct}%",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (summary.pocketMarginWithSlaPct >= 15.0) EmeraldPrimary else GoldAccent
+                                color = if (summary.pocketMarginWithSlaPct >= 15.0) EmeraldPrimary else GoldAccent,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = tr("PEAK CASH GAP", "ПИКОВЫЙ КАССОВЫЙ РАЗРЫВ"),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 9.sp
+                                fontSize = 9.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = viewModel.formatCurrency(summary.peakCashGapAmount),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
                     }

@@ -17,9 +17,10 @@
 ## Визуальный интерфейс
 
 <p align="center">
-  <img src="app/src/main/assets/screenshots/deal_approval.jpg" width="31%" alt="Согласование сделки и Светофор рисков" />
-  <img src="app/src/main/assets/screenshots/analytics_cashflow.jpg" width="31%" alt="P&L отчет, аналитика и график денежных потоков" />
-  <img src="app/src/main/assets/screenshots/cash_gap.jpg" width="31%" alt="Кассовый разрыв, NWC и арбитраж факторинга" />
+  <img src="app/src/main/assets/screenshots/deal_approval.jpg" width="24%" alt="Согласование сделки и Светофор рисков" />
+  <img src="app/src/main/assets/screenshots/price_waterfall.jpg" width="24%" alt="Ценовой водопад ритейла и карманная маржа Net-Net" />
+  <img src="app/src/main/assets/screenshots/analytics_cashflow.jpg" width="24%" alt="12-месячный прогноз окупаемости ROI и когортный P&L" />
+  <img src="app/src/main/assets/screenshots/executive_one_pager.jpg" width="24%" alt="Шпаргалка переговорщика One-Pager и коридор BATNA" />
 </p>
 
 ---

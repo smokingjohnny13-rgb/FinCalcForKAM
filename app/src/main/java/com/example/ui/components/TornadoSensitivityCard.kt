@@ -194,14 +194,20 @@ fun TornadoSensitivityCard(
                                     text = "${tr("PRIMARY LEVER", "ГЛАВНЫЙ РЫЧАГ")}: ${tr(dominant.nameEn, dominant.nameRu)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = GoldAccent
+                                    color = GoldAccent,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "${dominant.leverageMultiplier}x ${tr("Leverage", "Рычаг")}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = ElectricCyan,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = FontFamily.Monospace,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
@@ -297,7 +303,10 @@ fun TornadoSensitivityCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
@@ -310,7 +319,9 @@ fun TornadoSensitivityCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 Icon(

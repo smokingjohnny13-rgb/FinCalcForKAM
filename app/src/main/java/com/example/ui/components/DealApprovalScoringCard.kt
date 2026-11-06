@@ -103,7 +103,10 @@ fun DealApprovalScoringCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -119,21 +122,27 @@ fun DealApprovalScoringCard(
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
                             Text(
                                 text = tr("DEAL APPROVAL & SCORING", "СОГЛАСОВАНИЕ И СКОРИНГ СДЕЛКИ"),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                letterSpacing = 0.5.sp
+                                letterSpacing = 0.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "${tr("Client", "Контрагент")}: ${selectedClient?.name ?: tr("Not selected", "Не выбран")}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     // Approval Status Badge
                     val statusColor = Color(approvalStatus.colorHex)
@@ -164,7 +173,9 @@ fun DealApprovalScoringCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = statusColor,
-                                fontSize = 11.sp
+                                fontSize = 11.sp,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
                     }
@@ -561,7 +572,10 @@ private fun DealTrafficLightBanner(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     // Traffic Light visually showing 3 dots with active glowing
                     TrafficLightBulb(
                         color = Color(0xFF10B981),
@@ -581,14 +595,18 @@ private fun DealTrafficLightBanner(
                         label = "🔴"
                     )
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = tr(scoring.scoringLevel.titleEn, scoring.scoringLevel.titleRu),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black,
-                        color = activeColor
+                        color = activeColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     color = activeColor.copy(alpha = 0.2f),
@@ -599,7 +617,9 @@ private fun DealTrafficLightBanner(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = activeColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
             }
@@ -693,8 +713,11 @@ private fun MetricBox(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
@@ -709,15 +732,19 @@ private fun MetricBox(
                 fontWeight = FontWeight.Black,
                 color = accentColor,
                 fontFamily = FontFamily.Monospace,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
