@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -168,7 +169,10 @@ fun LandedCostModeler(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.LocalShipping,
                         contentDescription = null,
@@ -180,9 +184,13 @@ fun LandedCostModeler(
                         text = tr("LANDED COST MODELER", "МОДЕЛЕР СЕБЕСТОИМОСТИ (FOB → СКЛАД)"),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 // Direction toggle button
                 OutlinedButton(
@@ -202,7 +210,9 @@ fun LandedCostModeler(
                     Text(
                         text = if (!isReverseMode) tr("FOB → Landed", "FOB → Склад") else tr("Landed → FOB", "Склад → FOB"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
             }
@@ -270,12 +280,18 @@ fun LandedCostModeler(
                         text = "${tr("Express Multiplier", "Экспресс-множитель")}: K = ${numberFmt.format(expressCoeff)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = EmeraldPrimary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${tr("Range", "Диапазон")}: ${selectedCategory.minCoeff} – ${selectedCategory.maxCoeff}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
 
@@ -337,29 +353,31 @@ fun LandedCostModeler(
                     .border(1.dp, EmeraldPrimary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                     .padding(14.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = if (!isReverseMode) tr("FINAL LANDED COST ON WAREHOUSE", "СЕБЕСТОИМОСТЬ НА СКЛАДЕ (LANDED)") else tr("MAX ALLOWABLE FOB FACTORY PRICE", "МАКСИМАЛЬНАЯ ЦЕНА FOB ЗАВОДА"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             letterSpacing = 0.8.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = if (!isReverseMode) formatMoney(result.landedCost) else formatMoney(result.fobPrice),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${tr("Overhead", "Накладные расходы")}: +${formatMoney(result.totalOverheadAmount)} (+${numberFmt.format(result.totalOverheadPct)}%)",
                             style = MaterialTheme.typography.bodySmall,
-                            color = GoldAccent
+                            color = GoldAccent,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -367,14 +385,21 @@ fun LandedCostModeler(
                         Button(
                             onClick = { onApplyToMargin(result.landedCost) },
                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.testTag("modeler_btn_apply_margin")
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .testTag("modeler_btn_apply_margin")
                         ) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "${tr("Apply", "Применить")} (${formatMoney(result.landedCost)})",
+                                text = "${tr("Apply Landed Cost", "Применить к расчету маржи")}: ${formatMoney(result.landedCost)}",
                                 color = Color.Black,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                softWrap = false,
+                                maxLines = 1
                             )
                         }
                     }
@@ -552,7 +577,7 @@ fun FobLandedCostDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.weight(1f, fill = false),
+                        modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -570,13 +595,15 @@ fun FobLandedCostDialog(
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
                             Text(
                                 text = tr("FOB → LANDED COST MODELER", "РАСЧЕТ СЕБЕСТОИМОСТИ ИЗ FOB"),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = EmeraldPrimary,
-                                letterSpacing = 0.5.sp
+                                letterSpacing = 0.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = tr(
@@ -584,10 +611,15 @@ fun FobLandedCostDialog(
                                     "Экспресс-коэффициенты 1.28–1.75 для импорта"
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     IconButton(
                         onClick = onDismissRequest,
                         modifier = Modifier.size(32.dp)
